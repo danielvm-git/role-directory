@@ -1,0 +1,184 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.2</storyId>
+    <title>Docker Containerization Setup</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-2-docker-containerization-setup.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a production-ready Dockerfile with multi-stage build</iWant>
+    <soThat>the application can be deployed to Cloud Run in an optimized container</soThat>
+    <tasks>
+      - Create Dockerfile with multi-stage build (builder + runner stages)
+      - Configure environment variable injection at runtime (not baked in)
+      - Create .dockerignore file excluding unnecessary files
+      - Optimize Docker image size (target: &lt;500MB using Alpine)
+      - Test Docker image locally (build, run, verify accessibility)
+      - Document Docker usage in README or docs/DOCKER.md
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Multi-stage build with separate builder and runner stages
+    2. Node.js 22.x Alpine base image
+    3. Dependencies installed and Next.js built in builder stage
+    4. Production server configured (not dev server)
+    5. Environment variables accepted at runtime (DATABASE_URL, NODE_ENV, PORT, NEON_AUTH_*, ALLOWED_EMAILS)
+    6. PORT defaults to 8080 (Cloud Run standard)
+    7. Built image size &lt;500MB (or documented reason if larger)
+    8. Container runs locally: docker run -p 8080:8080 -e NODE_ENV=production
+    9. Application accessible at http://localhost:8080
+    10. .dockerignore excludes: node_modules, .git, .env files, .next, out, docs, test files
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.2</title>
+        <section>Story 1.2: Docker Containerization Setup</section>
+        <snippet>Multi-stage Dockerfile with Node.js 22.x base image. Production server (not dev). Environment variables at runtime. Target image size &lt;500MB. .dockerignore excludes unnecessary files.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - ADR-004</title>
+        <section>ADR-004: Deploy from Source</section>
+        <snippet>Decision to use Cloud Run "deploy from source" with Cloud Build handling Docker builds. Dockerfile still required but no manual Docker build/push in CI/CD. Rationale: Simplicity, cost (Cloud Build free tier), seamless GCP integration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - Containerization</title>
+        <section>Technology Stack Details - Infrastructure</section>
+        <snippet>Docker 27.3.1 for container runtime. Multi-stage builds for optimized images. Google Cloud Run for serverless container platform with auto-scale and pay-per-use.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-2: Docker Containerization</section>
+        <snippet>Dockerfile with multi-stage build (build + production stages). Node.js 22.x base image. Production image size &lt;500MB target. Environment variables at runtime (not baked in). Container runs locally. .dockerignore excludes unnecessary files.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.1: Dockerfile</section>
+        <snippet>Multi-stage build: Build stage + Production stage. Node.js 22.x base image. Install dependencies, build Next.js, run production server. Optimize for small image size (&lt;500MB target).</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.2: Environment Variable Injection</section>
+        <snippet>Accept environment variables at runtime (not build time). Required: DATABASE_URL, SESSION_SECRET, NODE_ENV, PORT. Default PORT=8080 (Cloud Run standard). Missing required variables cause startup failure with clear error.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-2.3: Container Security</section>
+        <snippet>Production Docker image must not expose sensitive data. Multi-stage build excludes build artifacts. .dockerignore excludes .env, .git, node_modules, docs. No hardcoded credentials. Base image: Official Node.js 22 image with security updates.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Services and Modules - Cloud Build</section>
+        <snippet>Cloud Build handles containerization, building Docker images from source. Inputs: Source code, Dockerfile. Outputs: Docker images in Artifact Registry. Automated by Cloud Run deployment.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>next.config.js</path>
+        <kind>config</kind>
+        <symbol>nextConfig</symbol>
+        <lines></lines>
+        <reason>Must be modified to enable standalone output for optimized Docker image: output: 'standalone'</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <docker>
+        <base-image name="node:22-alpine" version="22.11.0" type="runtime">Alpine Linux base with Node.js 22 LTS - minimal size for production</base-image>
+      </docker>
+      <node>
+        <dependency name="next" version="15.0.3" type="runtime">Required for production server (npm start)</dependency>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST use multi-stage Docker build with separate builder and runner stages
+    - MUST use node:22-alpine base image for minimal size
+    - MUST enable Next.js standalone output in next.config.js: output: 'standalone'
+    - MUST accept environment variables at runtime (not baked into image during build)
+    - MUST NOT include secrets in any Docker layer
+    - MUST create .dockerignore excluding: node_modules, .git, .env*, .next, out, docs, tests, README.md
+    - MUST expose port 8080 (Cloud Run standard)
+    - MUST use production server (npm start, not npm run dev)
+    - MUST optimize for image size: target &lt;500MB using Alpine + standalone output
+    - MUST copy only necessary files to final stage (standalone output + public + static)
+    - MUST use npm ci instead of npm install for reproducible builds
+    - MUST set NODE_ENV=production in final stage
+    - Builder stage: Install all dependencies, run build
+    - Runner stage: Copy built artifacts only, install production dependencies only
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Docker Container Interface</name>
+      <kind>Container runtime</kind>
+      <signature>
+        Entrypoint: npm start (or node server.js with standalone)
+        Exposed Port: 8080
+        Expected ENV vars:
+          - NODE_ENV (default: production)
+          - PORT (default: 8080)
+          - DATABASE_URL (required in Epic 2+)
+          - NEON_AUTH_PROJECT_ID (required in Epic 3+)
+          - NEON_AUTH_SECRET_KEY (required in Epic 3+)
+          - ALLOWED_EMAILS (required in Epic 3+)
+      </signature>
+      <path>Dockerfile</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing only for Epic 1. Focus on Docker build verification, image size check, local container execution, and accessibility testing. No automated tests in MVP (deferred to Phase 2).
+    </standards>
+    <locations>
+      - Local Docker build and run (manual verification)
+      - No test files for this story (infrastructure setup)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify multi-stage build">
+        Manual: Check Dockerfile has separate FROM statements for builder and runner stages. Verify builder stage installs deps and builds, runner stage copies artifacts only.
+      </test>
+      <test id="AC-2" desc="Verify Node.js 22.x Alpine base">
+        Manual: Check Dockerfile uses FROM node:22-alpine. Build image and inspect: docker inspect role-directory:local | grep alpine
+      </test>
+      <test id="AC-3" desc="Verify production server configuration">
+        Manual: Check Dockerfile CMD is "npm start" or "node server.js". Run container and verify no hot-reload (production mode).
+      </test>
+      <test id="AC-4" desc="Verify environment variables at runtime">
+        Manual: Build image without env vars. Run with: docker run -p 8080:8080 -e NODE_ENV=production -e PORT=8080. Verify app starts. Check no env vars baked in: docker history role-directory:local | grep -i database (should find nothing).
+      </test>
+      <test id="AC-5" desc="Verify image size">
+        Manual: Build image. Check size: docker images role-directory:local. Verify &lt;500MB. If larger, document reason in story completion notes.
+      </test>
+      <test id="AC-6" desc="Verify local container execution">
+        Manual: docker build -t role-directory:local . (expect success). docker run -p 8080:8080 -e NODE_ENV=production role-directory:local (expect startup). curl http://localhost:8080 (expect 200 OK or Hello World page).
+      </test>
+      <test id="AC-7" desc="Verify .dockerignore">
+        Manual: Check .dockerignore file exists. Verify excludes: node_modules, .git, .env*, .next, out, docs, tests. Build image and verify these files not in image: docker run --rm role-directory:local ls -la (should not see node_modules, .git, etc in /app).
+      </test>
+      <test id="AC-8" desc="Verify Next.js standalone output">
+        Manual: Check next.config.js has output: 'standalone'. Build project: npm run build. Verify .next/standalone directory created. Check Dockerfile copies from standalone directory.
+      </test>
+      <test id="AC-9" desc="Verify Cloud Run compatibility">
+        Manual: Run container with PORT=8080: docker run -p 8080:8080 -e PORT=8080 -e NODE_ENV=production role-directory:local. Verify listens on specified port. Check logs show correct port binding.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

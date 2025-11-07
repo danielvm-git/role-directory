@@ -1,0 +1,441 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.10</storyId>
+    <title>Manual Promotion Workflow (Staging to Production)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-10-manual-promotion-workflow-staging-production.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>DevOps engineer</asA>
+    <iWant>a GitHub Actions workflow to manually promote a validated staging deployment to production</iWant>
+    <soThat>I can promote fully tested changes to the production environment with explicit approval and confirmation</soThat>
+    <tasks>
+      - Create GitHub Actions workflow file with workflow_dispatch trigger and confirmation input
+      - Configure GitHub Environment protection (production) with required reviewers
+      - Configure workflow environment and GCP permissions
+      - Validate confirmation input (PROMOTE_TO_PRODUCTION string)
+      - Authenticate with Google Cloud using service account
+      - Pull staging image from GCR/Artifact Registry using provided tag
+      - Re-tag image for production with timestamp
+      - Push re-tagged image to registry (production-<timestamp> and production-latest)
+      - Deploy to Cloud Run production service (2 CPUs, 1 GB, min 2 instances)
+      - Run health check against production URL with IAM authentication
+      - Add comprehensive audit logging (staging tag, production tag, user, approver, timestamp)
+      - Document workflow usage with warnings and approval process
+      - Test promotion workflow end-to-end with approval flow
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Workflow triggered manually via GitHub Actions UI (workflow_dispatch)
+    2. Requires input: staging image tag to promote
+    3. Requires additional approval/confirmation (GitHub Environment protection: production)
+    4. Pulls the specified staging Docker image from GCR/Artifact Registry
+    5. Re-tags the image for production: gcr.io/PROJECT_ID/role-directory:production-<timestamp>
+    6. Pushes the re-tagged image to the registry
+    7. Deploys the image to the role-directory-production Cloud Run service
+    8. Runs health check against production URL: GET /api/health with IAM auth
+    9. Reports success or failure in GitHub Actions UI
+    10. Completes in under 5 minutes total (after approval)
+    11. Workflow does NOT rebuild the application (uses existing staging image)
+    12. Workflow includes explicit approval step (GitHub Environment: production with reviewers)
+    13. Workflow is documented with usage instructions and warnings
+    14. Workflow logs the promoted image tag for audit trail
+    15. Production promotion has higher scrutiny than dev→staging (approval + confirmation)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.10</title>
+        <section>Story 1.10: Manual Promotion Workflow (Staging to Production)</section>
+        <snippet>GitHub Actions workflow for manual staging to production promotion. Manually triggered with approval gate. Requires confirmation string. GitHub Environment protection with reviewers. Pulls staging image, re-tags for production, deploys to production Cloud Run. Health check with IAM auth. Comprehensive audit logging including approver. Completes in under 5 minutes (after approval). No rebuild.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-10: Manual Production Promotion</section>
+        <snippet>promote-to-production.yml workflow. Manually triggerable with approval requirement. Accepts staging image tag (commit SHA) as input. Deploys SAME Docker image to production (no rebuild). Production environment variables injected. GitHub Environment protection with required reviewers. Health check runs against production URL. Workflow summary displays production URL. Optional: Additional confirmation step. Complete in under 5 minutes after approval.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Workflows and Sequencing - Manual Production Promotion</section>
+        <snippet>Developer validates feature in staging → triggers Promote to Production workflow → Enter staging SHA + confirmation string → Approval request sent to reviewers → Reviewer approves → Workflow authenticates with GCP → Deploys SAME image to production (no rebuild) → Different env vars (NODE_ENV=production) → Different secrets (production database) → Health check against production URL → Report promotion status. Timing: under 3 minutes (after approval, faster than dev/staging, no rebuild).</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.7: Production Promotion Workflow</section>
+        <snippet>Manual promotion workflow from staging to production. Triggered from GitHub Actions UI with approval gate. Select staging deployment to promote. Confirmation string required. Human approval required from designated reviewers. Same Docker image deployed to production (no rebuild). Automated health check validation. Clear success/failure reporting. Comprehensive audit trail (who triggered, who approved, when, which version). Rollback capability if promotion fails.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Production Promotion Safety Gates</section>
+        <snippet>Production promotion requires multiple safety gates: Manual trigger (workflow_dispatch), Confirmation string (PROMOTE_TO_PRODUCTION), GitHub Environment approval (designated reviewers), No automatic deployments. Health check validation. Audit trail with approver. Rollback procedures documented. Higher scrutiny than staging promotion.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-1: Production Safety</section>
+        <snippet>Production deployments require explicit approval. No automatic production deployments. Multiple confirmation steps (trigger + confirmation string + approval). Only designated reviewers can approve. Audit trail for compliance. Failed deployments leave previous version running. Rollback procedures documented and tested. Zero-downtime deployments.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>.github/workflows/promote-dev-to-staging.yml</path>
+        <kind>github-actions</kind>
+        <symbol>staging-promotion-workflow</symbol>
+        <lines>N/A</lines>
+        <reason>Created in Story 1.9. Reference for promotion workflow pattern. Production workflow follows similar structure but adds approval gate and confirmation string validation.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <githubActions>
+        <action name="actions/checkout" version="v4" type="git">Checkout source code (optional for promotion, useful for workflow scripts)</action>
+        <action name="google-github-actions/auth" version="v2" type="gcp-auth">Authenticate to Google Cloud using service account credentials</action>
+        <action name="google-github-actions/setup-gcloud" version="v2" type="gcp-cli">Setup gcloud CLI for Docker authentication and Cloud Run operations</action>
+        <action name="google-github-actions/deploy-cloudrun" version="v2" type="gcp-deployment">Deploy Docker image to Cloud Run service</action>
+      </githubActions>
+      <githubSecrets>
+        <secret name="GCP_PROJECT_ID" type="string">Google Cloud project ID for image paths and Cloud Run</secret>
+        <secret name="GCP_SA_KEY" type="json">Service account JSON key for GCP authentication (or GCP_SERVICE_ACCOUNT_KEY)</secret>
+      </githubSecrets>
+      <githubEnvironment>
+        <environment name="production" type="protected-environment">GitHub Environment with required reviewers for production deployments. Must be configured before workflow runs.</environment>
+      </githubEnvironment>
+      <docker>
+        <command name="docker pull" type="registry">Pull staging image from GCR/Artifact Registry</command>
+        <command name="docker tag" type="tagging">Re-tag image for production environment</command>
+        <command name="docker push" type="registry">Push production-tagged image to registry</command>
+      </docker>
+      <gcloud>
+        <command name="gcloud auth configure-docker" type="auth">Configure Docker to use gcloud credentials for GCR/Artifact Registry</command>
+        <command name="gcloud container images list-tags" type="registry">List available staging images for promotion</command>
+        <command name="gcloud run deploy" type="deployment">Deploy image to Cloud Run (via deploy-cloudrun action)</command>
+        <command name="gcloud auth print-identity-token" type="auth">Generate IAM token for authenticated health check</command>
+      </gcloud>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST use workflow_dispatch trigger (manual trigger only, NEVER automatic)
+    - MUST require input: staging_image_tag (string, required)
+    - MUST require input: confirmation (string, must be exactly "PROMOTE_TO_PRODUCTION")
+    - MUST validate confirmation string at start of workflow (fail early if incorrect)
+    - MUST use GitHub Environment: production (triggers approval requirement)
+    - MUST configure production environment with required reviewers BEFORE use
+    - MUST pull existing staging image from registry (do NOT rebuild application)
+    - MUST re-tag image for production: production-<timestamp>
+    - MUST also tag as production-latest (always points to current production)
+    - MUST push both production tags to registry (production-<timestamp> and production-latest)
+    - MUST deploy to role-directory-production Cloud Run service
+    - MUST use IAM authentication for health check (gcloud auth print-identity-token)
+    - MUST run health check: GET /api/health with Authorization: Bearer <token>
+    - MUST fail workflow if health check returns non-200 status
+    - MUST complete in under 5 minutes total (AFTER approval, not counting approval wait time)
+    - MUST log comprehensive audit trail: staging tag, production tag, user, approver, timestamp, run URL
+    - MUST NOT rebuild application (promotes exact same artifact tested in staging)
+    - MUST leave previous production revision running if deployment fails
+    - CRITICAL: Production service has min 2 instances (no cold start, always responsive)
+    - CRITICAL: Production service has 2 CPUs, 1 GB memory (better performance than dev/staging)
+    - SHOULD use specific action versions (@v2, @v4) for reproducibility
+    - SHOULD use step outputs to pass data between steps
+    - SHOULD use environment variables for GCP_PROJECT_ID and GCP_REGION
+    - SHOULD include clear step names for debugging
+    - Image naming convention: gcr.io/<PROJECT_ID>/role-directory:<tag>
+    - Staging image tag format: staging-<timestamp>
+    - Production image tag format: production-<timestamp> (promotion time, not staging time)
+    - Health check should be fast (min 2 instances = no cold start, <100ms response)
+    - Error handling: set -e or fail-fast behavior in bash scripts
+    - Confirmation string is case-sensitive and must match exactly
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Production Promotion Workflow File</name>
+      <kind>GitHub Actions Workflow</kind>
+      <signature>
+        File: .github/workflows/promote-staging-to-production.yml
+        Name: Promote Staging to Production
+        Trigger: workflow_dispatch
+        
+        Inputs:
+          staging_image_tag:
+            description: Staging image tag to promote (e.g., staging-20231106-123456)
+            required: true
+            type: string
+          confirmation:
+            description: Type PROMOTE_TO_PRODUCTION to confirm
+            required: true
+            type: string
+        
+        Environment Variables:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_REGION: us-central1
+          SERVICE_NAME: role-directory-production
+        
+        Job: promote
+          Runs on: ubuntu-latest
+          Environment: production  # CRITICAL: Triggers approval requirement
+          Permissions:
+            contents: read
+            id-token: write
+          
+          Steps:
+            1. Checkout code (optional, for scripts)
+            2. Validate confirmation string (fail early if incorrect)
+            3. Authenticate to Google Cloud
+            4. Set up Cloud SDK
+            5. Configure Docker for GCR
+            6. Pull staging image
+            7. Re-tag image for production
+            8. Push production images
+            9. Deploy to Cloud Run (Production)
+            10. Wait for deployment (15 seconds)
+            11. Health check (with IAM auth, no cold start expected)
+            12. Log promotion details (audit trail with approver)
+      </signature>
+      <path>.github/workflows/promote-staging-to-production.yml</path>
+    </interface>
+    <interface>
+      <name>GitHub Environment Setup (Production)</name>
+      <kind>GitHub Repository Configuration</kind>
+      <signature>
+        CRITICAL: Must be configured BEFORE first workflow run
+        
+        Setup Steps:
+          1. Navigate to: Repository → Settings → Environments
+          2. Click "New environment"
+          3. Name: production
+          4. Add protection rules:
+             
+             a) Required reviewers:
+                - Add 1-6 team members who can approve production deployments
+                - Suggestions: Tech lead, DevOps engineer, CTO
+                - At least 1 reviewer required
+             
+             b) Wait timer (optional):
+                - 0 minutes (no delay after approval)
+                - Or set delay (e.g., 5 minutes for change windows)
+             
+             c) Deployment branches:
+                - Limit to: main branch only
+                - Prevents accidental deployments from feature branches
+          
+          5. Save protection rules
+        
+        When workflow reaches: environment: production
+          - Workflow pauses
+          - Approval request sent to configured reviewers (email notification)
+          - Any configured reviewer can approve
+          - After approval, workflow continues
+        
+        Approval UI:
+          - Reviewer sees: staging image tag, confirmation string, triggering user
+          - Reviewer clicks: "Review deployments"
+          - Reviewer clicks: "Approve and deploy" (green button)
+          - Or clicks: "Reject" (red button) to cancel deployment
+      </signature>
+      <path>GitHub Repository Settings</path>
+    </interface>
+    <interface>
+      <name>Confirmation String Validation</name>
+      <kind>Workflow Safety Check</kind>
+      <signature>
+        Purpose: Prevent accidental production promotions
+        Location: First step in workflow (before approval)
+        
+        Validation Logic:
+          if [ "${{ inputs.confirmation }}" != "PROMOTE_TO_PRODUCTION" ]; then
+            echo "❌ Confirmation string does not match. Promotion cancelled."
+            echo "Expected: PROMOTE_TO_PRODUCTION"
+            echo "Received: ${{ inputs.confirmation }}"
+            exit 1
+          fi
+          echo "✅ Confirmation validated"
+        
+        Required Value: PROMOTE_TO_PRODUCTION
+        Case Sensitive: Yes (must match exactly)
+        
+        Common Mistakes:
+          ❌ promote_to_production (lowercase)
+          ❌ PROMOTE TO PRODUCTION (spaces instead of underscores)
+          ❌ PROMOTE-TO-PRODUCTION (dashes instead of underscores)
+          ❌ PROMOTE_TO_PROD (abbreviated)
+          ✅ PROMOTE_TO_PRODUCTION (correct)
+        
+        Failure Behavior:
+          - Workflow fails immediately
+          - Error message shows expected vs received
+          - No approval request sent
+          - No GCP resources touched
+          - Safe to retry with correct string
+      </signature>
+      <path>Workflow validation step</path>
+    </interface>
+    <interface>
+      <name>Production Deployment with High Availability</name>
+      <kind>Cloud Run Deployment</kind>
+      <signature>
+        Target: role-directory-production
+        Region: us-central1
+        
+        Production Configuration (Story 1.8):
+          Min Instances: 2 (HIGH AVAILABILITY - no cold starts)
+          Max Instances: 10 (handle traffic spikes)
+          CPU: 2 (DOUBLE staging)
+          Memory: 1 GB (DOUBLE staging)
+          Gen2 Execution Environment: Yes
+          CPU Boost: Yes
+        
+        Deployment Command:
+          gcloud run deploy role-directory-production \
+            --region=us-central1 \
+            --image=gcr.io/PROJECT_ID/role-directory:production-<timestamp>
+        
+        Expected Behavior:
+          - Cloud Run creates new revision
+          - Gradual traffic migration (new revision receives traffic incrementally)
+          - Old revision continues serving until new revision healthy
+          - Health check validates new revision
+          - If health check passes: New revision receives 100% traffic
+          - If health check fails: Old revision continues, deployment marked failed
+        
+        Zero Downtime:
+          - Min 2 instances ensures at least one instance during deployment
+          - Graceful connection draining
+          - No 502/503 errors during deployment
+          - Response time: <100ms (no cold start, min 2 instances always warm)
+        
+        Result:
+          - New revision deployed to production
+          - Production URL unchanged (same URL, different revision)
+          - Image tag: production-<timestamp>
+          - Audit trail in workflow logs
+      </signature>
+      <path>Cloud Run production service</path>
+    </interface>
+    <interface>
+      <name>Comprehensive Audit Logging</name>
+      <kind>Workflow Logging and Compliance</kind>
+      <signature>
+        Production Promotion Summary logged at end of workflow:
+        
+        🚀 PRODUCTION Promotion Summary
+        ================================
+        Staging Image:    staging-20231106-123456
+        Production Image: production-20231106-153022
+        Production URL:   https://role-directory-production-xyz.run.app
+        Triggered by:     danielvm
+        Approved by:      (from GitHub Environment event - manual extraction)
+        Timestamp:        2025-11-07 15:30:22 UTC
+        Run URL:          https://github.com/user/repo/actions/runs/12345
+        
+        Audit Trail Purpose:
+          - Compliance: Who deployed what to production and when
+          - Debugging: Which version is currently in production
+          - Rollback: Reference for previous production versions
+          - Accountability: Clear chain of approval
+          - Post-mortem: Investigation of production incidents
+        
+        Accessible via:
+          - GitHub Actions run logs (permanent record)
+          - GitHub API (workflow runs endpoint)
+          - Future enhancement: Export to separate audit log file or database
+        
+        Additional Context:
+          - Workflow run ID: Unique identifier for this promotion
+          - GitHub actor: User who triggered the workflow
+          - Approver: Extracted from GitHub Environment deployment event
+          - Staging SHA: Traceability back to staging deployment
+          - Production SHA: Production-specific tag with promotion timestamp
+      </signature>
+      <path>GitHub Actions workflow logs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing by triggering workflow from GitHub Actions UI with approval flow and verifying production promotion. Automated tests deferred to Phase 2. Focus on verification: Approval gate works, confirmation string validated, staging image pulled, production image created and pushed, Cloud Run deployment succeeds, health check passes with no cold start, audit log complete including approver, timing under 5 minutes after approval.
+    </standards>
+    <locations>
+      - .github/workflows/promote-staging-to-production.yml (workflow file to create)
+      - GitHub Actions UI (workflow execution, approval, and logs)
+      - GitHub Repository Settings → Environments → production (configuration)
+      - GCR/Artifact Registry (verify production images)
+      - Cloud Run production service (verify deployment)
+      - Production service URL (manual health check)
+      - No test files for this story (CI/CD workflow)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify manual trigger via workflow_dispatch">
+        Manual: Go to GitHub Actions tab. Select "Promote Staging to Production" workflow. Click "Run workflow" button. Verify input fields for staging_image_tag and confirmation appear. Verify workflow can be triggered manually (not automatically on push/merge).
+      </test>
+      <test id="AC-2" desc="Verify requires staging image tag input">
+        Manual: Trigger workflow. Enter valid staging_image_tag. Enter confirmation string. Verify workflow starts. Check logs show input values used. Test with invalid staging tag (doesn't exist), verify workflow fails at "Pull staging image" step.
+      </test>
+      <test id="AC-3" desc="Verify requires approval (GitHub Environment protection)">
+        Manual: Configure production environment with required reviewers. Trigger workflow. Verify approval request appears in GitHub Actions UI. Verify "Waiting for approval" status. Verify email notification sent to reviewers. Approve deployment. Verify workflow continues after approval.
+      </test>
+      <test id="AC-4" desc="Verify pulls staging image from registry">
+        Manual: Check workflow logs for "Pull staging image" step. Verify command: docker pull gcr.io/PROJECT_ID/role-directory:staging-<TAG>. Verify image pulled successfully. If staging tag doesn't exist, verify workflow fails with clear error message.
+      </test>
+      <test id="AC-5" desc="Verify re-tags image for production">
+        Manual: Check workflow logs for "Re-tag image" step. Verify new tag generated: production-<timestamp>. Verify tag format: production-YYYYMMDD-HHMMSS. Verify output includes new tag name. Check docker tag commands executed.
+      </test>
+      <test id="AC-6" desc="Verify pushes production image to registry">
+        Manual: Check workflow logs for "Push production images" step. Verify push commands executed. After workflow completes, check GCR: gcloud container images list-tags gcr.io/PROJECT_ID/role-directory --filter="tags:production-*". Verify new production tag appears. Verify production-latest tag updated.
+      </test>
+      <test id="AC-7" desc="Verify deploys to Cloud Run production">
+        Manual: Check workflow logs for "Deploy to Cloud Run" step. Verify deploy-cloudrun action executed. Verify service: role-directory-production. Verify region: us-central1. Verify image: gcr.io/PROJECT_ID/role-directory:production-<TAG>. After workflow completes, check Cloud Run console. Verify new revision created with production image. Verify min 2 instances running.
+      </test>
+      <test id="AC-8" desc="Verify health check with IAM auth (no cold start)">
+        Manual: Check workflow logs for "Health check" step. Verify token generated: gcloud auth print-identity-token. Verify health check request: curl with Authorization header. Verify 200 OK response. Verify response time <100ms (no cold start, min 2 instances). Verify response body contains "status": "ok". If health check fails, verify workflow marked as failed.
+      </test>
+      <test id="AC-9" desc="Verify success/failure reporting">
+        Manual: After workflow completes, check GitHub Actions UI. Verify workflow status: Success (green check) or Failure (red X). Verify each step shows status. If failure, verify error message clear. Check workflow summary shows production URL.
+      </test>
+      <test id="AC-10" desc="Verify completes in under 5 minutes (after approval)">
+        Manual: Note workflow approval time and end time from GitHub Actions UI. Calculate duration (AFTER approval). Verify under 5 minutes. Expected: 3-4 minutes typical. Breakdown: Validation (5s), Auth (5s), Pull (30s), Tag (5s), Push (30s), Deploy (1-2min), Health check (15s).
+      </test>
+      <test id="AC-11" desc="Verify no rebuild (uses existing image)">
+        Manual: Check workflow logs carefully. Verify NO npm install, npm run build, or docker build commands. Verify only docker pull, docker tag, docker push. Verify image SHA matches staging image SHA (same binary).
+      </test>
+      <test id="AC-12" desc="Verify explicit approval step (GitHub Environment)">
+        Manual: Trigger workflow. Verify workflow pauses waiting for approval. Verify approval request UI shows: staging image tag, confirmation string, triggering user. Verify only configured reviewers can approve. Approve deployment. Verify workflow continues immediately after approval.
+      </test>
+      <test id="AC-13" desc="Verify workflow documented with warnings">
+        Manual: Check docs/guides/promotion-workflow-guide.md. Verify production section exists. Verify includes: Approval process, Confirmation string requirement, How to find staging image tag, Warnings about production impact, Rollback procedure, Troubleshooting.
+      </test>
+      <test id="AC-14" desc="Verify comprehensive audit logging">
+        Manual: Check workflow logs for "Log promotion details" step. Verify output includes: Staging Image tag, Production Image tag, Production URL, Triggered by (github.actor), Approver (from environment event), Timestamp (UTC), Run URL. Verify information accurate and complete. Verify labeled as "PRODUCTION Promotion Summary".
+      </test>
+      <test id="AC-15" desc="Verify higher scrutiny than staging">
+        Manual: Compare with staging promotion workflow (Story 1.9). Verify production has: Confirmation string input (staging doesn't), GitHub Environment approval (staging doesn't), More detailed audit log (includes approver). Verify documentation emphasizes production caution.
+      </test>
+      <test id="CONFIRMATION-VALIDATION" desc="Test confirmation string validation">
+        Manual: Test 1: Enter incorrect confirmation (e.g., "promote"). Verify workflow fails immediately at validation step. Verify error message clear. Test 2: Enter correct confirmation "PROMOTE_TO_PRODUCTION". Verify validation passes. Verify workflow continues to approval step.
+      </test>
+      <test id="E2E-PRODUCTION" desc="End-to-end production promotion test">
+        Manual: Promote test version to staging. Note staging image tag. Trigger production promotion workflow. Enter staging image tag. Enter confirmation: PROMOTE_TO_PRODUCTION. Approve deployment (as reviewer). Wait for completion (under 5 minutes after approval). Check production URL: curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://role-directory-production-xyz.run.app/api/health. Verify production shows promoted version. Verify response time <100ms (no cold start). Verify audit log in workflow logs includes approver.
+      </test>
+      <test id="APPROVAL-REJECTION" desc="Test approval rejection">
+        Manual: Trigger production promotion workflow. Enter staging image tag and confirmation. Wait for approval request. (As reviewer) Click "Reject" instead of "Approve". Verify workflow cancelled. Verify production NOT updated. Verify clear cancellation message in workflow logs.
+      </test>
+      <test id="HIGH-AVAILABILITY" desc="Verify production high availability">
+        Manual: After deployment, check Cloud Run console. Verify min 2 instances running immediately. Make concurrent requests: ab -n 100 -c 10 -H "Authorization: Bearer $(gcloud auth print-identity-token)" [PROD_URL]/api/health. Verify all requests <100ms (no cold starts). Verify 100% success rate.
+      </test>
+      <test id="ROLLBACK-TEST" desc="Test production rollback procedure">
+        Manual: Promote version A to production. Note production-A tag. Promote version B to production (with approval). Verify production now runs version B. Rollback to version A: Option 1: Trigger promotion workflow again with staging tag for version A (requires approval). Option 2: gcloud run services update-traffic to previous revision. Verify production back to version A.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

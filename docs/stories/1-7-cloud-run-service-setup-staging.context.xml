@@ -1,0 +1,336 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.7</storyId>
+    <title>Cloud Run Service Setup (Staging)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-7-cloud-run-service-setup-staging.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>DevOps engineer</asA>
+    <iWant>a Google Cloud Run service configured for the staging environment</iWant>
+    <soThat>I can deploy and test pre-production versions of the application before promoting to production</soThat>
+    <tasks>
+      - Verify Google Cloud project access and Cloud Run API enabled
+      - Create staging Cloud Run service using gcloud CLI (role-directory-staging)
+      - Configure instance scaling (min 1 warm instance, max 3 instances)
+      - Configure CPU and memory (1 CPU, 512 MB memory)
+      - Configure environment variables (NODE_ENV=staging, DATABASE_URL, NEXT_PUBLIC_API_URL)
+      - Configure ingress and port (ingress: all, port: 8080)
+      - Add resource labels (environment=staging, app=role-directory)
+      - Configure IAM authentication (require authentication, not public)
+      - Document service configuration for Infrastructure-as-Code reference
+      - Test staging service deployment with test image and health check
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Service has public staging URL: https://role-directory-staging-[hash].run.app
+    2. Uses minimum 1 instance (warm standby for faster pre-prod response)
+    3. Uses maximum 3 instances (controlled scaling with cost cap)
+    4. Uses 1 CPU and 512 MB memory per instance
+    5. Requires authentication via Google IAM (NOT fully public like dev)
+    6. Sets environment variables: NODE_ENV=staging, DATABASE_URL (from Secret Manager), NEXT_PUBLIC_API_URL (staging URL)
+    7. Has ingress set to "all" (accessible from internet with auth)
+    8. Uses container port 8080
+    9. Has resource labels: environment=staging, app=role-directory
+    10. Service is NOT created manually via Console (uses gcloud CLI)
+    11. Configuration is documented for Infrastructure-as-Code in future
+    12. Staging service URL is recorded for use in CI/CD workflows (Story 1.9)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.7</title>
+        <section>Story 1.7: Cloud Run Service Setup (Staging)</section>
+        <snippet>Staging Cloud Run service configuration. IAM protected (not public). Min 1 instance for warm standby, max 3 for cost control. 1 CPU, 512 MB memory. Environment: NODE_ENV=staging, DATABASE_URL from Secret Manager, NEXT_PUBLIC_API_URL. Labels: environment=staging, app=role-directory. Manual gcloud CLI setup, documented for IaC.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-7: Cloud Run Service Setup (Staging)</section>
+        <snippet>Staging service: role-directory-staging. Region: us-central1. Min 1 instance (warm), max 3 instances. 1 CPU, 512 MB memory. IAM authentication required (not public). Environment: NODE_ENV=staging. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.4: Staging Environment</section>
+        <snippet>Staging environment for pre-production validation. Mirrors production configuration. IAM protected access. Warm standby (min 1 instance) for responsive testing. Used for final validation before production promotion. Automated promotion workflow from dev to staging.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Cloud Run Configuration</section>
+        <snippet>Environment-specific Cloud Run services. Naming: role-directory-{environment}. Region: us-central1. Dev: min 0, public. Staging: min 1 (warm), IAM protected. Production: min 2 (high availability), IAM protected. Resources: 1 CPU, 512 MB memory. Port: 8080. Environment variables per environment. Secrets from Secret Manager.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Environment Variables Management</section>
+        <snippet>Environment-specific configuration. Dev: NODE_ENV=development. Staging: NODE_ENV=staging. Production: NODE_ENV=production. NEXT_PUBLIC_API_URL: Set to actual service URL. DATABASE_URL: From Secret Manager (encrypted). Secrets referenced by name, not embedded in config.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-2.3: Secret Management</section>
+        <snippet>Database credentials stored in Google Secret Manager. Encrypted at rest and in transit. Service account permissions for secret access. Secrets referenced by name in Cloud Run. No secrets in environment variables or code. Separate secrets per environment (dev, staging, production).</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-1.2: IAM Authentication</section>
+        <snippet>Staging and production require IAM authentication. Not publicly accessible without Bearer token. GitHub Actions service account granted roles/run.invoker. Manual testing requires: gcloud auth print-identity-token. Health check endpoint works with auth header.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Cost Optimization</section>
+        <snippet>Dev: min 0 instances (scale to zero) for cost savings. Staging: min 1 instance (warm standby) ~$17/month. Production: min 2 instances (high availability) ~$34/month. Max instances cap costs. Free tier covers dev. Total estimated cost: $50-100/month for all environments.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>Dockerfile</path>
+        <kind>docker</kind>
+        <symbol>multi-stage-build</symbol>
+        <lines>1-49</lines>
+        <reason>Created in Story 1.2. Staging service will deploy containers built from this Dockerfile.</reason>
+      </artifact>
+      <artifact>
+        <path>app/api/health/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>health-check</symbol>
+        <lines>N/A</lines>
+        <reason>Created in Story 1.6. Used to verify staging service deployment health.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <gcloud>
+        <command name="gcloud run deploy" type="deployment">Create and deploy Cloud Run service</command>
+        <command name="gcloud run services update" type="management">Update service configuration (scaling, resources, env vars, secrets)</command>
+        <command name="gcloud run services describe" type="inspection">Verify service configuration</command>
+        <command name="gcloud run services add-iam-policy-binding" type="iam">Grant IAM permissions for service access</command>
+        <command name="gcloud secrets create" type="secrets">Create Secret Manager secret for DATABASE_URL</command>
+        <command name="gcloud secrets add-iam-policy-binding" type="iam">Grant service account access to secrets</command>
+      </gcloud>
+      <iam>
+        <serviceAccount name="default-compute" type="cloud-run">Default Cloud Run service account for the service</serviceAccount>
+        <serviceAccount name="github-actions-deployer" type="custom">GitHub Actions service account (from Story 1.5) needs roles/run.invoker</serviceAccount>
+        <role name="roles/run.invoker" type="iam-role">Required to invoke/access IAM-protected Cloud Run service</role>
+        <role name="roles/secretmanager.secretAccessor" type="iam-role">Required for service account to read secrets</role>
+      </iam>
+      <secrets>
+        <secret name="staging-database-url" type="secret-manager">PostgreSQL connection string for staging database (placeholder for Epic 2)</secret>
+      </secrets>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST create service named: role-directory-staging (environment-specific naming)
+    - MUST use region: us-central1 (same as dev for consistency)
+    - MUST set min instances: 1 (warm standby, staging should be responsive)
+    - MUST set max instances: 3 (cost control, higher than dev for pre-prod testing)
+    - MUST set CPU: 1 and memory: 512Mi (consistent with dev)
+    - MUST set NODE_ENV=staging (environment detection)
+    - MUST set NEXT_PUBLIC_API_URL to actual staging service URL
+    - MUST set DATABASE_URL from Secret Manager (encrypted, not env var)
+    - MUST use port: 8080 (container port)
+    - MUST set ingress: all (internet accessible)
+    - MUST require authentication: --no-allow-unauthenticated (IAM protected, NOT public)
+    - MUST add labels: environment=staging, app=role-directory
+    - MUST grant GitHub Actions service account roles/run.invoker (for Story 1.9 deployment)
+    - MUST document all gcloud commands for IaC reference
+    - Service is NOT created via GCP Console (use gcloud CLI only)
+    - Create staging-database-url secret in Secret Manager (placeholder value for now)
+    - Actual database URL will be updated in Epic 2 when Neon staging database is provisioned
+    - MUST verify health check endpoint (/api/health) works with authentication
+    - Health check requires Authorization header: Bearer $(gcloud auth print-identity-token)
+    - Configuration should be reproducible from documentation
+    - SHOULD create docs/guides/cloud-run-staging-setup.md with all setup commands
+    - Cost awareness: Min 1 instance = ~$17-20/month (acceptable for pre-prod environment)
+    - Max 3 instances caps cost at ~$51/month under full load
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Staging Cloud Run Service Creation</name>
+      <kind>gcloud CLI</kind>
+      <signature>
+        Initial service creation:
+        gcloud run deploy role-directory-staging \
+          --region=us-central1 \
+          --platform=managed \
+          --no-allow-unauthenticated \
+          --image=gcr.io/cloudrun/hello \
+          --min-instances=1 \
+          --max-instances=3 \
+          --cpu=1 \
+          --memory=512Mi \
+          --port=8080 \
+          --ingress=all \
+          --set-env-vars=NODE_ENV=staging \
+          --labels=environment=staging,app=role-directory
+        
+        Output: Service URL (https://role-directory-staging-[hash].run.app)
+      </signature>
+      <path>GCP Cloud Run</path>
+    </interface>
+    <interface>
+      <name>Staging Secret Management</name>
+      <kind>Secret Manager</kind>
+      <signature>
+        Create secret:
+        gcloud secrets create staging-database-url \
+          --data-file=<(echo "postgresql://user:pass@host:5432/db?sslmode=require")
+        
+        Grant access to Cloud Run service account:
+        PROJECT_NUMBER=$(gcloud projects describe PROJECT_ID --format="value(projectNumber)")
+        gcloud secrets add-iam-policy-binding staging-database-url \
+          --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+          --role="roles/secretmanager.secretAccessor"
+        
+        Reference in Cloud Run:
+        gcloud run services update role-directory-staging \
+          --region=us-central1 \
+          --set-secrets=DATABASE_URL=staging-database-url:latest
+        
+        Note: Placeholder value for Story 1.7, real database URL in Epic 2
+      </signature>
+      <path>Google Secret Manager</path>
+    </interface>
+    <interface>
+      <name>Staging IAM Authentication</name>
+      <kind>IAM Policy Binding</kind>
+      <signature>
+        Grant GitHub Actions service account access:
+        gcloud run services add-iam-policy-binding role-directory-staging \
+          --region=us-central1 \
+          --member="serviceAccount:github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com" \
+          --role="roles/run.invoker"
+        
+        Manual testing with authentication:
+        TOKEN=$(gcloud auth print-identity-token)
+        curl -H "Authorization: Bearer $TOKEN" \
+          https://role-directory-staging-[hash].run.app/api/health
+        
+        Expected: 200 OK with { "status": "ok", "timestamp": "..." }
+        
+        Unauthenticated access (should fail):
+        curl https://role-directory-staging-[hash].run.app
+        Expected: 403 Forbidden
+      </signature>
+      <path>GCP IAM</path>
+    </interface>
+    <interface>
+      <name>Staging Service Configuration Verification</name>
+      <kind>gcloud CLI</kind>
+      <signature>
+        Verify service exists:
+        gcloud run services list --filter="role-directory-staging"
+        
+        Verify scaling configuration:
+        gcloud run services describe role-directory-staging \
+          --region=us-central1 \
+          --format="value(spec.template.metadata.annotations)"
+        Expected: min-instances: 1, max-instances: 3
+        
+        Verify resources:
+        gcloud run services describe role-directory-staging \
+          --region=us-central1 \
+          --format="value(spec.template.spec.containers[0].resources)"
+        Expected: cpu: 1, memory: 512Mi
+        
+        Verify environment variables:
+        gcloud run services describe role-directory-staging \
+          --region=us-central1 \
+          --format="value(spec.template.spec.containers[0].env)"
+        Expected: NODE_ENV=staging, NEXT_PUBLIC_API_URL=[url]
+        
+        Verify secrets:
+        gcloud run services describe role-directory-staging \
+          --region=us-central1 \
+          --format="value(spec.template.spec.containers[0].env[].valueFrom)"
+        Expected: DATABASE_URL from staging-database-url secret
+        
+        Verify labels:
+        gcloud run services describe role-directory-staging \
+          --region=us-central1 \
+          --format="value(metadata.labels)"
+        Expected: environment=staging, app=role-directory
+      </signature>
+      <path>gcloud CLI</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing via gcloud CLI commands to create and verify staging Cloud Run service. No application code changes in this story. Focus on infrastructure setup: Service exists, configuration correct, authentication works, health check accessible with auth. Document all commands for reproducibility.
+    </standards>
+    <locations>
+      - GCP Cloud Run Console (verify service exists and configuration)
+      - gcloud CLI (all configuration commands)
+      - docs/guides/cloud-run-staging-setup.md (documentation to create)
+      - Staging service URL: https://role-directory-staging-[hash].run.app
+      - No code files modified (infrastructure only)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify staging service exists with correct URL">
+        Manual: gcloud run services list --filter="role-directory-staging". Verify service listed. Get URL: gcloud run services describe role-directory-staging --format="value(status.url)". Verify format: https://role-directory-staging-[hash].run.app.
+      </test>
+      <test id="AC-2" desc="Verify min 1 instance configured">
+        Manual: gcloud run services describe role-directory-staging --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/minScale'])". Verify value: 1. Rationale: Warm standby for pre-prod testing.
+      </test>
+      <test id="AC-3" desc="Verify max 3 instances configured">
+        Manual: gcloud run services describe role-directory-staging --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/maxScale'])". Verify value: 3. Rationale: Cost control with higher capacity than dev.
+      </test>
+      <test id="AC-4" desc="Verify CPU and memory allocation">
+        Manual: gcloud run services describe role-directory-staging --format="value(spec.template.spec.containers[0].resources)". Verify cpu: 1. Verify memory: 512Mi. Same as dev for consistency.
+      </test>
+      <test id="AC-5" desc="Verify IAM authentication required">
+        Manual: Try unauthenticated access: curl https://role-directory-staging-[hash].run.app. Expected: 403 Forbidden. Try authenticated: curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" [url]/api/health. Expected: 200 OK.
+      </test>
+      <test id="AC-6" desc="Verify environment variables set">
+        Manual: gcloud run services describe role-directory-staging --format="value(spec.template.spec.containers[0].env)". Verify NODE_ENV=staging. Verify NEXT_PUBLIC_API_URL set to service URL. Verify DATABASE_URL from secret reference.
+      </test>
+      <test id="AC-7" desc="Verify ingress set to all">
+        Manual: gcloud run services describe role-directory-staging --format="value(metadata.annotations['run.googleapis.com/ingress'])". Verify value: all. Accessible from internet with auth.
+      </test>
+      <test id="AC-8" desc="Verify container port 8080">
+        Manual: gcloud run services describe role-directory-staging --format="value(spec.template.spec.containers[0].ports[0].containerPort)". Verify value: 8080. Matches Dockerfile EXPOSE.
+      </test>
+      <test id="AC-9" desc="Verify resource labels">
+        Manual: gcloud run services describe role-directory-staging --format="value(metadata.labels)". Verify environment=staging. Verify app=role-directory. Used for cost tracking and filtering.
+      </test>
+      <test id="AC-10" desc="Verify NOT created via Console">
+        Process: All commands in gcloud CLI. No manual Console clicks. Document commands in docs/guides/cloud-run-staging-setup.md. Ensure reproducible setup.
+      </test>
+      <test id="AC-11" desc="Verify configuration documented">
+        Manual: Check docs/guides/cloud-run-staging-setup.md exists. Verify contains all gcloud commands. Verify service URL recorded. Verify environment variables documented. Verify IAM bindings documented.
+      </test>
+      <test id="AC-12" desc="Verify service URL recorded for CI/CD">
+        Manual: Check documentation contains staging service URL. Will be used in Story 1.9 promotion workflow. Format: https://role-directory-staging-[hash].run.app.
+      </test>
+      <test id="SECRET" desc="Verify Secret Manager integration">
+        Manual: gcloud secrets describe staging-database-url. Verify secret exists. Check IAM: gcloud secrets get-iam-policy staging-database-url. Verify service account has secretAccessor role. Check Cloud Run: gcloud run services describe role-directory-staging --format="value(spec.template.spec.containers[0].env[].valueFrom)". Verify DATABASE_URL from staging-database-url secret.
+      </test>
+      <test id="IAM" desc="Verify GitHub Actions service account access">
+        Manual: gcloud run services get-iam-policy role-directory-staging. Verify github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com has roles/run.invoker. Needed for Story 1.9 automated promotion.
+      </test>
+      <test id="DEPLOY-TEST" desc="Test deployment with test image">
+        Manual: Build test image: docker build -t gcr.io/PROJECT_ID/role-directory:staging-test . Push: docker push gcr.io/PROJECT_ID/role-directory:staging-test. Deploy: gcloud run deploy role-directory-staging --image=gcr.io/PROJECT_ID/role-directory:staging-test. Verify deployment succeeds. Check revisions: gcloud run revisions list --service=role-directory-staging. Verify new revision created.
+      </test>
+      <test id="HEALTH-CHECK" desc="Verify health check with auth">
+        Manual: Get service URL. Request with auth: curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://role-directory-staging-[hash].run.app/api/health. Expected: 200 OK. Response: { "status": "ok", "timestamp": "..." }. Verify health endpoint from Story 1.6 works.
+      </test>
+      <test id="COST" desc="Verify cost implications understood">
+        Review: Min 1 instance = ~$17-20/month. Max 3 instances = ~$51/month under load. Typical staging cost: $20-30/month. Acceptable for pre-prod environment. Higher than dev ($0) but provides warm standby.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

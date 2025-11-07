@@ -1,0 +1,602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 2-3-database-schema-migration-setup
+  Generated: 2025-11-07
+  Epic: 2 - Database Infrastructure & Connectivity
+  Status: ready-for-dev
+-->
+<story-context>
+  <metadata>
+    <epic-id>2</epic-id>
+    <story-id>3</story-id>
+    <story-key>2-3-database-schema-migration-setup</story-key>
+    <story-title>Database Schema Migration Setup</story-title>
+    <status>ready-for-dev</status>
+    <generated-date>2025-11-07</generated-date>
+  </metadata>
+
+  <user-story>
+    <as-a>developer</as-a>
+    <i-want>a migration system to manage database schema changes across environments</i-want>
+    <so-that>schema updates can be applied consistently and safely to dev, staging, and production</so-that>
+  </user-story>
+
+  <acceptance-criteria>
+    <criterion id="AC-1">
+      <given>I need to create or modify database tables</given>
+      <when>I create a migration</when>
+      <then>the migration system supports up (apply) and down (rollback) migrations</then>
+      <and>Tracks migration state (which migrations have been applied)</and>
+      <and>Can be run manually via CLI: npm run migrate:up / npm run migrate:down</and>
+      <and>Generates migration files with timestamp: YYYYMMDDHHMMSS_migration_name.sql</and>
+      <and>Applies migrations in order (based on timestamp)</and>
+    </criterion>
+    <criterion id="AC-2">
+      <and>I can run migrations against any environment by setting DATABASE_URL</and>
+      <and>The migration tool creates a schema_migrations table to track applied migrations</and>
+      <and>Migration process is documented in README or docs/DATABASE.md</and>
+      <and>Sample migration included (create initial tables)</and>
+    </criterion>
+  </acceptance-criteria>
+
+  <story-tasks>
+    <task id="T1" status="pending">
+      <title>Choose migration tool approach</title>
+      <subtasks>
+        <subtask>Evaluate options: Prisma Migrate (full ORM), node-pg-migrate (SQL-based), Knex migrations, custom Node.js script</subtask>
+        <subtask>Recommendation: Custom Node.js script for MVP simplicity and full control</subtask>
+        <subtask>Rationale: SQL-based (no ORM), simple, explicit control, no additional dependencies</subtask>
+        <subtask>Document decision in story completion notes</subtask>
+      </subtasks>
+    </task>
+    <task id="T2" status="pending">
+      <title>Create migrations directory structure</title>
+      <subtasks>
+        <subtask>Create directory: migrations/</subtask>
+        <subtask>Use single directory with .up.sql and .down.sql suffixes</subtask>
+        <subtask>Document structure in README</subtask>
+      </subtasks>
+    </task>
+    <task id="T3" status="pending">
+      <title>Create migration tracking table</title>
+      <subtasks>
+        <subtask>Create initial migration: migrations/000_create_schema_migrations.sql</subtask>
+        <subtask>Define schema_migrations table with version (VARCHAR 255 PRIMARY KEY), applied_at (TIMESTAMP), description (TEXT)</subtask>
+        <subtask>This migration is always run first (bootstrap)</subtask>
+        <subtask>Track all subsequent migrations in this table</subtask>
+      </subtasks>
+    </task>
+    <task id="T4" status="pending">
+      <title>Create migration CLI script</title>
+      <subtasks>
+        <subtask>Create file: scripts/migrate.js</subtask>
+        <subtask>Add Node.js shebang: #!/usr/bin/env node</subtask>
+        <subtask>Make executable: chmod +x scripts/migrate.js</subtask>
+        <subtask>Import dependencies: neon from @neondatabase/serverless, fs, path</subtask>
+        <subtask>Accept commands: up, down, status, create</subtask>
+        <subtask>Read DATABASE_URL from environment</subtask>
+      </subtasks>
+    </task>
+    <task id="T5" status="pending">
+      <title>Implement migrate:up command</title>
+      <subtasks>
+        <subtask>Read all migration files from migrations/ directory</subtask>
+        <subtask>Sort by timestamp (alphabetical order)</subtask>
+        <subtask>Query schema_migrations to get applied migrations</subtask>
+        <subtask>Filter pending migrations (not in schema_migrations)</subtask>
+        <subtask>Apply each pending migration in order: read SQL, execute via neon client, insert into schema_migrations, log success/failure</subtask>
+        <subtask>Handle errors: Rollback on failure, log details</subtask>
+        <subtask>Exit with code 0 on success, non-zero on failure</subtask>
+      </subtasks>
+    </task>
+    <task id="T6" status="pending">
+      <title>Implement migrate:down command</title>
+      <subtasks>
+        <subtask>Query schema_migrations to get last applied migration</subtask>
+        <subtask>Find corresponding rollback file (*.down.sql)</subtask>
+        <subtask>Execute rollback SQL</subtask>
+        <subtask>Remove record from schema_migrations</subtask>
+        <subtask>Log success/failure</subtask>
+        <subtask>Note: Only rollback ONE migration at a time (safety)</subtask>
+      </subtasks>
+    </task>
+    <task id="T7" status="pending">
+      <title>Implement migrate:status command</title>
+      <subtasks>
+        <subtask>Query schema_migrations to get applied migrations</subtask>
+        <subtask>Read all migration files from migrations/ directory</subtask>
+        <subtask>Compare and display with checkmarks for applied, crosses for pending</subtask>
+        <subtask>Exit with code 0</subtask>
+      </subtasks>
+    </task>
+    <task id="T8" status="pending">
+      <title>Implement migrate:create command</title>
+      <subtasks>
+        <subtask>Accept migration name as argument: npm run migrate:create add_user_roles</subtask>
+        <subtask>Generate timestamp: YYYYMMDDHHMMSS format</subtask>
+        <subtask>Create migration files: ${timestamp}_${name}.up.sql and ${timestamp}_${name}.down.sql</subtask>
+        <subtask>Add template content with comments and examples</subtask>
+        <subtask>Log: "Created migration: ${timestamp}_${name}"</subtask>
+      </subtasks>
+    </task>
+    <task id="T9" status="pending">
+      <title>Add npm scripts for migration commands</title>
+      <subtasks>
+        <subtask>Update package.json with migrate:up, migrate:down, migrate:status, migrate:create scripts</subtask>
+        <subtask>Each script calls: node scripts/migrate.js [command]</subtask>
+        <subtask>Verify scripts run successfully</subtask>
+        <subtask>Document usage in README</subtask>
+      </subtasks>
+    </task>
+    <task id="T10" status="pending">
+      <title>Test migration system with sample migration</title>
+      <subtasks>
+        <subtask>Create test migration: npm run migrate:create test_table</subtask>
+        <subtask>Edit up migration: CREATE TABLE test_table with id, name, created_at</subtask>
+        <subtask>Edit down migration: DROP TABLE IF EXISTS test_table</subtask>
+        <subtask>Set DATABASE_URL for dev environment</subtask>
+        <subtask>Run npm run migrate:up - verify table created, schema_migrations updated</subtask>
+        <subtask>Run npm run migrate:status - should show applied</subtask>
+        <subtask>Run npm run migrate:down - verify table dropped, schema_migrations updated</subtask>
+        <subtask>Clean up test migration files</subtask>
+      </subtasks>
+    </task>
+    <task id="T11" status="pending">
+      <title>Document migration workflow</title>
+      <subtasks>
+        <subtask>Create file: docs/DATABASE.md (or update existing)</subtask>
+        <subtask>Document migration commands: create, apply, rollback, check status</subtask>
+        <subtask>Document workflow for each environment (dev, staging, production)</subtask>
+        <subtask>Document best practices: always create rollback, test rollback in dev, prefer additive migrations, never modify applied migrations</subtask>
+        <subtask>Add troubleshooting section</subtask>
+      </subtasks>
+    </task>
+    <task id="T12" status="pending">
+      <title>Add migration safety checks</title>
+      <subtasks>
+        <subtask>Check DATABASE_URL is set before running migrations</subtask>
+        <subtask>Warn if running against production database (check for 'prd' or 'production' in URL)</subtask>
+        <subtask>Validate migration file format (timestamp_name.sql)</subtask>
+        <subtask>Check for duplicate migration versions</subtask>
+        <subtask>Log DATABASE_URL (masked) to confirm target environment</subtask>
+      </subtasks>
+    </task>
+    <task id="T13" status="pending">
+      <title>Document migration naming conventions</title>
+      <subtasks>
+        <subtask>Document in README or docs/DATABASE.md: timestamp format YYYYMMDDHHMMSS, name format lowercase_with_underscores</subtask>
+        <subtask>Document migration file structure: forward ${timestamp}_${name}.up.sql, rollback ${timestamp}_${name}.down.sql</subtask>
+        <subtask>Document SQL conventions: use IF EXISTS/IF NOT EXISTS for idempotency, include comments for complex migrations, one logical change per migration</subtask>
+      </subtasks>
+    </task>
+  </story-tasks>
+
+  <artifacts>
+    <docs>
+      <doc id="DOC-1">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
+        <section>Migration System Requirements</section>
+        <snippet>Migration system can apply and rollback schema changes. Manual CLI-based migrations acceptable for MVP. Migrations tracked in schema_migrations table. Idempotent migrations (can be run multiple times safely). Backward-compatible schema changes (additive migrations, no breaking changes). Migration workflow: create in dev, test thoroughly, apply to staging, validate, apply to production.</snippet>
+      </doc>
+      <doc id="DOC-2">
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Migration Strategy</section>
+        <snippet>SQL-based migrations (not ORM). Custom Node.js script or node-pg-migrate. Migration tracking via schema_migrations table. Manual migrations for MVP (not automated in CI/CD). Timestamp-based migration ordering. Rollback support required for all migrations.</snippet>
+      </doc>
+      <doc id="DOC-3">
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-3: Reliability - Schema consistency across environments</section>
+        <snippet>Database schema must be consistent across dev, staging, and production environments. Migrations applied in same order in all environments. Zero downtime migrations preferred (additive changes). Rollback procedures documented and tested.</snippet>
+      </doc>
+      <doc id="DOC-4">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification</title>
+        <section>Migration CLI API</section>
+        <snippet>Migration CLI commands: npm run migrate:up (apply next pending migration), npm run migrate:down (rollback last migration), npm run migrate:status (show migration status), npm run migrate:create -- migration_name (create new migration file). Migrations stored in migrations/ directory with timestamp_name.up.sql and timestamp_name.down.sql files.</snippet>
+      </doc>
+      <doc id="DOC-5">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification</title>
+        <section>Migration Flow</section>
+        <snippet>Migration application flow: Developer creates migration file with timestamp. Developer sets DATABASE_URL env var for target environment. Developer runs npm run migrate:up. Migration script connects to database, reads schema_migrations table, identifies pending migrations, applies pending migrations in timestamp order, records applied migrations in schema_migrations table, reports success/failure.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact id="CODE-1">
+        <path>package.json</path>
+        <kind>configuration</kind>
+        <symbol>scripts</symbol>
+        <lines>9-22</lines>
+        <reason>Existing npm scripts structure - will add migrate:up, migrate:down, migrate:status, migrate:create scripts to this section</reason>
+      </artifact>
+      <artifact id="CODE-2">
+        <path>package.json</path>
+        <kind>configuration</kind>
+        <symbol>dependencies</symbol>
+        <lines>27-32</lines>
+        <reason>@neondatabase/serverless already installed - will be used by migration script to execute SQL</reason>
+      </artifact>
+      <artifact id="CODE-3">
+        <path>scripts/setup-github-actions-sa.sh</path>
+        <kind>script</kind>
+        <symbol>Shell script example</symbol>
+        <lines>N/A</lines>
+        <reason>Existing script in scripts/ directory - provides pattern for creating executable scripts with error handling</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@neondatabase/serverless" version="^0.10.1" scope="dependencies">HTTP-based PostgreSQL client used by migration script to execute SQL statements</package>
+        <package name="fs" version="built-in" scope="built-in">Node.js filesystem module for reading migration files</package>
+        <package name="path" version="built-in" scope="built-in">Node.js path module for resolving migration file paths</package>
+      </node>
+      <external>
+        <service name="Neon PostgreSQL" version="17.0">Target database for migrations - dev, staging, production databases</service>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface id="INT-1">
+      <name>Migration CLI Commands</name>
+      <kind>CLI - npm scripts</kind>
+      <signature>
+# Apply pending migrations
+npm run migrate:up
+
+# Rollback last migration
+npm run migrate:down
+
+# Show migration status
+npm run migrate:status
+
+# Create new migration
+npm run migrate:create migration_name
+
+# Environment-specific migration
+DATABASE_URL="postgresql://..." npm run migrate:up
+      </signature>
+      <path>scripts/migrate.js</path>
+      <notes>All commands require DATABASE_URL environment variable. Commands exit with code 0 on success, non-zero on failure. Migrations applied in timestamp order.</notes>
+    </interface>
+    <interface id="INT-2">
+      <name>Migration File Format</name>
+      <kind>File Structure Convention</kind>
+      <signature>
+# Forward migration
+migrations/${timestamp}_${name}.up.sql
+
+# Rollback migration
+migrations/${timestamp}_${name}.down.sql
+
+# Example
+migrations/20231106120000_create_users_table.up.sql
+migrations/20231106120000_create_users_table.down.sql
+
+# Timestamp format: YYYYMMDDHHMMSS
+# Name format: lowercase_with_underscores
+      </signature>
+      <path>migrations/</path>
+      <notes>Migrations sorted and applied in alphabetical (timestamp) order. Each migration must have both .up.sql (forward) and .down.sql (rollback) files.</notes>
+    </interface>
+    <interface id="INT-3">
+      <name>schema_migrations Table Schema</name>
+      <kind>Database Table Structure</kind>
+      <signature>
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version VARCHAR(255) PRIMARY KEY,       -- Migration filename without extension
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  description TEXT                        -- Optional description
+);
+
+-- Example data
+INSERT INTO schema_migrations (version, description) 
+VALUES ('20231106120000_create_users_table', 'Initial user tables');
+      </signature>
+      <path>migrations/000_create_schema_migrations.sql</path>
+      <notes>This table tracks which migrations have been applied. Created automatically by migrate:up on first run. Version field stores migration filename without .up.sql extension.</notes>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint id="CONS-1" type="architecture">
+      <title>SQL-Based Migrations (No ORM)</title>
+      <description>Use raw SQL files for migrations, not ORM migration tools. Keep migrations simple and readable. Prefer explicit SQL over abstractions. Custom Node.js script for migration execution.</description>
+      <source>docs/3-solutioning/architecture.md - Database Migration Strategy</source>
+    </constraint>
+    <constraint id="CONS-2" type="architecture">
+      <title>Migration Tracking via schema_migrations Table</title>
+      <description>Use schema_migrations table to track migration state. Never run same migration twice. Apply migrations in timestamp order. Store version (filename), applied_at timestamp, and optional description.</description>
+      <source>docs/tech-spec-epic-2.md - Migration System</source>
+    </constraint>
+    <constraint id="CONS-3" type="security">
+      <title>DATABASE_URL Required for Migrations</title>
+      <description>Require DATABASE_URL environment variable to be set before running migrations. Warn when running against production database (check for 'prd' or 'production' in URL). Log target database (masked credentials) to confirm environment.</description>
+      <source>docs/2-planning/PRD.md - NFR-3: Security</source>
+    </constraint>
+    <constraint id="CONS-4" type="reliability">
+      <title>Rollback Support Required</title>
+      <description>Every migration must have corresponding rollback (.down.sql file). Test rollback in dev before production. Only rollback one migration at a time for safety. Rollback should reverse all changes made by forward migration.</description>
+      <source>docs/tech-spec-epic-2.md - Reliability Requirements</source>
+    </constraint>
+    <constraint id="CONS-5" type="reliability">
+      <title>Idempotent Migrations</title>
+      <description>Migrations should be idempotent (can be run multiple times safely). Use CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, etc. Check for existence before modifying schema. Handle case where migration already partially applied.</description>
+      <source>docs/tech-spec-epic-2.md - Zero Downtime Migrations</source>
+    </constraint>
+    <constraint id="CONS-6" type="architecture">
+      <title>Manual Migrations for MVP</title>
+      <description>Migrations run manually via CLI for MVP (not automated in CI/CD). Developer sets DATABASE_URL for target environment and runs migrate:up. Automated migrations can be added post-MVP if needed.</description>
+      <source>docs/tech-spec-epic-2.md - Migration Workflow</source>
+    </constraint>
+    <constraint id="CONS-7" type="reliability">
+      <title>Fail-Fast on Migration Errors</title>
+      <description>If migration fails, stop immediately (don't continue with remaining migrations). Log full error details. Exit with non-zero code. Do not insert failed migration into schema_migrations table.</description>
+      <source>docs/tech-spec-epic-2.md - Error Handling</source>
+    </constraint>
+    <constraint id="CONS-8" type="documentation">
+      <title>Migration Documentation Required</title>
+      <description>Document migration commands in README or docs/DATABASE.md. Document workflow for each environment (dev, staging, production). Document best practices and naming conventions. Add troubleshooting section for common issues.</description>
+      <source>docs/3-solutioning/architecture.md - Documentation Standards</source>
+    </constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      <summary>Manual testing approach for migration system. Create test migration, apply, verify table created, rollback, verify table dropped. Test all CLI commands (create, up, down, status). Verify schema_migrations table tracking. No automated tests required for MVP - focus on manual verification and clear error messages.</summary>
+      <framework>Manual CLI testing with npm run migrate:* commands and psql verification</framework>
+      <location>Manual testing only (no test files). Optional test migration created in migrations/ during testing, then deleted.</location>
+    </standards>
+
+    <locations>
+      <location>Manual testing only for this story (no automated test files)</location>
+    </locations>
+
+    <ideas>
+      <test-idea id="TEST-1" maps-to="AC-1">
+        <title>Test Migration Creation</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Run: npm run migrate:create test_table
+          2. Expected: Two files created in migrations/ directory
+          3. Verify filenames: [timestamp]_test_table.up.sql and [timestamp]_test_table.down.sql
+          4. Verify timestamp format: YYYYMMDDHHMMSS (14 digits)
+          5. Open files and verify template content with comments
+          6. Expected: Template includes example SQL and instructions
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-2" maps-to="AC-1, AC-2">
+        <title>Test Migration Application (migrate:up)</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Edit [timestamp]_test_table.up.sql with: CREATE TABLE test_table (id SERIAL PRIMARY KEY, name VARCHAR(255), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+          2. Set DATABASE_URL for dev environment: export DATABASE_URL="postgresql://..."
+          3. Run: npm run migrate:up
+          4. Expected: Console output shows "Applying [timestamp]_test_table..." and "✅ applied"
+          5. Verify table created: psql $DATABASE_URL -c "\dt" (should show test_table)
+          6. Verify schema_migrations: psql $DATABASE_URL -c "SELECT * FROM schema_migrations" (should show test_table migration)
+          7. Run migrate:up again: Expected "already applied" message, no error
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-3" maps-to="AC-1">
+        <title>Test Migration Status Display</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. After applying test_table migration (TEST-2)
+          2. Run: npm run migrate:status
+          3. Expected: Console output shows migration list with checkmarks
+          4. Should show: ✅ [timestamp]_test_table (applied [date/time])
+          5. Create another migration: npm run migrate:create second_test
+          6. Run: npm run migrate:status
+          7. Expected: Shows test_table as applied ✅, second_test as pending ❌
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-4" maps-to="AC-1">
+        <title>Test Migration Rollback (migrate:down)</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Edit [timestamp]_test_table.down.sql with: DROP TABLE IF EXISTS test_table;
+          2. Run: npm run migrate:down
+          3. Expected: Console output shows "Rolling back [timestamp]_test_table..." and "✅ rolled back"
+          4. Verify table dropped: psql $DATABASE_URL -c "\dt" (should NOT show test_table)
+          5. Verify schema_migrations: psql $DATABASE_URL -c "SELECT * FROM schema_migrations" (should NOT show test_table)
+          6. Run migrate:down again with no migrations: Expected "No migrations to rollback" message
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-5" maps-to="AC-1">
+        <title>Test Migration Ordering</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Create three migrations with different timestamps:
+             - npm run migrate:create first_migration
+             - Wait 1 second
+             - npm run migrate:create second_migration
+             - Wait 1 second
+             - npm run migrate:create third_migration
+          2. Edit all .up.sql files with simple CREATE TABLE statements (unique table names)
+          3. Run: npm run migrate:up
+          4. Expected: Migrations applied in timestamp order (first, second, third)
+          5. Verify console output shows correct order
+          6. Verify schema_migrations shows correct order (ORDER BY version)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-6" maps-to="AC-2">
+        <title>Test DATABASE_URL Requirement</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Unset DATABASE_URL: unset DATABASE_URL
+          2. Run: npm run migrate:up
+          3. Expected: Error message "❌ DATABASE_URL environment variable is required"
+          4. Expected: Script exits with non-zero code
+          5. Verify migration did not run (no changes to database)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-7" maps-to="AC-1">
+        <title>Test Migration Error Handling</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Create migration with invalid SQL: npm run migrate:create invalid_sql
+          2. Edit .up.sql with intentional syntax error: "SELECT FROM invalid syntax"
+          3. Run: npm run migrate:up
+          4. Expected: Error message showing SQL error details
+          5. Expected: Migration NOT recorded in schema_migrations
+          6. Expected: Script exits with non-zero code
+          7. Fix SQL in .up.sql file
+          8. Run migrate:up again: Expected: Migration applies successfully this time
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-8" maps-to="AC-2">
+        <title>Test Production Warning</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set DATABASE_URL with 'production' or 'prd' in string: export DATABASE_URL="postgresql://...production..."
+          2. Run: npm run migrate:up (or any migration command)
+          3. Expected: Console warning "⚠️ WARNING: Running against PRODUCTION database!"
+          4. Expected: Masked DATABASE_URL displayed (password hidden)
+          5. Migration should still run (warning only, not blocking)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-9" maps-to="AC-2">
+        <title>Test schema_migrations Table Bootstrap</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Connect to fresh Neon dev database with no tables
+          2. Run: npm run migrate:up (with any migration file present)
+          3. Expected: schema_migrations table created automatically
+          4. Verify: psql $DATABASE_URL -c "\d schema_migrations"
+          5. Expected: Table has columns: version (VARCHAR 255 PK), applied_at (TIMESTAMP), description (TEXT)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-10" maps-to="AC-1, AC-2">
+        <title>End-to-End Migration Workflow Test</title>
+        <approach>Manual Full Workflow Test</approach>
+        <steps>
+          1. Start with clean database (no migrations applied)
+          2. Create migration: npm run migrate:create create_users
+          3. Edit .up.sql: CREATE TABLE users (id SERIAL PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL)
+          4. Edit .down.sql: DROP TABLE IF EXISTS users
+          5. Check status: npm run migrate:status (should show pending)
+          6. Apply migration: npm run migrate:up
+          7. Verify table exists: psql $DATABASE_URL -c "\d users"
+          8. Check status: npm run migrate:status (should show applied)
+          9. Test idempotency: npm run migrate:up again (should skip, no error)
+          10. Rollback: npm run migrate:down
+          11. Verify table dropped: psql $DATABASE_URL -c "\d users" (should show "relation does not exist")
+          12. Re-apply: npm run migrate:up (should work again)
+          13. Clean up: Delete migration files from migrations/ directory
+        </steps>
+      </test-idea>
+    </ideas>
+  </tests>
+
+  <dev-notes>
+    <technical-context>
+      <note id="NOTE-1">
+        <title>Custom Migration Script Approach</title>
+        <content>This story uses custom Node.js migration script (scripts/migrate.js) for MVP simplicity and full control. Alternative: node-pg-migrate (SQL-based, lightweight) or Prisma Migrate (ORM-based, heavyweight). Custom script chosen for: no additional dependencies, explicit control, easy to understand and modify, SQL-based (no ORM), perfect for MVP scope.</content>
+      </note>
+      <note id="NOTE-2">
+        <title>Migration File Structure</title>
+        <content>Migrations stored in migrations/ directory with .up.sql (forward) and .down.sql (rollback) suffixes. Filename format: [timestamp]_[name].up.sql where timestamp is YYYYMMDDHHMMSS (14 digits). Example: 20231106120000_create_users_table.up.sql. Migrations sorted alphabetically (timestamp order) for consistent application order across environments.</content>
+      </note>
+      <note id="NOTE-3">
+        <title>schema_migrations Table</title>
+        <content>Tracks which migrations have been applied. Columns: version (VARCHAR 255 PRIMARY KEY - filename without extension), applied_at (TIMESTAMP DEFAULT CURRENT_TIMESTAMP), description (TEXT - optional). Table created automatically by migrate:up on first run (CREATE TABLE IF NOT EXISTS). Never manually modify this table.</content>
+      </note>
+      <note id="NOTE-4">
+        <title>Migration Script Commands</title>
+        <content>Four commands supported: migrate:up (apply pending migrations in order), migrate:down (rollback last applied migration only), migrate:status (show applied vs pending migrations), migrate:create (generate new migration files with timestamp). All commands require DATABASE_URL environment variable.</content>
+      </note>
+      <note id="NOTE-5">
+        <title>Safety Features</title>
+        <content>DATABASE_URL required (fail if not set). Production warning (warn if URL contains 'prd' or 'production'). Fail-fast on errors (stop on first failure, don't continue). Only rollback one migration at a time (safety). Log target database with masked credentials. Exit codes: 0 on success, non-zero on failure.</content>
+      </note>
+      <note id="NOTE-6">
+        <title>Migration Best Practices</title>
+        <content>Always create rollback migrations (even if you don't plan to use them). Test rollback in dev before production. Prefer additive migrations (add columns, don't drop). Make migrations idempotent (use IF EXISTS / IF NOT EXISTS). One logical change per migration. Never modify applied migrations (create new one instead). Document complex migrations with comments.</content>
+      </note>
+      <note id="NOTE-7">
+        <title>Migration Workflow by Environment</title>
+        <content>Dev: Create migration, edit files, apply to dev, test thoroughly, test rollback. Staging: Apply to staging, validate schema and application. Production: Schedule maintenance window if needed, apply to production, verify health check. Use DATABASE_URL environment variable to target each environment: DATABASE_URL="postgresql://...dev..." npm run migrate:up</content>
+      </note>
+      <note id="NOTE-8">
+        <title>Manual Migrations for MVP</title>
+        <content>Migrations run manually via CLI for MVP (not automated in CI/CD). Developer responsibility to apply migrations before deploying new code. Future enhancement: Automate migrations in GitHub Actions workflow (run before deployment). For MVP, manual approach is simple, explicit, and sufficient.</content>
+      </note>
+    </technical-context>
+
+    <learnings-from-previous-stories>
+      <learning id="LEARN-1">
+        <from-story>Story 2.1 (Neon PostgreSQL Account and Database Setup)</from-story>
+        <status>ready-for-dev</status>
+        <content>Three Neon databases created: role_directory_dev, role_directory_stg, role_directory_prd. DATABASE_URL available for all three environments (stored in Secret Manager for Cloud Run, use .env.local for local dev). Can connect to databases via psql for verification.</content>
+      </learning>
+      <learning id="LEARN-2">
+        <from-story>Story 2.2 (Database Connection Configuration with Zod-Validated Config)</from-story>
+        <status>ready-for-dev</status>
+        <content>Database connection module (lib/db.ts) will exist after Story 2.2 with query() function. Migration script uses @neondatabase/serverless directly (same package as lib/db.ts) for database operations. Configuration module (lib/config.ts) validates DATABASE_URL format.</content>
+      </learning>
+      <learning id="LEARN-3">
+        <from-story>Story 1.1 (Project Initialization)</from-story>
+        <status>Done</status>
+        <content>Project structure established with scripts/ directory (existing scripts: setup-cloud-run-dev.sh, setup-github-actions-sa.sh). @neondatabase/serverless package already installed. npm scripts pattern established in package.json. Can add migrate:* scripts to existing scripts section.</content>
+      </learning>
+    </learnings-from-previous-stories>
+
+    <important-considerations>
+      <consideration id="CONS-A">
+        <title>Foundation for Schema Management</title>
+        <content>This story creates the migration system used for ALL schema changes in Epic 2, 3, and 4. Story 2.4 will create the first real migration (existing role/pricing tables). Critical that migration system is reliable, well-tested, and properly documented.</content>
+      </consideration>
+      <consideration id="CONS-B">
+        <title>Custom Script Simplicity</title>
+        <content>Custom Node.js migration script chosen over node-pg-migrate or Prisma Migrate for MVP simplicity. Approximately 200-300 lines of straightforward JavaScript. Easy to understand, modify, and debug. No magic, no abstractions. Can be replaced with more sophisticated tool post-MVP if needed.</content>
+      </consideration>
+      <consideration id="CONS-C">
+        <title>Manual Migration Execution</title>
+        <content>Migrations run manually via CLI for MVP (developer responsibility). Not automated in CI/CD workflow. Developer must remember to run migrations before deploying code that depends on schema changes. Future enhancement: Add migration step to GitHub Actions workflow (run before deployment).</content>
+      </consideration>
+      <consideration id="CONS-D">
+        <title>Idempotency is Critical</title>
+        <content>Migrations must be idempotent (safe to run multiple times). Use CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, etc. Important if migration partially fails or is interrupted. Prevents errors when re-running migrations. Document this pattern clearly in migration templates and documentation.</content>
+      </consideration>
+      <consideration id="CONS-E">
+        <title>Rollback Testing is Essential</title>
+        <content>Every rollback migration must be tested in dev before production deployment. Common mistake: Write rollback migration but never test it. When production issue occurs, rollback fails. Requirement: Test both forward and rollback for every migration before applying to staging/production.</content>
+      </consideration>
+      <consideration id="CONS-F">
+        <title>One Migration at a Time for Rollback</title>
+        <content>migrate:down only rolls back ONE migration (the last applied). Safety feature to prevent cascading rollbacks. If need to rollback multiple migrations, must run migrate:down multiple times. Intentional design for careful, controlled rollbacks.</content>
+      </consideration>
+    </important-considerations>
+  </dev-notes>
+
+  <references>
+    <reference id="REF-1">
+      <title>node-pg-migrate (Alternative Option)</title>
+      <url>https://github.com/salsita/node-pg-migrate</url>
+      <relevance>SQL-based migration tool for PostgreSQL - alternative to custom script if more features needed post-MVP</relevance>
+    </reference>
+    <reference id="REF-2">
+      <title>PostgreSQL CREATE TABLE Documentation</title>
+      <url>https://www.postgresql.org/docs/17/sql-createtable.html</url>
+      <relevance>Reference for writing migration SQL - CREATE TABLE, indexes, constraints, etc.</relevance>
+    </reference>
+    <reference id="REF-3">
+      <title>PostgreSQL IF EXISTS / IF NOT EXISTS</title>
+      <url>https://www.postgresql.org/docs/17/ddl-depend.html</url>
+      <relevance>Idempotency patterns for migrations - CREATE IF NOT EXISTS, DROP IF EXISTS</relevance>
+    </reference>
+    <reference id="REF-4">
+      <title>Node.js fs Module</title>
+      <url>https://nodejs.org/api/fs.html</url>
+      <relevance>Node.js filesystem API used for reading migration files (fs.readFileSync, fs.readdirSync)</relevance>
+    </reference>
+  </references>
+</story-context>
+
