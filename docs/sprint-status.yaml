@@ -1,0 +1,88 @@
+# Sprint Status Template
+# This tracks implementation progress through Phase 4 (Implementation)
+
+# generated: 2025-11-06
+# project: role-directory
+# project_key: role-directory
+# tracking_system: file-system
+# story_location: {project-root}/docs/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic exists in epic file but not contexted
+#   - contexted: Epic tech context created by *epic-tech-context (required)
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - drafted: Story file created in stories folder by *create-story
+#   - ready-for-dev: Draft approved and story context created by *story-ready
+#   - in-progress: Developer actively working on implementation by *dev-story
+#   - review: Implementation complete, ready for review by *code-review
+#   - done: Story completed by *story-done
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done by *retrospective
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epics should be 'contexted' before stories can be 'drafted'
+# - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
+
+generated: 2025-11-06
+project: role-directory
+project_key: role-directory
+tracking_system: file-system
+story_location: "{project-root}/docs/stories"
+
+development_status:
+  # Epic 1: Foundation & Deployment Pipeline
+  epic-1: contexted
+  1-1-project-initialization-and-structure: done
+  1-2-docker-containerization-setup: done
+  1-3-github-actions-ci-pipeline: done
+  1-4-cloud-run-service-setup-dev: done
+  1-5-github-actions-deployment-to-dev: done
+  1-6-health-check-endpoint: done
+  1-7-cloud-run-service-setup-staging: done
+  1-8-cloud-run-service-setup-production: done
+  1-9-manual-promotion-workflow-dev-staging: done
+  1-10-manual-promotion-workflow-staging-production: done
+  1-11-rollback-documentation-and-testing: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Database Infrastructure & Connectivity
+  epic-2: contexted
+  2-1-neon-postgresql-account-and-database-setup: ready-for-dev
+  2-2-database-connection-configuration-with-zod-validated-config: ready-for-dev
+  2-3-database-schema-migration-setup: ready-for-dev
+  2-4-initial-database-schema-migration: drafted
+  2-5-database-connection-testing-in-health-check: drafted
+  2-6-environment-specific-database-configuration-documentation: drafted
+  epic-2-retrospective: optional
+
+  # Epic 3: Authentication & Access Control
+  epic-3: backlog
+  3-1-neon-auth-project-setup-and-configuration: backlog
+  3-2-neon-auth-sdk-integration: backlog
+  3-3-sign-in-landing-page-with-oauth: backlog
+  3-4-email-whitelist-access-control: backlog
+  3-5-protected-route-middleware: backlog
+  3-6-user-context-display: backlog
+  3-7-session-management-testing-across-cloud-run-instances: backlog
+  3-8-authentication-error-handling-and-user-feedback: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Hello World Dashboard (Stack Validation)
+  epic-4: backlog
+  4-1-dashboard-page-route-and-layout: backlog
+  4-2-database-query-api-route: backlog
+  4-3-dashboard-data-display-component: backlog
+  4-4-query-performance-metric-display: backlog
+  4-5-end-to-end-testing-manual-mvp-validation: backlog
+  4-6-documentation-finalization-readme-and-setup-guides: backlog
+  4-7-cost-monitoring-and-optimization-validation: backlog
+  epic-4-retrospective: optional
+

@@ -1,0 +1,225 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.3</storyId>
+    <title>GitHub Actions CI Pipeline (Lint, Type Check, Build)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-3-github-actions-ci-pipeline.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a GitHub Actions workflow that runs lint, type check, and build on every commit to main</iWant>
+    <soThat>code quality is automatically validated before deployment</soThat>
+    <tasks>
+      - Create GitHub Actions workflow file in .github/workflows/
+      - Add checkout and Node.js 22.x setup stages with caching
+      - Add dependency installation stage (npm ci)
+      - Add linting stage (npm run lint)
+      - Add type checking stage (npm run type-check)
+      - Add build stage (npm run build)
+      - Optimize workflow performance (caching, fail-fast)
+      - Test workflow execution with passing and failing scenarios
+      - Add workflow status badge to README (optional)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Pipeline executes stages in order: Checkout → Setup Node.js 22.x → Install deps (npm ci) → Lint → Type check → Build
+    2. If any stage fails, pipeline stops and reports failure (fail-fast behavior)
+    3. Workflow completes in less than 5 minutes
+    4. Workflow status visible in GitHub pull requests and commits
+    5. Workflow does NOT deploy yet (deployment added in Story 1.5)
+    6. Workflow triggers automatically on push to main branch
+    7. Workflow uses ubuntu-latest runner
+    8. Node.js version 22.x configured with npm caching
+    9. All required scripts exist in package.json (lint, type-check, build)
+    10. Error messages clearly displayed in workflow logs
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.3</title>
+        <section>Story 1.3: GitHub Actions CI Pipeline</section>
+        <snippet>GitHub Actions workflow runs on every commit to main. Sequential stages: lint, type check, build. Failed stage stops pipeline. Completes in under 5 minutes. Workflow status visible in GitHub UI. No deployment yet (Story 1.5).</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-3: CI Pipeline</section>
+        <snippet>GitHub Actions workflow (.github/workflows/ci-cd-dev.yml) triggers on push to main. Stages: Lint → Type Check → Build. Failed stage stops pipeline and reports error. Pipeline completes in less than 5 minutes (build only, no deploy). Workflow status visible in GitHub pull requests and commits.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Workflows and Sequencing - Automated Dev Deployment</section>
+        <snippet>CI/CD workflow stages: Checkout code, Setup Node.js 22.x, Install dependencies (npm ci), Run ESLint, Run TypeScript type check, Build Next.js. Each stage failure stops pipeline with clear error message. Timing: under 10 minutes total (target 5-7 minutes).</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - CI/CD Pattern</title>
+        <section>ADR-004: Deploy from Source with Cloud Build</section>
+        <snippet>GitHub Actions workflows with gcloud CLI deployment. CI/CD Pattern: GitHub Actions for build automation, quality gates (lint, type check), and Cloud Run deployment orchestration. Free tier: 2,000 minutes/month for private repos, unlimited for public.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-4.4: CI/CD Pipeline</section>
+        <snippet>Automated build and quality check pipeline. Trigger: Push to main branch. Stages: Code checkout, dependency install, linting, type checking, build verification. Failed quality check stops deployment. Clear error reporting. Pipeline execution: under 10 minutes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Dependencies - GitHub Actions</section>
+        <snippet>GitHub Actions dependencies: actions/checkout@v4 (checkout source), actions/setup-node@v4 (setup Node.js environment), actions/cache@v4 (cache node_modules for faster builds), google-github-actions/auth@v2 (authenticate with GCP), google-github-actions/setup-gcloud@v2 (setup gcloud CLI).</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-1.2: CI/CD Pipeline Performance</section>
+        <snippet>Target: under 10 minutes total pipeline time (lint → build → deploy → health check). Expected breakdown: Lint + Type Check ~1 minute, Build ~2-3 minutes, Deploy (Cloud Build) ~4-5 minutes, Health Check ~30 seconds. Optimization: Cache node_modules in GitHub Actions using actions/cache.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>package.json</path>
+        <kind>config</kind>
+        <symbol>scripts</symbol>
+        <lines>9-14</lines>
+        <reason>Contains required scripts for CI pipeline: lint, type-check, build. These scripts will be executed by GitHub Actions workflow.</reason>
+      </artifact>
+      <artifact>
+        <path>.eslintrc.json</path>
+        <kind>config</kind>
+        <symbol>eslint-config</symbol>
+        <lines>1-3</lines>
+        <reason>ESLint configuration that npm run lint will use. Extends next/core-web-vitals and prettier.</reason>
+      </artifact>
+      <artifact>
+        <path>tsconfig.json</path>
+        <kind>config</kind>
+        <symbol>typescript-config</symbol>
+        <lines>1-40</lines>
+        <reason>TypeScript configuration that npm run type-check will validate against. Strict mode enabled.</reason>
+      </artifact>
+      <artifact>
+        <path>next.config.ts</path>
+        <kind>config</kind>
+        <symbol>nextConfig</symbol>
+        <lines>1-7</lines>
+        <reason>Next.js configuration used during npm run build. Currently minimal, will be extended in Story 1.2.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <githubActions>
+        <action name="actions/checkout" version="v4" type="ci">Checkout source code from repository</action>
+        <action name="actions/setup-node" version="v4" type="ci">Setup Node.js 22.x environment with npm caching</action>
+        <action name="actions/cache" version="v4" type="ci">Cache node_modules for faster builds (optional, setup-node has built-in caching)</action>
+      </githubActions>
+      <node>
+        <dependency name="next" version="15.0.3" type="runtime">Required for build stage (npm run build)</dependency>
+        <dependency name="eslint" version="9.13.0" type="dev">Required for lint stage</dependency>
+        <dependency name="typescript" version="5.6.3" type="dev">Required for type-check stage</dependency>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST trigger on push to main branch only (no pull request triggers in this story)
+    - MUST execute stages sequentially in order: Checkout → Setup Node.js → Install deps → Lint → Type check → Build
+    - MUST use fail-fast behavior: stop on first error, don't continue to next stage
+    - MUST use ubuntu-latest runner for GitHub Actions
+    - MUST use Node.js 22.x (matching project Node version)
+    - MUST use npm ci (not npm install) for reproducible builds
+    - MUST enable npm caching via actions/setup-node cache parameter
+    - MUST complete in less than 5 minutes total (target: 2-3 minutes with cache)
+    - MUST NOT include deployment stage (deployment added in Story 1.5)
+    - MUST use official GitHub Actions: actions/checkout@v4, actions/setup-node@v4
+    - Workflow file MUST be located at .github/workflows/ci-cd.yml (or ci-cd-dev.yml for consistency with tech spec)
+    - MUST display clear error messages when any stage fails
+    - MUST be visible in GitHub UI (Actions tab, commit status checks)
+    - All required scripts (lint, type-check, build) already exist from Story 1.1
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GitHub Actions Workflow Interface</name>
+      <kind>CI/CD Pipeline</kind>
+      <signature>
+        Trigger: push to main branch
+        Runner: ubuntu-latest
+        Node Version: 22.x
+        Stages:
+          1. Checkout (actions/checkout@v4)
+          2. Setup Node.js (actions/setup-node@v4 with cache: npm)
+          3. Install deps (npm ci)
+          4. Lint (npm run lint)
+          5. Type check (npm run type-check)
+          6. Build (npm run build)
+        Outputs:
+          - Workflow status (success/failure)
+          - Build artifacts (.next directory)
+          - Error logs (if failure)
+      </signature>
+      <path>.github/workflows/ci-cd.yml</path>
+    </interface>
+    <interface>
+      <name>Package.json Scripts Interface</name>
+      <kind>npm scripts</kind>
+      <signature>
+        npm run lint → next lint (ESLint check)
+        npm run type-check → tsc --noEmit (TypeScript validation)
+        npm run build → next build (Production build)
+      </signature>
+      <path>package.json</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing only for Epic 1. Automated tests (Vitest, Playwright) deferred to Phase 2. Focus on verification: commit workflow file, verify execution in GitHub Actions tab, test failure scenarios (introduce lint error, verify pipeline fails), verify success scenarios (fix error, verify pipeline passes), check execution time under 5 minutes.
+    </standards>
+    <locations>
+      - .github/workflows/ci-cd.yml (workflow file to be created)
+      - GitHub Actions tab in repository UI (workflow execution logs)
+      - No test files for this story (CI/CD infrastructure setup)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify stages execute in correct order">
+        Manual: Commit workflow file. Navigate to GitHub Actions tab. Verify stages appear in order: Checkout → Setup Node → Install deps → Lint → Type check → Build. Check workflow logs show each stage executing sequentially.
+      </test>
+      <test id="AC-2" desc="Verify fail-fast behavior">
+        Manual: Introduce deliberate lint error in app/page.tsx (e.g., unused variable). Commit to main. Verify pipeline stops at lint stage with failure. Check type-check and build stages do NOT execute.
+      </test>
+      <test id="AC-3" desc="Verify workflow completes in under 5 minutes">
+        Manual: Fix lint error. Commit to main. Time workflow execution from start to completion. First run (no cache) should be 3-5 minutes. Second run (with cache) should be 2-3 minutes. Verify under 5 minute target met.
+      </test>
+      <test id="AC-4" desc="Verify workflow status visible in GitHub">
+        Manual: After commit, check commit status shows green checkmark (passing) or red X (failing). Navigate to GitHub Actions tab, verify workflow appears with status. Check workflow is named correctly.
+      </test>
+      <test id="AC-5" desc="Verify no deployment stage">
+        Manual: Review workflow file. Confirm no gcloud deployment commands. Confirm no Cloud Run deployment steps. Workflow should only build, not deploy.
+      </test>
+      <test id="AC-6" desc="Verify automatic trigger on push to main">
+        Manual: Make trivial change (add comment). Commit and push to main. Verify workflow triggers automatically without manual intervention. Check workflow run appears in Actions tab immediately.
+      </test>
+      <test id="AC-7" desc="Verify ubuntu-latest runner">
+        Manual: Check workflow logs. Verify runner shows ubuntu-latest (or specific Ubuntu version like ubuntu-22.04). Confirm Linux environment.
+      </test>
+      <test id="AC-8" desc="Verify Node.js 22.x and npm caching">
+        Manual: Check workflow logs for "Setup Node.js" stage. Verify Node version 22.x installed. Check for cache restoration message (e.g., "Cache restored from key: ..."). Second run should show cache hit.
+      </test>
+      <test id="AC-9" desc="Verify all scripts exist and work">
+        Manual: Review package.json, confirm lint, type-check, build scripts present. Run locally: npm run lint (passes), npm run type-check (passes), npm run build (succeeds). Verify same commands work in CI.
+      </test>
+      <test id="AC-10" desc="Verify error messages displayed">
+        Manual: Introduce TypeScript error (e.g., wrong type). Commit. Check workflow logs show clear TypeScript error message with file and line number. Verify error is actionable.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

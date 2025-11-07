@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<story-context>
+  <metadata>
+    <story-id>1.11</story-id>
+    <story-key>1-11-rollback-documentation-and-testing</story-key>
+    <story-title>Rollback Documentation and Testing</story-title>
+    <epic-id>1</epic-id>
+    <status>ready-for-dev</status>
+    <generated-date>2025-11-06</generated-date>
+  </metadata>
+
+  <user-story>
+    <as-a>DevOps engineer</as-a>
+    <i-want>comprehensive rollback documentation and tested procedures</i-want>
+    <so-that>I can quickly recover from failed deployments or production issues in any environment with confidence</so-that>
+  </user-story>
+
+  <acceptance-criteria>
+    <criterion id="AC-1">
+      <description>Documented procedures include how to identify available Cloud Run revisions for rollback</description>
+      <verification>ROLLBACK.md contains gcloud commands to list revisions with example output</verification>
+    </criterion>
+    <criterion id="AC-2">
+      <description>Command to rollback via gcloud CLI documented: gcloud run services update-traffic</description>
+      <verification>ROLLBACK.md contains complete commands for dev, staging, production with placeholders</verification>
+    </criterion>
+    <criterion id="AC-3">
+      <description>How to rollback via GCP Console documented with UI instructions</description>
+      <verification>ROLLBACK.md contains step-by-step UI instructions with screenshots or detailed descriptions</verification>
+    </criterion>
+    <criterion id="AC-4">
+      <description>How to verify rollback was successful documented (health check + manual testing)</description>
+      <verification>ROLLBACK.md contains verification checklist with curl commands and expected outputs</verification>
+    </criterion>
+    <criterion id="AC-5">
+      <description>How to identify which image/revision to rollback to documented</description>
+      <verification>ROLLBACK.md contains decision guide with questions to ask and commands to identify target</verification>
+    </criterion>
+    <criterion id="AC-6">
+      <description>Expected rollback time documented (&lt;2 minutes for Cloud Run traffic shift)</description>
+      <verification>ROLLBACK.md contains timeline breakdown: CLI method, Console method, verification time</verification>
+    </criterion>
+    <criterion id="AC-7">
+      <description>Rollback procedures documented in docs/ROLLBACK.md</description>
+      <verification>File exists at docs/ROLLBACK.md with complete content</verification>
+    </criterion>
+    <criterion id="AC-8">
+      <description>Rollback has been tested at least once in the dev environment</description>
+      <verification>Test results documented in ROLLBACK.md with actual rollback time measured</verification>
+    </criterion>
+    <criterion id="AC-9">
+      <description>Rollback testing results documented (what worked, any issues)</description>
+      <verification>ROLLBACK.md contains "Rollback Testing Results" section with date, versions, time, issues</verification>
+    </criterion>
+    <criterion id="AC-10">
+      <description>Database migration rollback considerations noted</description>
+      <verification>ROLLBACK.md contains "Database Migration Rollback" section with scenarios table</verification>
+    </criterion>
+    <criterion id="AC-11">
+      <description>Rollback procedures include troubleshooting section for common issues</description>
+      <verification>ROLLBACK.md contains troubleshooting section with 5+ common issues and solutions</verification>
+    </criterion>
+    <criterion id="AC-12">
+      <description>Rollback procedures linked from main README</description>
+      <verification>README.md contains link to docs/ROLLBACK.md in Deployment/Operations section</verification>
+    </criterion>
+  </acceptance-criteria>
+
+  <story-tasks>
+    <task id="T1" status="pending">
+      <description>Create rollback documentation file (AC-7: docs/ROLLBACK.md exists)</description>
+      <subtasks>
+        <subtask>Create file: docs/ROLLBACK.md</subtask>
+        <subtask>Add document title: "Rollback Procedures"</subtask>
+        <subtask>Add table of contents</subtask>
+        <subtask>Add introduction: Purpose, when to rollback, prerequisites</subtask>
+        <subtask>Add sections: Dev, Staging, Production rollback procedures</subtask>
+        <subtask>Add troubleshooting section</subtask>
+        <subtask>Add references to related documentation</subtask>
+      </subtasks>
+    </task>
+    <task id="T2" status="pending">
+      <description>Document how to identify available revisions (AC-1: Clear instructions)</description>
+      <subtasks>
+        <subtask>Document command: gcloud run revisions list --service=[SERVICE_NAME] --region=[REGION]</subtask>
+        <subtask>Document output columns: REVISION, ACTIVE, SERVICE, DEPLOYED_BY, DEPLOYED_AT</subtask>
+        <subtask>Document how to identify current revision (marked ACTIVE)</subtask>
+        <subtask>Document how to identify previous revision (most recent non-active)</subtask>
+        <subtask>Document how to get revision image tag with gcloud run revisions describe</subtask>
+        <subtask>Add example output with annotations</subtask>
+        <subtask>Document via GCP Console: Navigate to Cloud Run → Service → Revisions tab</subtask>
+      </subtasks>
+    </task>
+    <task id="T3" status="pending">
+      <description>Document rollback via gcloud CLI (AC-2: Complete gcloud commands)</description>
+      <subtasks>
+        <subtask>Document traffic shift command for dev: gcloud run services update-traffic role-directory-dev</subtask>
+        <subtask>Document traffic shift command for staging: gcloud run services update-traffic role-directory-staging</subtask>
+        <subtask>Document traffic shift command for production: gcloud run services update-traffic role-directory-production</subtask>
+        <subtask>Document how to find [REVISION] name from previous task</subtask>
+        <subtask>Document expected output and success indicators</subtask>
+        <subtask>Document verification command: gcloud run services describe [SERVICE]</subtask>
+        <subtask>Add notes: Traffic shift is instant, no downtime, previous revision keeps running</subtask>
+      </subtasks>
+    </task>
+    <task id="T4" status="pending">
+      <description>Document rollback via GCP Console (AC-3: Step-by-step UI instructions)</description>
+      <subtasks>
+        <subtask>Document 10-step UI workflow: Navigate → Select → Revisions tab → Manage Traffic → Save</subtask>
+        <subtask>Add screenshots or detailed descriptions for each step</subtask>
+        <subtask>Document verification: Check "Active revision" indicator</subtask>
+        <subtask>Note: UI method and CLI method achieve the same result</subtask>
+      </subtasks>
+    </task>
+    <task id="T5" status="pending">
+      <description>Document rollback verification steps (AC-4: Clear verification checklist)</description>
+      <subtasks>
+        <subtask>Document 7-step verification: Traffic shifted → Health check → Manual testing → Logs → Monitor</subtask>
+        <subtask>Document health check for dev (public): curl -f [SERVICE_URL]/api/health</subtask>
+        <subtask>Document health check for staging/production (IAM): curl with Bearer token</subtask>
+        <subtask>Document expected verification time: &lt;5 minutes</subtask>
+        <subtask>Document what to do if verification fails</subtask>
+      </subtasks>
+    </task>
+    <task id="T6" status="pending">
+      <description>Document how to identify rollback target (AC-5: Decision guide)</description>
+      <subtasks>
+        <subtask>Document questions: When did issue start? Last known good revision? Database migrations involved?</subtask>
+        <subtask>Document how to find revision deployment time with gcloud run revisions describe</subtask>
+        <subtask>Document how to correlate with GitHub Actions deployments</subtask>
+        <subtask>Document recommendation: Rollback to most recent known good revision</subtask>
+      </subtasks>
+    </task>
+    <task id="T7" status="pending">
+      <description>Document expected rollback timeline (AC-6: Time estimates documented)</description>
+      <subtasks>
+        <subtask>Document CLI traffic shift: &lt;1 minute</subtask>
+        <subtask>Document GCP Console traffic shift: 1-2 minutes</subtask>
+        <subtask>Document verification: 2-5 minutes</subtask>
+        <subtask>Document total rollback time: 3-7 minutes</subtask>
+        <subtask>Document zero-downtime: Previous revision keeps running</subtask>
+        <subtask>Note: Faster than redeployment (~3-5 minutes vs. ~5-10 minutes)</subtask>
+      </subtasks>
+    </task>
+    <task id="T8" status="pending">
+      <description>Test rollback in dev environment (AC-8: Rollback tested successfully)</description>
+      <subtasks>
+        <subtask>Prerequisites: Dev environment deployed (Story 1.5)</subtask>
+        <subtask>Deploy version 1 to dev: Record v1 revision and behavior</subtask>
+        <subtask>Deploy version 2 to dev: Record v2 revision and behavior</subtask>
+        <subtask>Perform rollback from v2 to v1: Execute gcloud run services update-traffic</subtask>
+        <subtask>Verify rollback: Health check passes, v1 behavior restored</subtask>
+        <subtask>Measure rollback time: Record actual time</subtask>
+        <subtask>Document test results in ROLLBACK.md</subtask>
+      </subtasks>
+    </task>
+    <task id="T9" status="pending">
+      <description>Document rollback test results (AC-9: Test results documented)</description>
+      <subtasks>
+        <subtask>Add section: "Rollback Testing Results"</subtask>
+        <subtask>Document: Environment, date, versions, rollback method, time, verification, issues</subtask>
+        <subtask>Document lessons learned</subtask>
+        <subtask>Document any adjustments made to procedures</subtask>
+      </subtasks>
+    </task>
+    <task id="T10" status="pending">
+      <description>Add database migration rollback notes (AC-10: Database considerations noted)</description>
+      <subtasks>
+        <subtask>Add section: "Database Migration Rollback"</subtask>
+        <subtask>Document scenarios: Application-only rollback vs. Database + application rollback</subtask>
+        <subtask>Document table: Bug in logic (app only), New column (app only), Renamed column (both), etc.</subtask>
+        <subtask>Document recommendation: Design migrations to be backward-compatible</subtask>
+        <subtask>Note: Detailed database migration rollback covered in Epic 2</subtask>
+      </subtasks>
+    </task>
+    <task id="T11" status="pending">
+      <description>Add troubleshooting section (AC-11: Common issues and solutions documented)</description>
+      <subtasks>
+        <subtask>Add section: "Troubleshooting Rollback Issues"</subtask>
+        <subtask>Document Issue 1: Permission denied → Solution: Verify IAM permissions</subtask>
+        <subtask>Document Issue 2: Health check fails → Solution: Check logs, verify revision</subtask>
+        <subtask>Document Issue 3: Cannot find revision → Solution: Check retention policy</subtask>
+        <subtask>Document Issue 4: Issue persists → Solution: Database-related or upstream</subtask>
+        <subtask>Document Issue 5: Split traffic → Solution: Consolidate to single revision</subtask>
+        <subtask>Add references to Cloud Run documentation</subtask>
+      </subtasks>
+    </task>
+    <task id="T12" status="pending">
+      <description>Link rollback documentation from README (AC-12: ROLLBACK.md linked)</description>
+      <subtasks>
+        <subtask>Open README.md</subtask>
+        <subtask>Add section: "Deployment and Operations" (if not exists)</subtask>
+        <subtask>Add link: [Rollback Procedures](docs/ROLLBACK.md)</subtask>
+        <subtask>Add description: Instructions for rolling back deployments in all environments</subtask>
+      </subtasks>
+    </task>
+    <task id="T13" status="pending">
+      <description>Review and validate documentation completeness (AC: All criteria covered)</description>
+      <subtasks>
+        <subtask>Review ROLLBACK.md against all 12 acceptance criteria</subtask>
+        <subtask>Have another team member review for clarity</subtask>
+        <subtask>Make revisions based on feedback</subtask>
+        <subtask>Mark story complete when all criteria met</subtask>
+      </subtasks>
+    </task>
+  </story-tasks>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification: Foundation &amp; Deployment Pipeline</title>
+        <section>AC-11: Rollback Documentation and Testing</section>
+        <snippet>Comprehensive rollback documentation with CLI and Console procedures, verification steps, testing results, and database migration considerations. Expected rollback time &lt;2 minutes for Cloud Run traffic shift.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.8: Rollback Procedures</section>
+        <snippet>Documented rollback procedures for all environments with step-by-step instructions, expected timelines, and troubleshooting guidance. Infrastructure validation is core goal.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Cloud Run Revision Management</section>
+        <snippet>Cloud Run revisions are immutable snapshots of service configuration and container image. Traffic splitting enables instant zero-downtime rollback by shifting traffic to previous revision.</snippet>
+      </doc>
+      <doc>
+        <path>docs/CLOUD_RUN_SETUP.md</path>
+        <title>Cloud Run Service Setup Guide</title>
+        <section>Environment Setup</section>
+        <snippet>Step-by-step instructions for setting up Cloud Run services across dev, staging, and production environments with gcloud CLI commands and configuration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-4-cloud-run-service-setup-dev.md</path>
+        <title>Story 1.4: Cloud Run Service Setup (Dev Environment)</title>
+        <section>Dev Cloud Run Service</section>
+        <snippet>Dev environment (role-directory-dev) configured with public access, environment variables, and auto-scaling (0-10 instances). Creates revisions for rollback testing.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-5-github-actions-deployment-to-dev.md</path>
+        <title>Story 1.5: GitHub Actions Deployment to Dev</title>
+        <section>Automated Deployment</section>
+        <snippet>Automated CI/CD deployment to dev environment creates new Cloud Run revisions on every commit to main. Health check validates deployment success.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-6-health-check-endpoint.md</path>
+        <title>Story 1.6: Health Check Endpoint</title>
+        <section>Health Check API</section>
+        <snippet>Public endpoint at /api/health returns JSON status for deployment verification. Used by GitHub Actions and manual rollback verification.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>app/api/health/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET</symbol>
+        <lines>1-66</lines>
+        <reason>Health check endpoint used for rollback verification. Returns {"status":"ok","timestamp":"..."} on success. Public endpoint, no authentication required.</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/setup-cloud-run-dev.sh</path>
+        <kind>script</kind>
+        <symbol>setup-cloud-run-dev.sh</symbol>
+        <lines>full-file</lines>
+        <reason>Script for creating dev Cloud Run service. Reference for understanding service configuration and revision creation.</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/setup-cloud-run-staging.sh</path>
+        <kind>script</kind>
+        <symbol>setup-cloud-run-staging.sh</symbol>
+        <lines>full-file</lines>
+        <reason>Script for creating staging Cloud Run service. Reference for staging rollback procedures.</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/setup-cloud-run-production.sh</path>
+        <kind>script</kind>
+        <symbol>setup-cloud-run-production.sh</symbol>
+        <lines>full-file</lines>
+        <reason>Script for creating production Cloud Run service. Reference for production rollback procedures.</reason>
+      </artifact>
+      <artifact>
+        <path>.github/workflows/ci-cd-dev.yml</path>
+        <kind>github-action</kind>
+        <symbol>ci-cd-dev workflow</symbol>
+        <lines>full-file</lines>
+        <reason>CI/CD workflow that creates new revisions on deployment. Understanding how revisions are created helps document rollback procedures.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="next" version="15.0.3">Next.js framework for web application</package>
+        <package name="react" version="18.3.1">React library for UI</package>
+        <package name="typescript" version="5.6.3">TypeScript for type safety</package>
+      </node>
+      <gcloud>
+        <tool name="gcloud CLI" version="latest">Google Cloud SDK for Cloud Run management and rollback commands</tool>
+        <tool name="Cloud Run" version="gen2">Serverless container platform with revision management and traffic splitting</tool>
+        <tool name="Artifact Registry" version="latest">Docker image storage for versioned container images</tool>
+      </gcloud>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>Health Check Endpoint</name>
+      <kind>REST-API</kind>
+      <signature>GET /api/health → {status: "ok"|"error", timestamp: string, database?: string}</signature>
+      <path>app/api/health/route.ts</path>
+      <notes>Public endpoint for rollback verification. Returns 200 OK on success, 500 on error. Used by GitHub Actions and manual verification.</notes>
+    </interface>
+    <interface>
+      <name>gcloud run revisions list</name>
+      <kind>CLI-command</kind>
+      <signature>gcloud run revisions list --service=[SERVICE] --region=[REGION] --limit=10</signature>
+      <path>N/A (gcloud CLI)</path>
+      <notes>Lists available Cloud Run revisions with ACTIVE status, deployment time, and image. Use to identify rollback target.</notes>
+    </interface>
+    <interface>
+      <name>gcloud run services update-traffic</name>
+      <kind>CLI-command</kind>
+      <signature>gcloud run services update-traffic [SERVICE] --region=[REGION] --to-revisions=[REVISION]=100</signature>
+      <path>N/A (gcloud CLI)</path>
+      <notes>Shifts 100% traffic to specified revision. Instant zero-downtime rollback. Previous revision keeps running.</notes>
+    </interface>
+    <interface>
+      <name>gcloud run revisions describe</name>
+      <kind>CLI-command</kind>
+      <signature>gcloud run revisions describe [REVISION] --region=[REGION] --format="value(spec.containers[0].image)"</signature>
+      <path>N/A (gcloud CLI)</path>
+      <notes>Gets container image for a revision. Use to identify which code version is in each revision.</notes>
+    </interface>
+    <interface>
+      <name>gcloud run services describe</name>
+      <kind>CLI-command</kind>
+      <signature>gcloud run services describe [SERVICE] --region=[REGION] --format="value(status.traffic)"</signature>
+      <path>N/A (gcloud CLI)</path>
+      <notes>Verifies traffic split and active revision. Use after rollback to confirm traffic shifted successfully.</notes>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint>
+      <type>documentation-quality</type>
+      <description>Step-by-step instructions with clear commands, placeholders marked with [BRACKETS], expected outputs shown, screenshots or detailed UI descriptions provided</description>
+      <source>PRD FR-6.8, Epic 1 Tech Spec AC-11</source>
+    </constraint>
+    <constraint>
+      <type>environment-specific</type>
+      <description>Separate rollback instructions for dev, staging, and production with correct service names (role-directory-dev, role-directory-staging, role-directory-production)</description>
+      <source>Architecture document, CLOUD_RUN_SETUP.md</source>
+    </constraint>
+    <constraint>
+      <type>verification-required</type>
+      <description>Always verify rollback succeeded with health check, manual testing, and log monitoring. Document verification steps clearly.</description>
+      <source>Architecture document, PRD NFR-2</source>
+    </constraint>
+    <constraint>
+      <type>testing-required</type>
+      <description>Test rollback in dev environment before documenting. Measure actual rollback time. Document test results with date, versions, time, and issues.</description>
+      <source>PRD NFR-2, Epic 1 Tech Spec AC-11</source>
+    </constraint>
+    <constraint>
+      <type>database-awareness</type>
+      <description>Note database migration rollback considerations. Distinguish application-only rollback from database + application rollback. Reference Epic 2 for detailed database procedures.</description>
+      <source>Architecture document, Epic 2 scope</source>
+    </constraint>
+    <constraint>
+      <type>troubleshooting-coverage</type>
+      <description>Document common rollback issues (permission denied, health check fails, revision not found, issue persists, split traffic) with clear solutions and external references</description>
+      <source>User experience, operational excellence</source>
+    </constraint>
+    <constraint>
+      <type>documentation-location</type>
+      <description>Rollback documentation must be in docs/ROLLBACK.md and linked from main README.md in Deployment/Operations section</description>
+      <source>Epic 1 Tech Spec AC-11, project structure conventions</source>
+    </constraint>
+    <constraint>
+      <type>no-code-changes</type>
+      <description>This is a documentation-only story. No code changes required. Testing uses existing dev deployment from Story 1.5.</description>
+      <source>Epic 1 Tech Spec AC-11, story definition</source>
+    </constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      <paragraph>This story requires manual testing of rollback procedures in the dev environment. Create two distinct versions (v1 and v2) with visible differences (e.g., health endpoint returns different data). Deploy both to dev, then execute rollback from v2 to v1 using gcloud CLI. Measure actual rollback time from command execution to verified traffic shift. Verify rollback succeeded by: (1) checking traffic allocation with gcloud run services describe, (2) running health check against service URL, (3) confirming v1 behavior restored (not v2). Document all test results including date, versions, rollback method, actual time, verification steps, and any issues encountered. Expected rollback time: &lt;1 minute for traffic shift, &lt;5 minutes total including verification. No automated tests required for this documentation-focused story.</paragraph>
+    </standards>
+    <locations>
+      <location>N/A - Documentation-only story with manual testing</location>
+    </locations>
+    <ideas>
+      <idea criterion-id="AC-1">
+        <description>Verify "Identify Available Revisions" section in ROLLBACK.md contains gcloud run revisions list command with example output showing REVISION, ACTIVE, DEPLOYED_AT columns</description>
+      </idea>
+      <idea criterion-id="AC-2">
+        <description>Verify "Rollback via gcloud CLI" section contains complete update-traffic commands for all three environments (dev, staging, production) with correct service names and region</description>
+      </idea>
+      <idea criterion-id="AC-3">
+        <description>Verify "Rollback via GCP Console" section contains 10-step UI workflow with screenshots or detailed descriptions: Navigate → Service → Revisions → Manage Traffic → Save</description>
+      </idea>
+      <idea criterion-id="AC-4">
+        <description>Verify "Rollback Verification" section contains 7-step checklist: traffic shifted, health check (curl with examples), manual testing, logs, monitor for 5-10 minutes</description>
+      </idea>
+      <idea criterion-id="AC-5">
+        <description>Verify "Identify Rollback Target" section contains decision questions (When did issue start? Last known good? Database migrations?) and commands to find revision deployment time</description>
+      </idea>
+      <idea criterion-id="AC-6">
+        <description>Verify "Expected Rollback Timeline" section contains time estimates: CLI (&lt;1 min), Console (1-2 min), verification (2-5 min), total (3-7 min)</description>
+      </idea>
+      <idea criterion-id="AC-7">
+        <description>Verify docs/ROLLBACK.md file exists with table of contents, introduction, environment-specific sections, troubleshooting, and references</description>
+      </idea>
+      <idea criterion-id="AC-8">
+        <description>Manually test rollback in dev: Deploy v1, deploy v2, rollback to v1, verify health check passes and v1 behavior restored, measure actual time</description>
+      </idea>
+      <idea criterion-id="AC-9">
+        <description>Verify "Rollback Testing Results" section documents test details: environment (dev), date, versions (v1→v2→v1), method (gcloud CLI), actual time measured, verification results, issues/lessons</description>
+      </idea>
+      <idea criterion-id="AC-10">
+        <description>Verify "Database Migration Rollback" section contains scenarios table: Bug (app only), New column (app only), Renamed column (both), Removed column (db+app), Destructive (db+app)</description>
+      </idea>
+      <idea criterion-id="AC-11">
+        <description>Verify "Troubleshooting Rollback Issues" section contains 5+ common issues with solutions: Permission denied, Health check fails, Revision not found, Issue persists, Split traffic</description>
+      </idea>
+      <idea criterion-id="AC-12">
+        <description>Verify README.md contains link to docs/ROLLBACK.md in "Deployment and Operations" section with brief description of rollback procedures</description>
+      </idea>
+    </ideas>
+  </tests>
+
+  <implementation-notes>
+    <note type="cloud-run-revisions">
+      <title>Cloud Run Revision Concepts</title>
+      <content>Cloud Run revision is immutable snapshot of service configuration and container image. Each deployment creates new revision with auto-generated name (e.g., role-directory-dev-00005-abc). Active revision receives 100% traffic. Previous revisions kept running (zero downtime). Traffic splitting enables instant rollback by shifting traffic from current to previous revision. Rollback takes ~10-30 seconds for traffic shift to complete.</content>
+    </note>
+    <note type="rollback-commands">
+      <title>Key Rollback Commands</title>
+      <content>
+        List revisions: gcloud run revisions list --service=role-directory-dev --region=us-central1 --limit=10
+        
+        Rollback dev: gcloud run services update-traffic role-directory-dev --region=us-central1 --to-revisions=[REVISION]=100
+        
+        Rollback staging: gcloud run services update-traffic role-directory-staging --region=us-central1 --to-revisions=[REVISION]=100
+        
+        Rollback production: gcloud run services update-traffic role-directory-production --region=us-central1 --to-revisions=[REVISION]=100
+        
+        Verify traffic: gcloud run services describe role-directory-dev --region=us-central1 --format="value(status.traffic)"
+        
+        Get revision image: gcloud run revisions describe [REVISION] --region=us-central1 --format="value(spec.containers[0].image)"
+      </content>
+    </note>
+    <note type="verification-checklist">
+      <title>Rollback Verification Checklist</title>
+      <content>
+        1. Verify traffic shifted: gcloud run services describe [SERVICE] --format="value(status.traffic)"
+        2. Health check (dev/public): curl -f https://role-directory-dev-hash.run.app/api/health
+        3. Health check (staging/prod/IAM): curl -f -H "Authorization: Bearer $(gcloud auth print-identity-token)" [URL]/api/health
+        4. Check response: {"status":"ok","timestamp":"..."}
+        5. Manual testing: Open service URL, verify expected behavior
+        6. Check logs: gcloud logging read for recent errors
+        7. Monitor: Watch for 5-10 minutes for stability
+      </content>
+    </note>
+    <note type="database-rollback">
+      <title>Database Rollback Scenarios</title>
+      <content>
+        Application-only rollback (safe):
+        - Bug in application logic
+        - New column added (old code ignores it)
+        - Backward-compatible migrations
+        
+        Database + application rollback (required):
+        - Column renamed (old code expects old name)
+        - Column removed (old code expects removed column)
+        - Destructive migrations (data loss)
+        
+        Recommendation: Design migrations to be backward-compatible when possible. Detailed database rollback procedures covered in Epic 2.
+      </content>
+    </note>
+    <note type="testing-procedure">
+      <title>Rollback Testing in Dev</title>
+      <content>
+        1. Deploy version 1: Note revision name and behavior (e.g., health endpoint returns {"status":"ok"})
+        2. Deploy version 2: Make visible change (e.g., add "version":"2" field), note revision name
+        3. List revisions: gcloud run revisions list --service=role-directory-dev --region=us-central1
+        4. Execute rollback: gcloud run services update-traffic role-directory-dev --region=us-central1 --to-revisions=[V1_REVISION]=100
+        5. Measure time: Record actual time from command to traffic shift complete
+        6. Verify: Health check passes, v1 behavior restored (version field absent)
+        7. Document: Add test results to ROLLBACK.md with date, versions, actual time, issues
+      </content>
+    </note>
+    <note type="documentation-structure">
+      <title>ROLLBACK.md Structure</title>
+      <content>
+        Required sections:
+        1. Introduction: Purpose, when to rollback, prerequisites
+        2. Identifying Available Revisions: gcloud commands, example output, GCP Console navigation
+        3. Rollback via gcloud CLI: Commands for dev/staging/production, verification
+        4. Rollback via GCP Console: 10-step UI workflow, screenshots/descriptions
+        5. Rollback Verification: 7-step checklist, health check curl commands
+        6. Identifying Rollback Target: Decision questions, correlation with GitHub Actions
+        7. Expected Rollback Timeline: CLI/Console/verification time estimates
+        8. Rollback Testing Results: Dev test with date, versions, actual time, lessons
+        9. Database Migration Rollback: Scenarios table, backward-compatibility notes
+        10. Troubleshooting: 5+ common issues with solutions
+        11. References: Links to Cloud Run docs, GitHub Actions, promotion workflows
+      </content>
+    </note>
+  </implementation-notes>
+
+  <project-context>
+    <background>role-directory is an infrastructure-first Next.js 15 web application designed to validate a complete production-ready deployment pipeline on Google Cloud Run. The primary goal is infrastructure confidence through validation of CI/CD automation, containerization, multi-environment deployment (dev → staging → production), and rollback capabilities. This story (1.11) is the final story in Epic 1 and provides the critical rollback safety net for all deployment operations.</background>
+    <tech-stack>Next.js 15.0.3, TypeScript 5.6.3, React 18.3.1, Docker 27.3.1, Google Cloud Run, GitHub Actions, gcloud CLI, Artifact Registry</tech-stack>
+    <architecture-pattern>Serverless monolith with stateless containers, zero-downtime deployments via Cloud Run revision management, manual promotion workflows between environments</architecture-pattern>
+  </project-context>
+</story-context>
+

@@ -1,0 +1,262 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.6</storyId>
+    <title>Health Check Endpoint</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-6-health-check-endpoint.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a health check endpoint that reports application status</iWant>
+    <soThat>CI/CD and Cloud Run can verify the application is running correctly</soThat>
+    <tasks>
+      - Create health check API route (app/api/health/route.ts)
+      - Implement basic health response (200 OK, status + timestamp)
+      - Add optional database health check (commented out, enable in Epic 2)
+      - Implement error handling (500 on critical issues)
+      - Ensure no authentication required (public endpoint)
+      - Optimize response time (under 100ms warm)
+      - Test health check endpoint locally (dev and production builds)
+      - Update deployment health check (verify Story 1.5 uses this endpoint)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. GET /api/health endpoint exists and returns 200 OK when healthy
+    2. Response body includes: { "status": "ok", "timestamp": "ISO 8601 timestamp" }
+    3. Response time is under 100ms for warm requests
+    4. If database connectivity is testable (Epic 2+), optionally include database status
+    5. If critical issues exist (e.g., database connection failure), return 500 Internal Server Error
+    6. Endpoint does NOT require authentication (public for health checks)
+    7. Endpoint is used by CI/CD pipeline (Story 1.5) for deployment validation
+    8. Works in both development (port 3000) and production (port 8080) modes
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.6</title>
+        <section>Story 1.6: Health Check Endpoint</section>
+        <snippet>Health check endpoint at /api/health. Returns 200 OK with status and timestamp. Optional database status after Epic 2. No authentication required. Used by CI/CD for deployment validation. Response time under 100ms warm.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-6: Health Check Endpoint</section>
+        <snippet>GET /api/health endpoint returns 200 OK when healthy. Response body: { "status": "ok", "timestamp": "ISO 8601" }. Optional database status: { "database": "connected" }. If database fails: 500 status with { "status": "error", "database": "disconnected" }. No authentication required. Response time: under 100ms warm, under 3s cold start.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.3: Health Check Endpoint</section>
+        <snippet>Health check endpoint for monitoring and deployment validation. Endpoint: GET /api/health. Response format: JSON with status and timestamp. Public access (no authentication). Used by: CI/CD pipeline, Cloud Run health monitoring, operational monitoring. Performance: Fast response (under 100ms), minimal logic.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Route Pattern</section>
+        <snippet>Next.js 15 App Router API routes. Location: app/api/[endpoint]/route.ts. Export named functions: GET, POST, PUT, DELETE. Use NextResponse.json() for responses. Error handling: Try-catch with structured logging. No sensitive data exposure. Consistent error response format.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Health Check Response Format</section>
+        <snippet>Standard health check response: { "status": "ok", "timestamp": "ISO 8601" }. Optional fields: database status, service version. Error response: { "status": "error", "timestamp": "ISO 8601", "error": "message" }. HTTP status codes: 200 (healthy), 500 (unhealthy). No authentication required.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-5: Automated Dev Deployment - Health Check</section>
+        <snippet>Health check runs after deployment. Request: GET $SERVICE_URL/api/health. Expected: 200 OK response. Timeout: 30 seconds (allows cold start). Retry: Poll every 2 seconds up to 30 attempts. On success: Deployment marked successful. On failure: Deployment marked failed. Health check endpoint must exist before deployment workflow runs.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>app</path>
+        <kind>directory</kind>
+        <symbol>next-app-router</symbol>
+        <lines>N/A</lines>
+        <reason>Next.js App Router directory created in Story 1.1. Health check will be added at app/api/health/route.ts following App Router pattern.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <nextjs>
+        <module name="next/server" type="core">NextResponse class for API route responses</module>
+        <pattern name="app-router-api" type="routing">App Router API route pattern (app/api/[route]/route.ts)</pattern>
+      </nextjs>
+      <future>
+        <module name="@/lib/db" type="database" epic="2">Database query function for optional database health check (Epic 2, Story 2.2)</module>
+      </future>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST create health check at app/api/health/route.ts (Next.js 15 App Router pattern)
+    - MUST export named GET function (not default export)
+    - MUST use NextResponse.json() for JSON responses
+    - MUST return 200 OK status code when healthy
+    - MUST include response body with: { "status": "ok", "timestamp": "ISO 8601" }
+    - MUST use new Date().toISOString() for timestamp (ISO 8601 format)
+    - MUST NOT require authentication (public endpoint for health checks)
+    - MUST handle errors gracefully (try-catch with 500 status on error)
+    - MUST log errors server-side only (no sensitive details in response)
+    - MUST respond in under 100ms for warm requests (minimal logic)
+    - MUST NOT expose sensitive information (database credentials, internal errors)
+    - Database health check is OPTIONAL for Story 1.6 (basic implementation)
+    - If database check implemented, MUST be commented out until Epic 2 completes
+    - If database check fails, MUST return 500 status with { "status": "error", "database": "disconnected" }
+    - MUST work in both development (npm run dev, port 3000) and production (npm start, port 8080)
+    - MUST be accessible at /api/health in deployed Cloud Run environment
+    - Story 1.5 deployment workflow depends on this endpoint existing
+    - SHOULD implement basic version first (status + timestamp only)
+    - SHOULD add database check in Epic 2 after lib/db.ts exists
+    - Response format MUST be consistent with architecture document specification
+    - Error handling MUST follow Next.js App Router error handling pattern
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Health Check API Route</name>
+      <kind>Next.js API Route</kind>
+      <signature>
+        File: app/api/health/route.ts
+        Export: async function GET()
+        Returns: NextResponse with JSON body
+        
+        Success Response (200 OK):
+        {
+          "status": "ok",
+          "timestamp": "2025-11-06T15:30:00.000Z"
+        }
+        
+        Error Response (500 Internal Server Error):
+        {
+          "status": "error",
+          "timestamp": "2025-11-06T15:30:00.000Z"
+        }
+        
+        Future (Epic 2+) Success Response:
+        {
+          "status": "ok",
+          "timestamp": "2025-11-06T15:30:00.000Z",
+          "database": "connected"
+        }
+        
+        Future (Epic 2+) Error Response:
+        {
+          "status": "error",
+          "timestamp": "2025-11-06T15:30:00.000Z",
+          "database": "disconnected"
+        }
+      </signature>
+      <path>app/api/health/route.ts</path>
+    </interface>
+    <interface>
+      <name>Health Check Usage in CI/CD</name>
+      <kind>GitHub Actions Integration</kind>
+      <signature>
+        Workflow: .github/workflows/ci-cd.yml
+        Job: deploy-dev
+        Step: Health Check
+        
+        Command:
+          SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
+          curl -sf "$SERVICE_URL/api/health"
+        
+        Success: Exit code 0 (200 OK response)
+        Failure: Exit code non-zero (non-200 response or connection error)
+        
+        Retry Logic:
+          - Poll every 2 seconds
+          - Up to 30 attempts (60 seconds total)
+          - Allows for cold start delay
+        
+        Note: Implemented in Story 1.5, depends on this story (1.6)
+      </signature>
+      <path>.github/workflows/ci-cd.yml</path>
+    </interface>
+    <interface>
+      <name>Optional Database Health Check</name>
+      <kind>Database Connectivity Check</kind>
+      <signature>
+        Enabled: Epic 2+ (after Story 2.2 creates lib/db.ts)
+        Current Story 1.6: Commented out, not implemented
+        
+        Implementation (future):
+          import { query } from '@/lib/db';
+          try {
+            await query('SELECT 1');
+            response.database = 'connected';
+          } catch (dbError) {
+            console.error('Database health check failed:', dbError);
+            return NextResponse.json(
+              { status: 'error', timestamp: new Date().toISOString(), database: 'disconnected' },
+              { status: 500 }
+            );
+          }
+        
+        Timeout: 2 seconds
+        Query: Simple SELECT 1 or SELECT version()
+        
+        Story 1.6: Include commented-out code as placeholder
+      </signature>
+      <path>app/api/health/route.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing by requesting health endpoint locally and in deployed environment. Automated tests deferred to Phase 2. Focus on verification: Endpoint exists, returns 200 OK, response format correct, timestamp valid, response time under 100ms, works in dev and production, deployment workflow uses endpoint.
+    </standards>
+    <locations>
+      - app/api/health/route.ts (health check implementation to create)
+      - Local testing: http://localhost:3000/api/health (dev), http://localhost:8080/api/health (production)
+      - Cloud Run: https://role-directory-dev-[hash].run.app/api/health
+      - No test files for this story (API endpoint only)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify GET /api/health returns 200 OK">
+        Manual: Start dev server (npm run dev). Request: curl -i http://localhost:3000/api/health. Verify status line: HTTP/1.1 200 OK. Verify Content-Type: application/json.
+      </test>
+      <test id="AC-2" desc="Verify response body format">
+        Manual: Request: curl http://localhost:3000/api/health | jq. Verify JSON structure: { "status": "ok", "timestamp": "..." }. Verify "status" value is exactly "ok". Verify "timestamp" exists and is non-empty string.
+      </test>
+      <test id="AC-2b" desc="Verify timestamp is valid ISO 8601">
+        Manual: Request: curl http://localhost:3000/api/health | jq '.timestamp'. Verify format matches: YYYY-MM-DDTHH:MM:SS.sssZ. Example: 2025-11-06T15:30:00.000Z. Test: Can parse with new Date(timestamp).
+      </test>
+      <test id="AC-3" desc="Verify response time under 100ms (warm)">
+        Manual: Warm up endpoint: curl http://localhost:3000/api/health (discard). Measure: curl -w "%{time_total}\n" -o /dev/null -s http://localhost:3000/api/health. Verify time under 0.1 seconds (100ms). Run multiple times to confirm consistency.
+      </test>
+      <test id="AC-4" desc="Verify database check is optional (Story 1.6)">
+        Manual: Check app/api/health/route.ts source code. Verify database check code is commented out or not implemented. Request health endpoint. Verify response does NOT include "database" field (basic implementation only).
+      </test>
+      <test id="AC-5" desc="Verify error handling (500 on critical error)">
+        Manual (future, Epic 2+): Enable database check. Stop database or use invalid connection string. Request health endpoint. Verify 500 Internal Server Error status. Verify response: { "status": "error", "timestamp": "...", "database": "disconnected" }.
+      </test>
+      <test id="AC-6" desc="Verify no authentication required">
+        Manual: Request without any headers: curl http://localhost:3000/api/health. Verify 200 OK (not 401 Unauthorized). Request from browser (no cookies/auth): Open http://localhost:3000/api/health. Verify JSON response displayed (not auth redirect).
+      </test>
+      <test id="AC-7" desc="Verify used by CI/CD (Story 1.5)">
+        Manual: Check .github/workflows/ci-cd.yml. Verify deploy-dev job has health check step. Verify health check uses: curl $SERVICE_URL/api/health. Deploy to dev environment. Check workflow logs for health check step. Verify health check passes.
+      </test>
+      <test id="AC-8a" desc="Verify works in development mode">
+        Manual: Start dev server: npm run dev. Request: curl http://localhost:3000/api/health. Verify 200 OK response. Verify response format correct.
+      </test>
+      <test id="AC-8b" desc="Verify works in production mode">
+        Manual: Build: npm run build. Start: npm start. Wait for server ready on port 8080. Request: curl http://localhost:8080/api/health. Verify 200 OK response. Verify response format correct.
+      </test>
+      <test id="DEPLOY" desc="Verify works in Cloud Run (deployed)">
+        Manual: Deploy to dev (Story 1.5 workflow). Get service URL from deployment logs. Request: curl https://role-directory-dev-[hash].run.app/api/health. Verify 200 OK response. Verify response format correct. Check Cloud Run logs for health check requests.
+      </test>
+      <test id="COLD-START" desc="Verify cold start performance acceptable">
+        Manual: In Cloud Run, wait for service to scale to zero (5 minutes idle). Request health endpoint (triggers cold start). Measure response time. Verify under 3 seconds. Subsequent requests: Verify under 100ms (warm).
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 2-1-neon-postgresql-account-and-database-setup
+  Generated: 2025-11-07
+  Epic: 2 - Database Infrastructure & Connectivity
+  Status: ready-for-dev
+-->
+<story-context>
+  <metadata>
+    <epic-id>2</epic-id>
+    <story-id>1</story-id>
+    <story-key>2-1-neon-postgresql-account-and-database-setup</story-key>
+    <story-title>Neon PostgreSQL Account and Database Setup</story-title>
+    <status>ready-for-dev</status>
+    <generated-date>2025-11-07</generated-date>
+  </metadata>
+
+  <user-story>
+    <as-a>developer</as-a>
+    <i-want>three separate Neon PostgreSQL databases (dev, staging, production) configured and accessible</i-want>
+    <so-that>each environment has isolated data and I can validate schema migrations independently</so-that>
+  </user-story>
+
+  <acceptance-criteria>
+    <criterion id="AC-1">
+      <given>I have a Neon account (free tier)</given>
+      <when>I create the databases</when>
+      <then>Three databases exist: role_directory_dev, role_directory_stg, role_directory_prd</then>
+      <and>Each database has a unique connection string</and>
+      <and>Connection strings use format: postgresql://user:pass@ep-xxx.region.neon.tech/dbname?sslmode=require</and>
+      <and>TLS/SSL encryption enabled (sslmode=require)</and>
+      <and>Neon auto-suspend enabled (default, saves compute hours)</and>
+    </criterion>
+    <criterion id="AC-2">
+      <and>I can connect to each database using psql or a PostgreSQL client</and>
+      <and>Connection strings are stored in Google Secret Manager (not in code)</and>
+      <and>Each environment's Cloud Run service has access to its corresponding database connection string</and>
+    </criterion>
+  </acceptance-criteria>
+
+  <story-tasks>
+    <task id="T1" status="pending">
+      <title>Create Neon account (free tier)</title>
+      <subtasks>
+        <subtask>Navigate to: https://neon.tech</subtask>
+        <subtask>Click "Sign Up" button</subtask>
+        <subtask>Sign up with GitHub or Google account (recommended for OAuth)</subtask>
+        <subtask>Verify email address if required</subtask>
+        <subtask>Complete account setup wizard</subtask>
+        <subtask>Note: Free tier includes 1 project, unlimited databases, 0.5 GB storage, auto-suspend after 5 minutes</subtask>
+      </subtasks>
+    </task>
+    <task id="T2" status="pending">
+      <title>Create Neon project: role-directory</title>
+      <subtasks>
+        <subtask>In Neon Console, click "Create Project"</subtask>
+        <subtask>Project name: role-directory or role-directory-mvp</subtask>
+        <subtask>Select region: Choose closest to Cloud Run region (us-central1) - if unavailable, choose US East or US West</subtask>
+        <subtask>Leave auto-suspend enabled (default, cost savings)</subtask>
+        <subtask>Create project</subtask>
+        <subtask>Note project ID (displayed in URL or project settings)</subtask>
+      </subtasks>
+    </task>
+    <task id="T3" status="pending">
+      <title>Create dev database: role_directory_dev</title>
+      <subtasks>
+        <subtask>In Neon Console, navigate to project</subtask>
+        <subtask>Click "Databases" tab</subtask>
+        <subtask>Click "Create Database"</subtask>
+        <subtask>Database name: role_directory_dev</subtask>
+        <subtask>Owner: default (or create separate role if needed)</subtask>
+        <subtask>Create database</subtask>
+        <subtask>Copy connection string from "Connection Details"</subtask>
+        <subtask>Verify format: postgresql://user:password@ep-xxx-xxx.region.neon.tech/role_directory_dev?sslmode=require</subtask>
+      </subtasks>
+    </task>
+    <task id="T4" status="pending">
+      <title>Create staging database: role_directory_stg</title>
+      <subtasks>
+        <subtask>In Neon Console, same project</subtask>
+        <subtask>Click "Create Database"</subtask>
+        <subtask>Database name: role_directory_stg</subtask>
+        <subtask>Owner: default</subtask>
+        <subtask>Create database</subtask>
+        <subtask>Copy connection string</subtask>
+        <subtask>Note: Uses same Neon project, different database name</subtask>
+      </subtasks>
+    </task>
+    <task id="T5" status="pending">
+      <title>Create production database: role_directory_prd</title>
+      <subtasks>
+        <subtask>In Neon Console, same project</subtask>
+        <subtask>Click "Create Database"</subtask>
+        <subtask>Database name: role_directory_prd</subtask>
+        <subtask>Owner: default</subtask>
+        <subtask>Create database</subtask>
+        <subtask>Copy connection string</subtask>
+        <subtask>Note: Production data will be isolated from dev/staging</subtask>
+      </subtasks>
+    </task>
+    <task id="T6" status="pending">
+      <title>Test database connections locally via psql</title>
+      <subtasks>
+        <subtask>Install PostgreSQL client if not already installed (macOS: brew install postgresql, Ubuntu: sudo apt-get install postgresql-client, Windows: download from postgresql.org)</subtask>
+        <subtask>Test dev connection: psql "postgresql://user:password@ep-xxx.neon.tech/role_directory_dev?sslmode=require"</subtask>
+        <subtask>Verify connection: Run \conninfo to see connection details</subtask>
+        <subtask>Run test query: SELECT version();</subtask>
+        <subtask>Verify SSL: Should show "SSL connection" in conninfo output</subtask>
+        <subtask>Repeat for staging and production databases</subtask>
+        <subtask>Expected: All three connections succeed, SSL enabled</subtask>
+      </subtasks>
+    </task>
+    <task id="T7" status="pending">
+      <title>Store connection strings in Google Secret Manager</title>
+      <subtasks>
+        <subtask>Set GCP project: gcloud config set project PROJECT_ID</subtask>
+        <subtask>Create dev secret: echo "postgresql://..." | gcloud secrets create dev-database-url --data-file=-</subtask>
+        <subtask>Create staging secret: echo "postgresql://..." | gcloud secrets create staging-database-url --data-file=-</subtask>
+        <subtask>Create production secret: echo "postgresql://..." | gcloud secrets create production-database-url --data-file=-</subtask>
+        <subtask>Verify secrets created: gcloud secrets list | grep database-url</subtask>
+      </subtasks>
+    </task>
+    <task id="T8" status="pending">
+      <title>Grant Cloud Run service account access to secrets</title>
+      <subtasks>
+        <subtask>Get service account email: gcloud projects describe PROJECT_ID --format="value(projectNumber)"</subtask>
+        <subtask>Service account format: PROJECT_NUMBER-compute@developer.gserviceaccount.com</subtask>
+        <subtask>Grant dev secret access: gcloud secrets add-iam-policy-binding dev-database-url --member="serviceAccount:..." --role="roles/secretmanager.secretAccessor"</subtask>
+        <subtask>Grant staging secret access: gcloud secrets add-iam-policy-binding staging-database-url --member="serviceAccount:..." --role="roles/secretmanager.secretAccessor"</subtask>
+        <subtask>Grant production secret access: gcloud secrets add-iam-policy-binding production-database-url --member="serviceAccount:..." --role="roles/secretmanager.secretAccessor"</subtask>
+        <subtask>Verify IAM bindings: gcloud secrets get-iam-policy dev-database-url</subtask>
+      </subtasks>
+    </task>
+    <task id="T9" status="pending">
+      <title>Configure Cloud Run services with database secrets</title>
+      <subtasks>
+        <subtask>Update dev Cloud Run service: gcloud run services update role-directory-dev --region=us-central1 --set-secrets=DATABASE_URL=dev-database-url:latest</subtask>
+        <subtask>Update staging Cloud Run service: gcloud run services update role-directory-staging --region=us-central1 --set-secrets=DATABASE_URL=staging-database-url:latest</subtask>
+        <subtask>Update production Cloud Run service: gcloud run services update role-directory-production --region=us-central1 --set-secrets=DATABASE_URL=production-database-url:latest</subtask>
+        <subtask>Verify: gcloud run services describe role-directory-dev --format="value(spec.template.spec.containers[0].env)"</subtask>
+      </subtasks>
+    </task>
+    <task id="T10" status="pending">
+      <title>Document Neon setup process</title>
+      <subtasks>
+        <subtask>Create file: docs/guides/neon-infrastructure-setup-guide.md</subtask>
+        <subtask>Document Neon account creation steps</subtask>
+        <subtask>Document project and database creation</subtask>
+        <subtask>Document connection string format and components</subtask>
+        <subtask>Document Google Secret Manager commands</subtask>
+        <subtask>Document Cloud Run secret injection</subtask>
+        <subtask>Add troubleshooting section (connection issues, SSL errors)</subtask>
+        <subtask>Add references to Neon documentation</subtask>
+        <subtask>Link from main README if appropriate</subtask>
+      </subtasks>
+    </task>
+    <task id="T11" status="pending">
+      <title>Create .env.example for local development</title>
+      <subtasks>
+        <subtask>Create or update .env.example file</subtask>
+        <subtask>Add: DATABASE_URL=postgresql://user:password@host:5432/role_directory_dev?sslmode=require</subtask>
+        <subtask>Add comment: # Copy to .env.local and replace with your Neon dev database connection string</subtask>
+        <subtask>Add to .gitignore if not already: .env.local</subtask>
+        <subtask>Document in README: How to set up local environment with Neon database</subtask>
+        <subtask>Note: Never commit actual DATABASE_URL to git</subtask>
+      </subtasks>
+    </task>
+  </story-tasks>
+
+  <artifacts>
+    <docs>
+      <doc id="DOC-1">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
+        <section>Neon PostgreSQL Setup (Story 2.1)</section>
+        <snippet>Epic 2 establishes reliable PostgreSQL database connectivity from serverless Cloud Run environment, handling Neon PostgreSQL's auto-suspend behavior and serverless constraints. Uses @neondatabase/serverless driver (v0.10.1) with built-in HTTP-based pooling. Free tier: 1 project, unlimited databases, 0.5 GB storage, auto-suspend after 5 minutes.</snippet>
+      </doc>
+      <doc id="DOC-2">
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-3: Security - Database Credentials in Secret Manager</section>
+        <snippet>DATABASE_URL must be stored in Google Secret Manager (never in code or GitHub). All connections must use SSL/TLS (sslmode=require). Configuration validation must fail fast on invalid config. Least privilege IAM: Cloud Run service account has only secretAccessor role.</snippet>
+      </doc>
+      <doc id="DOC-3">
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Technology Decision</section>
+        <snippet>Neon PostgreSQL 17.0 (serverless, auto-suspend). Database client: @neondatabase/serverless v0.10.1 (HTTP-based pooling). Configuration: Zod v3.23.8 for runtime validation. Secrets Management: Google Secret Manager for DATABASE_URL (runtime injection). Cost: $0/month for MVP (free tier).</snippet>
+      </doc>
+      <doc id="DOC-4">
+        <path>docs/CLOUD_RUN_SETUP.md</path>
+        <title>Cloud Run Service Setup Guide</title>
+        <section>Secret Manager Configuration</section>
+        <snippet>Enable Secret Manager API, create secrets for DATABASE_URL, grant Cloud Run service account secretAccessor role, inject secrets as environment variables using --set-secrets flag. Secrets auto-rotate when updated, triggering new Cloud Run revision deployment.</snippet>
+      </doc>
+      <doc id="DOC-5">
+        <path>docs/guides/neon-infrastructure-setup-guide.md</path>
+        <title>Neon Infrastructure Setup Guide (To Be Created)</title>
+        <section>Complete Neon Database Setup</section>
+        <snippet>This file will be created in Task 10 of this story, documenting the entire Neon account setup, database creation, Secret Manager integration, and troubleshooting for all three environments.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact id="CODE-1">
+        <path>.gitignore</path>
+        <kind>configuration</kind>
+        <symbol>.env.local</symbol>
+        <lines>36-42</lines>
+        <reason>Already configured to ignore .env.local and other environment files, ensuring DATABASE_URL is never committed to git</reason>
+      </artifact>
+      <artifact id="CODE-2">
+        <path>scripts/setup-cloud-run-dev.sh</path>
+        <kind>script</kind>
+        <symbol>Cloud Run Setup Script</symbol>
+        <lines>N/A</lines>
+        <reason>Existing script for Cloud Run setup - may need modification to include Secret Manager configuration</reason>
+      </artifact>
+      <artifact id="CODE-3">
+        <path>scripts/setup-github-actions-sa.sh</path>
+        <kind>script</kind>
+        <symbol>GitHub Actions Service Account Setup</symbol>
+        <lines>N/A</lines>
+        <reason>Script that creates GitHub Actions service account - relevant for understanding GCP IAM setup patterns</reason>
+      </artifact>
+      <artifact id="CODE-4">
+        <path>package.json</path>
+        <kind>configuration</kind>
+        <symbol>dependencies</symbol>
+        <lines>27-32</lines>
+        <reason>Already includes @neondatabase/serverless (v0.10.1) and zod (v3.23.8) - dependencies ready for Epic 2 implementation</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@neondatabase/serverless" version="^0.10.1" scope="dependencies">HTTP-based PostgreSQL client optimized for serverless environments with built-in connection pooling</package>
+        <package name="zod" version="^3.23.8" scope="dependencies">Runtime schema validation with TypeScript type inference - will be used in Story 2.2 for config validation</package>
+        <package name="next" version="^15.0.3" scope="dependencies">Next.js framework with App Router</package>
+        <package name="react" version="^18.3.1" scope="dependencies">React library</package>
+        <package name="react-dom" version="^18.3.1" scope="dependencies">React DOM renderer</package>
+        <package name="typescript" version="^5.6.3" scope="devDependencies">TypeScript compiler with strict mode</package>
+      </node>
+      <external>
+        <service name="Neon PostgreSQL" version="17.0">Serverless PostgreSQL hosting with auto-suspend, free tier: 1 project, unlimited databases, 0.5GB storage</service>
+        <service name="Google Secret Manager">Secure secret storage, free tier: 6 secrets, then $0.06/secret/month</service>
+        <service name="Google Cloud Run">Serverless container platform, requires secretAccessor IAM role for database secret access</service>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface id="INT-1">
+      <name>Neon Connection String Format</name>
+      <kind>External API - Database Connection</kind>
+      <signature>postgresql://[user]:[password]@[endpoint].[region].neon.tech/[database]?sslmode=require</signature>
+      <path>N/A - External service format</path>
+      <notes>
+        Components:
+        - user: Database user (auto-generated by Neon)
+        - password: Random password (shown once, save immediately)
+        - endpoint: Unique endpoint ID (ep-xxx)
+        - region: Neon region (us-east-2, us-west-2, eu-central-1, etc.)
+        - database: Database name (e.g., role_directory_dev)
+        - sslmode: Must be "require" (enforce TLS/SSL encryption)
+      </notes>
+    </interface>
+    <interface id="INT-2">
+      <name>Google Secret Manager CLI</name>
+      <kind>CLI - Secret Management</kind>
+      <signature>
+        gcloud secrets create SECRET_NAME --data-file=-
+        gcloud secrets add-iam-policy-binding SECRET_NAME --member="serviceAccount:EMAIL" --role="roles/secretmanager.secretAccessor"
+        gcloud secrets versions access latest --secret=SECRET_NAME
+      </signature>
+      <path>N/A - gcloud CLI</path>
+      <notes>Used to create secrets, grant IAM permissions, and retrieve secret values for Cloud Run services</notes>
+    </interface>
+    <interface id="INT-3">
+      <name>Cloud Run Secret Injection</name>
+      <kind>CLI - Container Configuration</kind>
+      <signature>gcloud run services update SERVICE_NAME --region=REGION --set-secrets=DATABASE_URL=SECRET_NAME:latest</signature>
+      <path>N/A - gcloud CLI</path>
+      <notes>Injects Google Secret Manager secrets as environment variables in Cloud Run containers. Creates new revision on update.</notes>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint id="CONS-1" type="security">
+      <title>Never Commit DATABASE_URL to Git</title>
+      <description>DATABASE_URL must NEVER be in git. Use .env.local for local development (gitignored). Store credentials in Google Secret Manager only.</description>
+      <source>docs/2-planning/PRD.md - NFR-3: Security</source>
+    </constraint>
+    <constraint id="CONS-2" type="security">
+      <title>SSL/TLS Required for All Database Connections</title>
+      <description>All connection strings must include ?sslmode=require. Verify SSL connection active after connecting. Reject connections without SSL.</description>
+      <source>docs/3-solutioning/architecture.md - Database Security</source>
+    </constraint>
+    <constraint id="CONS-3" type="architecture">
+      <title>Environment Isolation</title>
+      <description>Separate databases for dev, staging, production. No shared data between environments. Different connection strings for each environment.</description>
+      <source>docs/3-solutioning/architecture.md - Environment Strategy</source>
+    </constraint>
+    <constraint id="CONS-4" type="security">
+      <title>Least Privilege IAM</title>
+      <description>Cloud Run service account has only secretAccessor role. Not secretmanager.admin or broader permissions. Each service accesses only its corresponding secret.</description>
+      <source>docs/2-planning/PRD.md - NFR-3: Security</source>
+    </constraint>
+    <constraint id="CONS-5" type="documentation">
+      <title>Documentation Required</title>
+      <description>Document Neon setup steps with examples. Document Secret Manager commands. Document troubleshooting common issues. Link from main README.</description>
+      <source>docs/3-solutioning/architecture.md - Documentation Standards</source>
+    </constraint>
+    <constraint id="CONS-6" type="infrastructure">
+      <title>Neon Free Tier Limitations</title>
+      <description>Free tier includes: 1 project, unlimited databases, 0.5 GB storage, ~100 compute hours/month, auto-suspend after 5 minutes. Cold start on first query after suspend: 2-3 seconds. This is acceptable for MVP.</description>
+      <source>docs/tech-spec-epic-2.md - Neon Configuration</source>
+    </constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      <summary>This is an infrastructure setup story with no application code changes. Manual testing and verification are the primary testing approach. Unit/integration tests are documented in Tech Spec but NOT required for MVP (per PRD Phase 2 deferral). Focus on manual verification checklists.</summary>
+      <framework>Manual verification via psql, gcloud CLI, and browser</framework>
+      <location>N/A - Infrastructure setup, no test files</location>
+    </standards>
+
+    <locations>
+      <location>N/A - Manual testing only for this story</location>
+    </locations>
+
+    <ideas>
+      <test-idea id="TEST-1" maps-to="AC-1">
+        <title>Verify Three Neon Databases Created</title>
+        <approach>Manual</approach>
+        <steps>
+          1. Log into Neon Console (https://console.neon.tech)
+          2. Navigate to role-directory project
+          3. Click "Databases" tab
+          4. Verify three databases exist: role_directory_dev, role_directory_stg, role_directory_prd
+          5. For each database, verify connection string is displayed and contains "?sslmode=require"
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-2" maps-to="AC-2">
+        <title>Test Database Connections via psql</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Install PostgreSQL client (if not installed): brew install postgresql
+          2. Test dev connection: psql "postgresql://user:pass@ep-xxx.neon.tech/role_directory_dev?sslmode=require"
+          3. Run: \conninfo (should show SSL connection)
+          4. Run: SELECT version(); (should return PostgreSQL 17.0)
+          5. Run: \q to exit
+          6. Repeat steps 2-5 for staging and production databases
+          7. Expected: All three connections succeed with SSL enabled
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-3" maps-to="AC-2">
+        <title>Verify Secrets Created in Google Secret Manager</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Run: gcloud secrets list | grep database-url
+          2. Expected output: dev-database-url, staging-database-url, production-database-url
+          3. For each secret, run: gcloud secrets describe SECRET_NAME
+          4. Verify replication policy is "automatic"
+          5. Run: gcloud secrets get-iam-policy dev-database-url
+          6. Verify Cloud Run service account has secretAccessor role
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-4" maps-to="AC-2">
+        <title>Verify Cloud Run Services Have DATABASE_URL</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Run: gcloud run services describe role-directory-dev --region=us-central1 --format="yaml(spec.template.spec.containers[0].env)"
+          2. Expected: DATABASE_URL environment variable with secret reference (dev-database-url:latest)
+          3. Repeat for role-directory-staging and role-directory-production
+          4. Verify each service references its corresponding secret (dev, staging, production)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-5" maps-to="AC-1, AC-2">
+        <title>Verify Documentation Completeness</title>
+        <approach>Manual Review</approach>
+        <steps>
+          1. Open docs/guides/neon-infrastructure-setup-guide.md (created in Task 10)
+          2. Verify document includes: Account creation steps, project creation, database creation for all 3 environments, connection string format explanation, Secret Manager setup commands, Cloud Run secret injection commands, troubleshooting section with common issues
+          3. Follow documentation to set up a new database (optional validation)
+          4. Verify .env.example exists with DATABASE_URL template and security warning comment
+        </steps>
+      </test-idea>
+    </ideas>
+  </tests>
+
+  <dev-notes>
+    <technical-context>
+      <note id="NOTE-1">
+        <title>Neon Free Tier Limits</title>
+        <content>Free tier includes: 1 project, unlimited databases, 0.5 GB storage, ~100 compute hours/month, auto-suspend after 5 minutes of inactivity. First query after suspend incurs 2-3 second resume penalty. This is acceptable and expected for MVP usage.</content>
+      </note>
+      <note id="NOTE-2">
+        <title>Connection String Security</title>
+        <content>Connection string format: postgresql://[user]:[password]@[endpoint].[region].neon.tech/[database]?sslmode=require. Password is shown ONCE in Neon Console - save immediately. Store in Google Secret Manager, never commit to git. Use .env.local for local development (gitignored).</content>
+      </note>
+      <note id="NOTE-3">
+        <title>Secret Manager Structure</title>
+        <content>Three secrets required: dev-database-url (for role-directory-dev), staging-database-url (for role-directory-staging), production-database-url (for role-directory-production). Each secret injected into its corresponding Cloud Run service as DATABASE_URL environment variable. Cloud Run service account needs secretAccessor role for each secret.</content>
+      </note>
+      <note id="NOTE-4">
+        <title>Neon Auto-Suspend Behavior</title>
+        <content>Database suspends after 5 minutes of no queries (free tier). First query after suspend: ~2-3 second resume time ("cold start"). Subsequent queries: less than 50ms while database is active. HTTP-based driver (@neondatabase/serverless in Story 2.2) handles this transparently. No connection pooling needed (HTTP protocol is stateless).</content>
+      </note>
+      <note id="NOTE-5">
+        <title>Story Dependencies</title>
+        <content>This is an infrastructure setup story with no code dependencies. Can be done in parallel with Epic 1 completion. Database connection will not be used until Story 2.2 (connection module). Cloud Run services (role-directory-dev, role-directory-staging, role-directory-production) must exist before Task 9 (secret injection). If services don't exist yet, defer Task 9 until after Story 1.4, 1.7, 1.8.</content>
+      </note>
+      <note id="NOTE-6">
+        <title>Cost Implications</title>
+        <content>Neon Free Tier: $0/month (0.5 GB storage, ~100 compute hours). Google Secret Manager: $0.06/secret/month after 6 free secrets (3 secrets used, still within free tier). Total Cost: $0/month for MVP.</content>
+      </note>
+      <note id="NOTE-7">
+        <title>Testing Connections</title>
+        <content>Use psql to test connections: psql "postgresql://user:pass@ep-xxx.neon.tech/role_directory_dev?sslmode=require". Verify SSL connection with \conninfo command. Test query: SELECT version(); (should return PostgreSQL 17.0). Expected SSL output: "SSL connection (protocol: TLSv1.3, ...)"</content>
+      </note>
+    </technical-context>
+
+    <learnings-from-previous-stories>
+      <learning id="LEARN-1">
+        <from-story>Epic 1 Stories (1-11)</from-story>
+        <status>Done</status>
+        <content>Cloud Run services exist: role-directory-dev deployed and accessible. Google Cloud project configured with Secret Manager API enabled. gcloud CLI authenticated and configured locally. Documentation patterns established (docs/guides/ directory). GitHub Actions CI/CD pipeline functional for dev environment.</content>
+      </learning>
+      <learning id="LEARN-2">
+        <from-story>Story 1.4 (Cloud Run Dev Service)</from-story>
+        <status>Done</status>
+        <content>Dev Cloud Run service (role-directory-dev) exists and is accessible at https://role-directory-dev-q5xt7ys22a-uc.a.run.app. Service account: PROJECT_NUMBER-compute@developer.gserviceaccount.com. Region: us-central1. This service will receive DATABASE_URL secret in Task 9.</content>
+      </learning>
+      <learning id="LEARN-3">
+        <from-story>Story 1.7, 1.8 (Staging/Production Services)</from-story>
+        <status>Ready-for-dev (or Drafted)</status>
+        <content>Staging and production Cloud Run services will be created in Stories 1.7 and 1.8. If these services don't exist yet when implementing this story, defer Task 9 (Cloud Run secret injection) until after those services are created. Can still complete Tasks 1-8 and 10-11 independently.</content>
+      </learning>
+    </learnings-from-previous-stories>
+
+    <important-considerations>
+      <consideration id="CONS-A">
+        <title>Infrastructure Story - No Application Code</title>
+        <content>This story creates external infrastructure (Neon databases, Secret Manager secrets, IAM bindings) and documentation. No application code changes. No need to commit code to git except for .env.example and documentation files.</content>
+      </consideration>
+      <consideration id="CONS-B">
+        <title>Secret Manager vs .env.local</title>
+        <content>Google Secret Manager is for Cloud Run (runtime). .env.local is for local development only (gitignored). Never commit .env.local. Document this clearly in README and neon-infrastructure-setup-guide.md.</content>
+      </consideration>
+      <consideration id="CONS-C">
+        <title>Parallel Work Opportunity</title>
+        <content>This story can be implemented in parallel with Epic 1 stories (1.7, 1.8, 1.9, 1.10, 1.11) since there are no code dependencies. Only Task 9 (Cloud Run secret injection) requires Cloud Run services to exist first.</content>
+      </consideration>
+      <consideration id="CONS-D">
+        <title>Free Tier Sufficient for MVP</title>
+        <content>Neon free tier limitations (0.5 GB storage, auto-suspend, ~100 compute hours/month) are acceptable for MVP. If limits are exceeded during development, can upgrade to Neon paid tier (~$19/month for always-on compute). Monitor usage in Neon Console.</content>
+      </consideration>
+    </important-considerations>
+  </dev-notes>
+
+  <references>
+    <reference id="REF-1">
+      <title>Neon Documentation</title>
+      <url>https://neon.tech/docs/</url>
+      <relevance>Official Neon documentation for account setup, database creation, connection string format, and troubleshooting</relevance>
+    </reference>
+    <reference id="REF-2">
+      <title>Google Secret Manager Documentation</title>
+      <url>https://cloud.google.com/secret-manager/docs</url>
+      <relevance>Official GCP documentation for creating secrets, managing IAM permissions, and injecting secrets into Cloud Run</relevance>
+    </reference>
+    <reference id="REF-3">
+      <title>Cloud Run Secret Injection</title>
+      <url>https://cloud.google.com/run/docs/configuring/secrets</url>
+      <relevance>How to inject Google Secret Manager secrets as environment variables in Cloud Run services</relevance>
+    </reference>
+    <reference id="REF-4">
+      <title>PostgreSQL Connection String Format</title>
+      <url>https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING</url>
+      <relevance>Standard PostgreSQL connection string format and URI parameters (including sslmode)</relevance>
+    </reference>
+  </references>
+</story-context>
+

@@ -1,0 +1,238 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.4</storyId>
+    <title>Cloud Run Service Setup (Dev Environment)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-4-cloud-run-service-setup-dev.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a Cloud Run service configured for the dev environment</iWant>
+    <soThat>the application can be deployed and accessed via a public URL</soThat>
+    <tasks>
+      - Verify GCP project setup and enable required APIs (Cloud Run, Artifact Registry, Secret Manager)
+      - Create Cloud Run service with name role-directory-dev in selected region
+      - Configure public access (allow unauthenticated invocations)
+      - Configure environment variables (NODE_ENV=development, PORT=8080, DATABASE_URL placeholder)
+      - Set up Google Secret Manager for secure secrets management
+      - Deploy initial placeholder container or wait for Story 1.5
+      - Verify service configuration (CPU, memory, scaling, public access)
+      - Document setup instructions with GCP project details and service URL
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Service name: role-directory-dev
+    2. Region: Selected region (e.g., us-central1)
+    3. Allow unauthenticated access (public URL)
+    4. Environment variables: NODE_ENV=development, DATABASE_URL (placeholder), PORT=8080
+    5. Minimum instances: 0 (scale to zero for cost optimization)
+    6. Maximum instances: 10 (cost control)
+    7. CPU: 1 vCPU, Memory: 512Mi (sufficient for MVP)
+    8. Service has public URL: https://role-directory-dev-[hash].run.app
+    9. Environment variables managed via GCP console or gcloud CLI
+    10. Service documented in README with URL and setup instructions
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.4</title>
+        <section>Story 1.4: Cloud Run Service Setup (Dev)</section>
+        <snippet>Create Cloud Run service for dev environment. Service name: role-directory-dev. Region selection. Public access (unauthenticated). Environment variables: NODE_ENV, PORT, DATABASE_URL. Min instances: 0 (scale to zero). Max instances: 10. CPU: 1, Memory: 512Mi. Public URL documented.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-4: Cloud Run Dev Service</section>
+        <snippet>Service name: role-directory-dev. Region: us-central1. Allow unauthenticated access (public URL). Environment variables: NODE_ENV=development, PORT=8080. Min instances: 0, Max instances: 10. CPU: 1, Memory: 512Mi. Service accessible at public URL: https://role-directory-dev-xxx.run.app.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Services and Modules - Cloud Run Services</section>
+        <snippet>Cloud Run Services: Serverless container hosting (3 services: dev, stg, prd). Inputs: Docker images, environment variables, secrets. Outputs: Running HTTP services with auto-scaling. Configuration: Min instances 0, Max instances 10, CPU 1, Memory 512Mi, Concurrency 80, Timeout 300s. Public access enabled for MVP.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - Cloud Run Configuration</title>
+        <section>Technology Stack Details - Infrastructure</section>
+        <snippet>Google Cloud Run for serverless container platform with auto-scale and pay-per-use pricing. Scale to zero for cost optimization. Free tier: 2M requests/month, 360,000 GB-seconds. Configuration: 1 vCPU, 512Mi memory, min instances 0, max instances 10. Expected cost: ~$0-3/month.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-4.1: Development Environment</section>
+        <snippet>Cloud Run service for dev environment. Auto-deploy on commit to main branch. Public URL for testing. Environment: NODE_ENV=development. Database: Neon PostgreSQL dev database. Cost target: ~$0/month (free tier). Purpose: Automated testing and feature validation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-5.3: Cost Optimization</section>
+        <snippet>Cloud Run scale to zero when idle (no requests = $0 cost). Target monthly cost: $0-3 total. Free tiers: Cloud Run (2M requests), Neon PostgreSQL (3GB storage, 100 compute hours). Max instances capped at 10 to prevent runaway costs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Data Models and Contracts - Cloud Run Service Configuration</section>
+        <snippet>Service configuration YAML: Service Name role-directory-{env}, Region us-central1, Container Port 8080, CPU 1, Memory 512Mi, Min Instances 0 (scale to zero), Max Instances 10 (cost control), Concurrency 80 (requests per container), Timeout 300s (5 minutes).</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - ADR-007</title>
+        <section>ADR-007: Use Google Secret Manager for Secrets</section>
+        <snippet>Decision: Store all secrets in Google Secret Manager and inject into Cloud Run at runtime. Rationale: Native GCP integration, IAM-controlled access, automatic secret rotation support, audit logging, no secrets in code/containers. Alternative rejected: Environment variables directly (less secure, no rotation).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>Dockerfile</path>
+        <kind>config</kind>
+        <symbol>multi-stage-docker</symbol>
+        <lines>1-49</lines>
+        <reason>Created in Story 1.2. Will be used by Cloud Run in Story 1.5 for container deployment. Cloud Run will build from this Dockerfile using Cloud Build.</reason>
+      </artifact>
+      <artifact>
+        <path>.github/workflows/ci-cd.yml</path>
+        <kind>ci-cd</kind>
+        <symbol>github-actions-workflow</symbol>
+        <lines>1-34</lines>
+        <reason>Created in Story 1.3. Will be extended in Story 1.5 to add deployment stage targeting this Cloud Run service.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <gcloud>
+        <api name="run.googleapis.com" type="gcp-api">Cloud Run API for service deployment and management</api>
+        <api name="artifactregistry.googleapis.com" type="gcp-api">Artifact Registry API for Docker image storage</api>
+        <api name="secretmanager.googleapis.com" type="gcp-api">Secret Manager API for secure secrets storage</api>
+      </gcloud>
+      <iam>
+        <serviceAccount name="PROJECT_NUMBER-compute@developer.gserviceaccount.com" type="default">Default Compute Engine service account used by Cloud Run</serviceAccount>
+        <role name="roles/secretmanager.secretAccessor" type="iam-role">Allows Cloud Run to read secrets from Secret Manager</role>
+        <role name="roles/run.invoker" type="iam-role">Allows public access (granted to allUsers for unauthenticated invocations)</role>
+      </iam>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST use service name: role-directory-dev (consistent naming across environments)
+    - MUST scale to zero (min instances: 0) for cost optimization
+    - MUST set max instances: 10 for cost control (prevents runaway costs)
+    - MUST allow unauthenticated access (public URL for MVP, application-level auth in Epic 3)
+    - MUST use Google Secret Manager for DATABASE_URL (security requirement ADR-007)
+    - MUST NOT store secrets in environment variables directly (use Secret Manager injection)
+    - MUST set NODE_ENV=development (environment identification)
+    - MUST set PORT=8080 (Cloud Run standard port)
+    - MUST allocate CPU: 1 vCPU, Memory: 512Mi (sufficient for MVP, can scale later)
+    - MUST enable required GCP APIs: Cloud Run, Artifact Registry, Secret Manager
+    - MUST grant service account roles/secretmanager.secretAccessor permission
+    - MUST document service URL, region, and setup instructions
+    - Region SHOULD be us-central1 or closest to primary users
+    - Concurrency default: 80 requests per container (Cloud Run default)
+    - Timeout default: 300s (5 minutes, Cloud Run default)
+    - This story creates infrastructure only (no container deployment, that's Story 1.5)
+    - Can optionally deploy placeholder container for testing, or wait for Story 1.5
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Cloud Run Service Interface</name>
+      <kind>GCP Service</kind>
+      <signature>
+        gcloud run deploy role-directory-dev \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --min-instances 0 \
+          --max-instances 10 \
+          --cpu 1 \
+          --memory 512Mi \
+          --set-env-vars NODE_ENV=development,PORT=8080 \
+          --set-secrets=DATABASE_URL=role-directory-dev-db-url:latest \
+          --platform managed
+        
+        Public URL: https://role-directory-dev-[hash].run.app
+        Service Account: PROJECT_NUMBER-compute@developer.gserviceaccount.com
+      </signature>
+      <path>GCP Cloud Run</path>
+    </interface>
+    <interface>
+      <name>Secret Manager Interface</name>
+      <kind>GCP Service</kind>
+      <signature>
+        Secret Name: role-directory-dev-db-url
+        Initial Value: postgresql://placeholder (updated in Epic 2)
+        Access Policy: roles/secretmanager.secretAccessor for Cloud Run service account
+        Injection: DATABASE_URL environment variable in Cloud Run container
+      </signature>
+      <path>GCP Secret Manager</path>
+    </interface>
+    <interface>
+      <name>Service Management CLI Commands</name>
+      <kind>gcloud CLI</kind>
+      <signature>
+        List services:
+          gcloud run services list --region us-central1
+        
+        Describe service:
+          gcloud run services describe role-directory-dev --region us-central1
+        
+        View logs:
+          gcloud run services logs read role-directory-dev --region us-central1
+        
+        Update service:
+          gcloud run services update role-directory-dev --region us-central1 [options]
+      </signature>
+      <path>gcloud CLI</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing only for Epic 1. Automated infrastructure tests deferred to Phase 2. Focus on verification: Create service via gcloud CLI or GCP Console, verify configuration matches acceptance criteria, test public URL accessibility, verify secret injection works, check service logs for errors, confirm scale to zero behavior.
+    </standards>
+    <locations>
+      - GCP Cloud Run Console (web UI for service management)
+      - gcloud CLI (command-line interface for service operations)
+      - Service logs: gcloud run services logs read
+      - No test files for this story (infrastructure setup)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify service name">
+        Manual: Run gcloud run services list --region us-central1. Verify service named "role-directory-dev" appears in list.
+      </test>
+      <test id="AC-2" desc="Verify region">
+        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "location" field shows selected region (e.g., us-central1).
+      </test>
+      <test id="AC-3" desc="Verify public access">
+        Manual: In GCP Console, check service allows unauthenticated invocations. Run gcloud run services get-iam-policy role-directory-dev --region us-central1. Verify allUsers has roles/run.invoker role. Access service URL without authentication, should succeed.
+      </test>
+      <test id="AC-4" desc="Verify environment variables">
+        Manual: Run gcloud run services describe role-directory-dev --region us-central1 --format="value(spec.template.spec.containers[0].env)". Verify NODE_ENV=development, PORT=8080 present. Check DATABASE_URL injected from Secret Manager.
+      </test>
+      <test id="AC-5" desc="Verify min instances: 0">
+        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "minScale: 0" in configuration. Wait 15 minutes with no requests, verify service scales to zero (no active instances in console).
+      </test>
+      <test id="AC-6" desc="Verify max instances: 10">
+        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "maxScale: 10" in configuration.
+      </test>
+      <test id="AC-7" desc="Verify CPU and memory">
+        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "cpu: 1" and "memory: 512Mi" in container spec.
+      </test>
+      <test id="AC-8" desc="Verify public URL">
+        Manual: Get service URL from gcloud run services describe output or GCP Console. URL format: https://role-directory-dev-[hash].run.app. Access URL in browser (if container deployed). Should respond (or show error if no container yet).
+      </test>
+      <test id="AC-9" desc="Verify secret management">
+        Manual: Run gcloud secrets list. Verify secret "role-directory-dev-db-url" exists. Check IAM: gcloud secrets get-iam-policy role-directory-dev-db-url. Verify service account has secretAccessor role. Check container logs for DATABASE_URL value (should be placeholder, not exposed in public logs).
+      </test>
+      <test id="AC-10" desc="Verify documentation">
+        Manual: Check README.md or docs/DEPLOYMENT.md for Cloud Run section. Verify includes: GCP project ID, region, service name, service URL, environment variables, setup instructions, cost expectations.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

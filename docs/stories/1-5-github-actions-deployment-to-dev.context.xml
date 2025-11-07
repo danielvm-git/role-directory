@@ -1,0 +1,297 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.5</storyId>
+    <title>GitHub Actions Deployment to Dev</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-5-github-actions-deployment-to-dev.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>automated deployment to the dev environment on every commit to main</iWant>
+    <soThat>changes are immediately available for validation without manual intervention</soThat>
+    <tasks>
+      - Create GCP service account for CI/CD with required IAM roles
+      - Store GCP credentials in GitHub Secrets (project ID, service account key)
+      - Extend CI workflow with deployment job that depends on build job
+      - Configure Cloud Run deployment using gcloud CLI (--source flag, ADR-004)
+      - Add health check after deployment (GET /api/health, verify 200 OK)
+      - Add deployment status reporting (service URL in logs/workflow summary)
+      - Test deployment workflow end-to-end (commit to main, verify deployment)
+      - Test failure scenarios (build error, deployment error, health check failure)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. CI pipeline passes (lint, type check, build) before deployment runs
+    2. Authenticate with GCP using service account credentials
+    3. Build Docker image and tag with commit SHA
+    4. Push image to Google Container Registry or Artifact Registry
+    5. Deploy image to role-directory-dev Cloud Run service
+    6. Run health check against deployed service (GET /api/health returns 200)
+    7. If health check fails, deployment is marked as failed
+    8. Deployment completes in less than 10 minutes total (CI + deploy)
+    9. Dev URL is posted in workflow logs or as comment
+    10. Failed deployments do NOT affect currently running service (zero-downtime)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.5</title>
+        <section>Story 1.5: GitHub Actions Deployment to Dev</section>
+        <snippet>Automated deployment to dev on commit to main. CI passes → deployment triggers. Authenticate with GCP, deploy to Cloud Run using gcloud CLI, run health check. Deployment completes in under 10 minutes. Failed deployments don't affect running service. Service URL visible in logs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-5: Automated Dev Deployment</section>
+        <snippet>CI pipeline extended with deployment stage after build passes. Authenticate with GCP using service account key. Deploy to Cloud Run dev service. Health check runs after deployment (GET /api/health). Deployment completes in under 10 minutes total. Failed quality check stops deployment. Failed deployments leave previous version running.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Workflows and Sequencing - Automated Dev Deployment</section>
+        <snippet>Push to main → CI runs (lint, type, build). CI passes → Deployment triggers. Authenticate with GCP → Deploy via gcloud run deploy --source. Cloud Build builds Docker image. Cloud Run deploys new revision. Health check verifies deployment. Previous revision remains if deployment fails. Timing: under 10 minutes total (target 5-7 minutes).</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - ADR-004</title>
+        <section>ADR-004: Deploy from Source</section>
+        <snippet>Decision: Use gcloud run deploy --source . for Cloud Run deployment. Cloud Build handles Docker build automatically. Rationale: Simplicity (no manual Docker build/push), Cost (Cloud Build free tier), Seamless GCP integration. Alternative rejected: Manual Docker build in GitHub Actions (more complex, requires container registry management).</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-4.4: CI/CD Pipeline</section>
+        <snippet>Automated build and deployment pipeline. Trigger: Push to main branch. Stages: Code checkout, dependency install, linting, type checking, build verification, deployment to dev. Failed quality check stops deployment. Clear error reporting. Pipeline execution: under 10 minutes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-2.4: Service Account Permissions</section>
+        <snippet>Least-privilege IAM roles for CI/CD service account. Permissions required: roles/run.developer (Deploy to Cloud Run), roles/secretmanager.secretAccessor (Read secrets), roles/artifactregistry.writer (Push Docker images). Service account cannot access unrelated GCP resources.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-3.1: Deployment Error Handling</section>
+        <snippet>Failed deployments do not affect running service. Cloud Run atomic deployments: new revision only receives traffic after passing health check. Previous revision continues serving traffic until new revision healthy. CI/CD pipeline fails fast: lint/type/build errors stop deployment before Cloud Run.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-3.2: Zero-Downtime Deployments</section>
+        <snippet>No service interruption during deployments. Cloud Run gradual traffic migration: new revision receives traffic incrementally. HTTP connections gracefully drained from old revision. Cold start handled by Cloud Run: new containers pre-warmed before receiving traffic.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>.github/workflows/ci-cd.yml</path>
+        <kind>github-actions</kind>
+        <symbol>ci-cd-workflow</symbol>
+        <lines>1-34</lines>
+        <reason>Created in Story 1.3. Will be extended in this story to add deploy-dev job with GCP authentication and Cloud Run deployment.</reason>
+      </artifact>
+      <artifact>
+        <path>Dockerfile</path>
+        <kind>docker</kind>
+        <symbol>multi-stage-build</symbol>
+        <lines>1-49</lines>
+        <reason>Created in Story 1.2. Cloud Build will use this Dockerfile to build container image when deploying with --source flag.</reason>
+      </artifact>
+      <artifact>
+        <path>next.config.ts</path>
+        <kind>config</kind>
+        <symbol>nextConfig</symbol>
+        <lines>1-7</lines>
+        <reason>Contains standalone output configuration needed for optimized Docker builds. Used by Dockerfile during Cloud Build.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <githubActions>
+        <action name="google-github-actions/auth" version="v2" type="gcp-auth">Authenticate to Google Cloud using service account credentials from GitHub Secrets</action>
+        <action name="google-github-actions/setup-gcloud" version="v2" type="gcp-cli">Setup gcloud CLI for Cloud Run deployment commands</action>
+        <action name="actions/checkout" version="v4" type="git">Checkout source code for deployment (already used in Story 1.3)</action>
+      </githubActions>
+      <githubSecrets>
+        <secret name="GCP_PROJECT_ID" type="string">Google Cloud project ID for gcloud commands</secret>
+        <secret name="GCP_SERVICE_ACCOUNT_KEY" type="json">Service account JSON key for GCP authentication</secret>
+        <secret name="NEON_AUTH_PROJECT_ID" type="string">Neon Auth project ID (placeholder for Epic 3, optional for Story 1.5)</secret>
+        <secret name="ALLOWED_EMAILS_DEV" type="string">Email whitelist for dev environment (placeholder for Epic 3, optional)</secret>
+      </githubSecrets>
+      <gcloud>
+        <command name="gcloud run deploy" type="deployment">Deploy application to Cloud Run using --source flag (Cloud Build handles Docker)</command>
+        <command name="gcloud run services describe" type="management">Get service URL after deployment for health check</command>
+      </gcloud>
+      <iam>
+        <serviceAccount name="github-actions-deployer" type="custom">Service account for GitHub Actions CI/CD pipeline</serviceAccount>
+        <role name="roles/run.developer" type="iam-role">Deploy and manage Cloud Run services</role>
+        <role name="roles/iam.serviceAccountUser" type="iam-role">Act as Cloud Run service account</role>
+        <role name="roles/artifactregistry.writer" type="iam-role">Push Docker images to Artifact Registry</role>
+        <role name="roles/secretmanager.secretAccessor" type="iam-role">Read secrets for deployment (optional, may not be needed for Story 1.5)</role>
+      </iam>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST extend existing ci-cd.yml workflow (from Story 1.3) - do not create new workflow file
+    - MUST add deploy-dev job that depends on build job (needs: build)
+    - MUST use google-github-actions/auth@v2 for GCP authentication
+    - MUST use google-github-actions/setup-gcloud@v2 for gcloud CLI setup
+    - MUST use gcloud run deploy --source . (ADR-004: Cloud Build handles Docker)
+    - MUST tag image with commit SHA for traceability ($GITHUB_SHA)
+    - MUST deploy to role-directory-dev service (created in Story 1.4)
+    - MUST set environment variables: NODE_ENV=development, PORT=8080
+    - MUST inject DATABASE_URL from Secret Manager (--set-secrets flag)
+    - MUST run health check after deployment (GET /api/health endpoint)
+    - MUST fail deployment if health check fails (exit 1 from health check step)
+    - MUST complete in under 10 minutes total (CI + deployment)
+    - MUST NOT affect running service if deployment fails (Cloud Run atomic deployment)
+    - Health check endpoint may not exist yet (Story 1.6) - acceptable to skip or have it fail initially
+    - Can implement basic health check placeholder in this story OR wait for Story 1.6
+    - Service account IAM roles must follow least-privilege principle
+    - GitHub Secrets must NOT be logged or exposed in workflow output
+    - Deployment job should only run on main branch (not PRs)
+    - SHOULD post service URL to workflow logs or GitHub Actions summary
+    - Region must match Story 1.4 configuration (likely us-central1)
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GitHub Actions Deployment Workflow</name>
+      <kind>CI/CD Pipeline</kind>
+      <signature>
+        Job: deploy-dev
+        Trigger: After build job succeeds (needs: build)
+        Runner: ubuntu-latest
+        Steps:
+          1. Checkout code (actions/checkout@v4)
+          2. Authenticate to GCP (google-github-actions/auth@v2)
+          3. Setup gcloud CLI (google-github-actions/setup-gcloud@v2)
+          4. Deploy to Cloud Run (gcloud run deploy --source .)
+          5. Get service URL (gcloud run services describe)
+          6. Health check (curl $SERVICE_URL/api/health)
+        Environment: GitHub Actions runner with GCP access
+        Secrets: GCP_PROJECT_ID, GCP_SERVICE_ACCOUNT_KEY
+        Outputs: Service URL, deployment status
+      </signature>
+      <path>.github/workflows/ci-cd.yml</path>
+    </interface>
+    <interface>
+      <name>GCP Service Account Setup</name>
+      <kind>IAM Configuration</kind>
+      <signature>
+        Service Account: github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com
+        Required Roles:
+          - roles/run.developer (Deploy to Cloud Run)
+          - roles/iam.serviceAccountUser (Act as service account)
+          - roles/artifactregistry.writer (Push images)
+        Key: JSON format, stored in GitHub Secrets as GCP_SERVICE_ACCOUNT_KEY
+        
+        Creation commands:
+          gcloud iam service-accounts create github-actions-deployer
+          gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:... --role=...
+          gcloud iam service-accounts keys create key.json --iam-account=...
+      </signature>
+      <path>GCP IAM Console</path>
+    </interface>
+    <interface>
+      <name>Cloud Run Deployment Command</name>
+      <kind>gcloud CLI</kind>
+      <signature>
+        gcloud run deploy role-directory-dev \
+          --source . \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --set-env-vars NODE_ENV=development,PORT=8080 \
+          --set-secrets DATABASE_URL=role-directory-dev-db-url:latest \
+          --min-instances 0 \
+          --max-instances 10 \
+          --cpu 1 \
+          --memory 512Mi \
+          --quiet
+        
+        Cloud Build automatically:
+          - Builds Docker image from Dockerfile
+          - Pushes image to Artifact Registry
+          - Deploys to Cloud Run
+        
+        Output: Service URL (https://role-directory-dev-[hash].run.app)
+      </signature>
+      <path>GitHub Actions workflow</path>
+    </interface>
+    <interface>
+      <name>Health Check Validation</name>
+      <kind>HTTP Request</kind>
+      <signature>
+        Endpoint: GET $SERVICE_URL/api/health
+        Expected: 200 OK
+        Timeout: 30-60 seconds (allows cold start)
+        Retry: Poll every 2 seconds for up to 30 attempts
+        On Success: Deployment marked successful
+        On Failure: Deployment marked failed (exit 1)
+        
+        Note: Endpoint created in Story 1.6
+        Story 1.5 options:
+          1. Skip health check initially
+          2. Implement basic placeholder /api/health
+          3. Accept health check failure until Story 1.6
+      </signature>
+      <path>GitHub Actions workflow</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing by committing to main branch and verifying deployment in GitHub Actions. Automated tests deferred to Phase 2. Focus on verification: CI stages pass, deployment triggers, GCP authentication succeeds, Cloud Run deployment succeeds, health check runs (may fail if endpoint doesn't exist yet), service URL accessible, total time under 10 minutes, failure scenarios tested.
+    </standards>
+    <locations>
+      - .github/workflows/ci-cd.yml (workflow file to be modified)
+      - GitHub Actions tab in repository (workflow execution logs)
+      - GCP Cloud Run Console (verify deployment)
+      - Service URL (manual browser test)
+      - No test files for this story (CI/CD infrastructure)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify CI passes before deployment">
+        Manual: Commit to main. Check GitHub Actions. Verify build job completes (lint, type, build) before deploy-dev job starts. Check job dependency: needs: build.
+      </test>
+      <test id="AC-2" desc="Verify GCP authentication">
+        Manual: Check deploy-dev job logs. Verify "Authenticate to Google Cloud" step succeeds. Check for authentication confirmation message. No authentication errors.
+      </test>
+      <test id="AC-3-4" desc="Verify Docker image build and push">
+        Manual: Check deployment logs for Cloud Build activity. Verify "Building using Dockerfile". Verify image pushed to Artifact Registry. Check GCP Artifact Registry console for new image with commit SHA tag.
+      </test>
+      <test id="AC-5" desc="Verify deployment to Cloud Run">
+        Manual: Check deployment logs for "Deploying to Cloud Run service [role-directory-dev]". Verify deployment succeeds. Check GCP Cloud Run console shows new revision. Verify revision tagged with commit SHA.
+      </test>
+      <test id="AC-6-7" desc="Verify health check">
+        Manual: Check workflow logs for "Health Check" step. If /api/health exists (Story 1.6): Verify 200 OK response, health check passes. If endpoint doesn't exist: Verify health check fails gracefully or is skipped. Document result in completion notes.
+      </test>
+      <test id="AC-8" desc="Verify deployment time under 10 minutes">
+        Manual: Check workflow run summary. Note total execution time from start to finish. Breakdown: CI stages (~3 min), Deployment (~5 min), Health check (~1 min). Verify total under 10 minutes.
+      </test>
+      <test id="AC-9" desc="Verify dev URL posted">
+        Manual: Check workflow logs for service URL. Should see: "Deployed to: https://role-directory-dev-[hash].run.app". Check if URL added to workflow summary (optional). Verify URL format is correct.
+      </test>
+      <test id="AC-10" desc="Verify zero-downtime deployment">
+        Manual: Access service URL during deployment (if possible). Verify no 502/503 errors during deployment. In Cloud Run console, check revision history. Verify old revision remained until new revision healthy. Test failure scenario: deploy broken code, verify old revision still running.
+      </test>
+      <test id="FAIL-1" desc="Test build failure prevents deployment">
+        Manual: Introduce lint error (unused variable). Commit to main. Verify build job fails. Verify deploy-dev job does NOT run (skipped due to dependency). Fix error, verify deployment resumes.
+      </test>
+      <test id="FAIL-2" desc="Test deployment failure handling">
+        Manual: Introduce deployment error (wrong region in command?). Verify deployment fails. Check Cloud Run console: previous revision still running. Fix error, verify deployment succeeds.
+      </test>
+      <test id="FAIL-3" desc="Test health check failure handling">
+        Manual: Break /api/health endpoint (return 500 error). Deploy. Verify health check fails. Verify deployment marked failed in GitHub Actions. Verify previous revision still running. Fix endpoint, verify deployment succeeds.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

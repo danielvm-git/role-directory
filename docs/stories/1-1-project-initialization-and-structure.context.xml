@@ -1,0 +1,174 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.1</storyId>
+    <title>Project Initialization and Structure</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-1-project-initialization-and-structure.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a properly structured Next.js 15 project with TypeScript, ESLint, and Prettier configured</iWant>
+    <soThat>I have a solid foundation for building the application with quality tooling in place</soThat>
+    <tasks>
+      - Initialize Next.js 15 project with TypeScript and App Router
+      - Configure ESLint and Prettier for code quality
+      - Create basic folder structure (app/, lib/, types/, components/)
+      - Configure TypeScript strict mode with path aliases
+      - Update .gitignore to exclude .env and build artifacts
+      - Create basic landing page with "Hello World" content
+      - Verify development server runs successfully
+      - Initialize git repository with initial commit
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Next.js 15 with App Router and TypeScript 5.8 installed
+    2. ESLint configured with recommended rules
+    3. Prettier configured for consistent formatting
+    4. Basic folder structure created: app/, lib/, types/, components/
+    5. .gitignore properly configured (excludes .env, node_modules, etc.)
+    6. package.json with all core dependencies
+    7. npm run dev starts development server successfully
+    8. npm run lint and npm run type-check run without errors
+    9. Basic landing page at / displays "Hello World"
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.1</title>
+        <section>Story 1.1: Project Initialization and Structure</section>
+        <snippet>Story defines acceptance criteria for Next.js 15 initialization with TypeScript, ESLint, Prettier, and basic project structure. Includes verification steps for dev server, linting, and type checking.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - Project Initialization</title>
+        <section>Project Initialization</section>
+        <snippet>Complete npx create-next-app command with flags: --typescript, --tailwind, --app, --no-src-dir, --import-alias "@/*". Includes installation of additional dependencies: @neondatabase/serverless, zod, prettier, eslint-config-prettier.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - Project Structure</title>
+        <section>Project Structure</section>
+        <snippet>Defines complete folder organization: app/ (Next.js App Router), lib/ (utilities), types/ (TypeScript definitions), components/ (React components), public/ (static assets). Includes configuration files: .eslintrc.json, .prettierrc, tsconfig.json, tailwind.config.ts.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - Technology Stack</title>
+        <section>Technology Stack Details</section>
+        <snippet>Next.js 15.0.3, React 18.3.1, TypeScript 5.6.3, Tailwind CSS 3.4.14, Node.js 22.11.0 LTS. Includes Zod 3.23.8 for validation, ESLint 9.13.0, Prettier 3.3.3.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - ADR-001</title>
+        <section>ADR-001: Use Next.js 15 with App Router</section>
+        <snippet>Decision to use Next.js 15 App Router (not Pages Router). Rationale: Recommended approach for new projects, React Server Components, improved routing with layouts, better TypeScript support.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document - Naming Conventions</title>
+        <section>Consistency Rules - Naming Conventions</section>
+        <snippet>Components: PascalCase (UserButton.tsx), Routes: kebab-case, Utilities: camelCase (logger.ts), Types: camelCase (api.ts), Tests: *.test.ts(x), Config files: kebab-case.config.*</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-1: Project Initialization</section>
+        <snippet>Acceptance criteria details: Next.js 15.0.3 project initialized with TypeScript, Tailwind CSS, and App Router. ESLint and Prettier configured. Basic folder structure. Development server runs. Linting and type checking work. .gitignore properly configured.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Project Classification</section>
+        <snippet>Infrastructure-first approach: Build just enough features to validate deployment pipeline. Next.js 15 web application with TypeScript, deployed to Cloud Run. Cost target: ~$0-3/month using free tiers.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- No existing code files yet - this is the first story initializing the project -->
+    </code>
+    <dependencies>
+      <node>
+        <dependency name="next" version="15.0.3" type="runtime">Next.js framework with App Router</dependency>
+        <dependency name="react" version="18.3.1" type="runtime">UI library</dependency>
+        <dependency name="react-dom" version="18.3.1" type="runtime">React DOM renderer</dependency>
+        <dependency name="typescript" version="5.6.3" type="dev">TypeScript compiler</dependency>
+        <dependency name="@neondatabase/serverless" version="0.10.1" type="runtime">Neon PostgreSQL client (for future stories)</dependency>
+        <dependency name="zod" version="3.23.8" type="runtime">Runtime validation library</dependency>
+        <dependency name="tailwindcss" version="3.4.14" type="dev">Utility-first CSS framework</dependency>
+        <dependency name="eslint" version="9.13.0" type="dev">JavaScript/TypeScript linter</dependency>
+        <dependency name="eslint-config-next" version="15.0.3" type="dev">Next.js ESLint configuration</dependency>
+        <dependency name="eslint-config-prettier" version="^9.1.0" type="dev">Prettier compatibility for ESLint</dependency>
+        <dependency name="prettier" version="3.3.3" type="dev">Code formatter</dependency>
+        <dependency name="postcss" version="^8" type="dev">CSS processing tool</dependency>
+        <dependency name="autoprefixer" version="^10" type="dev">CSS vendor prefixing</dependency>
+        <dependency name="@types/node" version="^22" type="dev">Node.js type definitions</dependency>
+        <dependency name="@types/react" version="^18" type="dev">React type definitions</dependency>
+        <dependency name="@types/react-dom" version="^18" type="dev">React DOM type definitions</dependency>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST use Next.js 15 App Router (not Pages Router) as per ADR-001
+    - MUST enable TypeScript strict mode in tsconfig.json
+    - MUST use path aliases: @/* maps to project root
+    - MUST follow naming conventions: Components (PascalCase), Utilities (camelCase), Folders (kebab-case)
+    - MUST configure .gitignore to exclude .env, .env.local, .env.*.local, node_modules, .next, out
+    - MUST use Prettier configuration from architecture.md (semi: true, singleQuote: true, tabWidth: 2, trailingComma: es5, printWidth: 100)
+    - MUST extend ESLint config with both next/core-web-vitals and prettier
+    - MUST create folder structure: app/, lib/, types/, components/, public/
+    - NO src/ directory (use --no-src-dir flag)
+    - NO custom documentation in README.md yet (deferred to Story 1.11)
+    - Manual testing only (automated tests deferred to Phase 2)
+  </constraints>
+
+  <interfaces>
+    <!-- No external interfaces yet - this story creates the project foundation -->
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing only for Epic 1. Automated tests (Vitest, React Testing Library, Playwright) deferred to Phase 2. Focus on verification steps: run dev server, run linting, run type checking, verify hot module replacement works.
+    </standards>
+    <locations>
+      <!-- No test files in this story - testing infrastructure added in Phase 2 -->
+      - tests/e2e/ (E2E tests - Phase 2)
+      - Co-located *.test.ts(x) files (Unit/Component tests - Phase 2)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify Next.js 15 project initialization">
+        Manual: Check package.json for next@15.0.3, react@18.3.1, typescript@5.6.3
+      </test>
+      <test id="AC-2" desc="Verify ESLint configuration">
+        Manual: Run npm run lint, expect no errors. Check .eslintrc.json extends next/core-web-vitals and prettier.
+      </test>
+      <test id="AC-3" desc="Verify Prettier configuration">
+        Manual: Check .prettierrc file exists with correct settings (semi, singleQuote, tabWidth, trailingComma, printWidth).
+      </test>
+      <test id="AC-4" desc="Verify folder structure">
+        Manual: Check app/, lib/, types/, components/ directories exist.
+      </test>
+      <test id="AC-5" desc="Verify .gitignore">
+        Manual: Check .gitignore excludes .env, .env.local, .env.*.local, node_modules, .next, out.
+      </test>
+      <test id="AC-6" desc="Verify package.json scripts">
+        Manual: Check scripts for dev, build, start, lint, type-check.
+      </test>
+      <test id="AC-7" desc="Verify development server">
+        Manual: Run npm run dev, access http://localhost:3000, verify "Hello World" page displays. Test hot module replacement by editing app/page.tsx.
+      </test>
+      <test id="AC-8" desc="Verify linting and type checking">
+        Manual: Run npm run lint (expect pass), Run npm run type-check (expect pass).
+      </test>
+      <test id="AC-9" desc="Verify landing page">
+        Manual: Access http://localhost:3000, verify "Hello World" text displays with basic Tailwind styling.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

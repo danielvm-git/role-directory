@@ -1,0 +1,420 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.8</storyId>
+    <title>Cloud Run Service Setup (Production)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-8-cloud-run-service-setup-production.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>DevOps engineer</asA>
+    <iWant>a Google Cloud Run service configured for the production environment</iWant>
+    <soThat>I can deploy the live application with appropriate scaling, security, and reliability for end users</soThat>
+    <tasks>
+      - Verify Google Cloud project access and Cloud Run API enabled
+      - Create production Cloud Run service using gcloud CLI (role-directory-production)
+      - Configure instance scaling (min 2 for high availability, max 10 for traffic spikes)
+      - Configure CPU and memory (2 CPUs, 1 GB memory for better performance)
+      - Configure environment variables (NODE_ENV=production, DATABASE_URL, NEXT_PUBLIC_API_URL)
+      - Configure ingress and port (ingress: all, port: 8080)
+      - Add resource labels (environment=production, app=role-directory)
+      - Configure IAM authentication (require authentication, not public)
+      - Configure production-specific settings (gen2 execution, CPU boost, timeout, concurrency)
+      - Document service configuration for Infrastructure-as-Code reference
+      - Test production service deployment with test image and health check (verify no cold starts)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Service has public production URL: https://role-directory-production-[hash].run.app
+    2. Uses minimum 2 instances (high availability, no cold starts for users)
+    3. Uses maximum 10 instances (handles traffic spikes, higher than staging)
+    4. Uses 2 CPUs and 1024 MB memory per instance (better performance than dev/staging)
+    5. Requires authentication via Google IAM (NOT fully public, same as staging)
+    6. Sets environment variables: NODE_ENV=production, DATABASE_URL (from Secret Manager), NEXT_PUBLIC_API_URL (production URL)
+    7. Has ingress set to "all" (accessible from internet with auth)
+    8. Uses container port 8080
+    9. Has resource labels: environment=production, app=role-directory
+    10. Service is NOT created manually via Console (uses gcloud CLI for reproducibility)
+    11. Configuration is documented for Infrastructure-as-Code in future
+    12. Production service URL is recorded for use in CI/CD workflows (Story 1.10)
+    13. Production has higher resource allocation than dev/staging for reliability and performance
+    14. Uses gen2 execution environment for better performance
+    15. Uses CPU boost for faster cold starts (if they occur)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.8</title>
+        <section>Story 1.8: Cloud Run Service Setup (Production)</section>
+        <snippet>Production Cloud Run service configuration. IAM protected (not public). Min 2 instances for high availability (no cold starts), max 10 for traffic spikes. 2 CPUs, 1 GB memory for performance. Gen2 execution environment. CPU boost enabled. Environment: NODE_ENV=production, DATABASE_URL from Secret Manager. Labels: environment=production, app=role-directory. Manual gcloud CLI setup, documented for IaC.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-8: Cloud Run Service Setup (Production)</section>
+        <snippet>Production service: role-directory-production. Region: us-central1. Min 2 instances (high availability, no cold starts), max 10 instances. 2 CPUs, 1 GB memory (better than staging). IAM authentication required. Gen2 execution environment. CPU boost enabled. Timeout: 300s. Environment: NODE_ENV=production. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.5: Production Environment</section>
+        <snippet>Production environment for live users. High availability configuration. No cold starts (min 2 instances always running). IAM protected access. Automated promotion workflow from staging. Higher resource allocation (2 CPU, 1 GB) for performance. Gen2 execution for reliability. Monitoring and alerting ready.</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-2: Performance Requirements</section>
+        <snippet>Response time: P95 under 200ms. No cold starts for production users. High availability: min 2 instances. Auto-scaling: handle traffic spikes up to 10x baseline. Resource allocation: sufficient CPU/memory for concurrent users. Gen2 execution environment for better performance.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Cloud Run Configuration - Production</section>
+        <snippet>Production: role-directory-production. Min 2 instances (high availability). Max 10 instances (traffic spikes). 2 CPUs, 1 GB memory. Gen2 execution environment. CPU boost enabled. IAM authentication required. DATABASE_URL from Secret Manager. Port 8080. Labels: environment=production, app=role-directory. Cost: ~$50-100/month typical usage.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-3: High Availability</section>
+        <snippet>Min 2 instances ensures at least one instance during deployments. No cold starts for users. Load balancing across instances. Graceful shutdown during deployments. Zero-downtime deployments (new revision alongside old). Health checks verify readiness. Gen2 execution for reliability.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Gen2 Execution Environment</section>
+        <snippet>Gen2 recommended for production. Benefits: Up to 32 GiB memory support (vs 4 GiB gen1). Better performance and faster cold starts. Network file system support. More powerful infrastructure. CPU boost: Allocates full CPU during startup (vs throttled). Reduces cold start by 30-50%. Small additional cost during startup only.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Cost Optimization - Production</section>
+        <snippet>Production cost: Min 2 instances = ~$35/month base. 2 CPUs + 1 GB = 2x staging cost per instance. Typical usage: $50-100/month. Max 10 instances: Could spike to ~$240/month (unlikely). Justification: High availability and performance for production users worth the cost. Free tier does not apply (min 2 instances).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>Dockerfile</path>
+        <kind>docker</kind>
+        <symbol>multi-stage-build</symbol>
+        <lines>1-49</lines>
+        <reason>Created in Story 1.2. Production service will deploy containers built from this Dockerfile.</reason>
+      </artifact>
+      <artifact>
+        <path>app/api/health/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>health-check</symbol>
+        <lines>N/A</lines>
+        <reason>Created in Story 1.6. Used to verify production service deployment health and monitor live service.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <gcloud>
+        <command name="gcloud run deploy" type="deployment">Create and deploy Cloud Run service</command>
+        <command name="gcloud run services update" type="management">Update service configuration (scaling, resources, env vars, secrets, execution environment)</command>
+        <command name="gcloud run services describe" type="inspection">Verify service configuration and status</command>
+        <command name="gcloud run revisions list" type="inspection">List deployment revisions for production service</command>
+        <command name="gcloud run services add-iam-policy-binding" type="iam">Grant IAM permissions for service access</command>
+        <command name="gcloud secrets create" type="secrets">Create Secret Manager secret for production DATABASE_URL</command>
+        <command name="gcloud secrets add-iam-policy-binding" type="iam">Grant service account access to production secrets</command>
+      </gcloud>
+      <iam>
+        <serviceAccount name="default-compute" type="cloud-run">Default Cloud Run service account for the production service</serviceAccount>
+        <serviceAccount name="github-actions-deployer" type="custom">GitHub Actions service account (from Story 1.5) needs roles/run.invoker for production</serviceAccount>
+        <role name="roles/run.invoker" type="iam-role">Required to invoke/access IAM-protected Cloud Run production service</role>
+        <role name="roles/secretmanager.secretAccessor" type="iam-role">Required for service account to read production secrets</role>
+      </iam>
+      <secrets>
+        <secret name="production-database-url" type="secret-manager">PostgreSQL connection string for production database (placeholder for Epic 2)</secret>
+      </secrets>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST create service named: role-directory-production (environment-specific naming)
+    - MUST use region: us-central1 (same as dev/staging for consistency)
+    - MUST set min instances: 2 (HIGH AVAILABILITY - no cold starts for production users)
+    - MUST set max instances: 10 (handle traffic spikes, higher capacity than staging)
+    - MUST set CPU: 2 (DOUBLE staging, better performance)
+    - MUST set memory: 1Gi (DOUBLE staging, 1024 MB)
+    - MUST set NODE_ENV=production (critical for Next.js production optimizations)
+    - MUST set NEXT_PUBLIC_API_URL to actual production service URL
+    - MUST set DATABASE_URL from Secret Manager (encrypted, isolated from dev/staging)
+    - MUST use port: 8080 (container port)
+    - MUST set ingress: all (internet accessible with authentication)
+    - MUST require authentication: --no-allow-unauthenticated (IAM protected, NOT public)
+    - MUST add labels: environment=production, app=role-directory
+    - MUST use gen2 execution environment (--execution-environment=gen2)
+    - MUST enable CPU boost (--cpu-boost) for faster cold starts
+    - MUST set timeout: 300 seconds (5 minutes, explicit for documentation)
+    - MUST set concurrency: 80 requests per instance (explicit for documentation)
+    - MUST grant GitHub Actions service account roles/run.invoker (for Story 1.10 deployment)
+    - MUST document all gcloud commands for IaC reference
+    - Service is NOT created via GCP Console (use gcloud CLI only for reproducibility)
+    - Create production-database-url secret in Secret Manager (placeholder value for now)
+    - Actual database URL will be updated in Epic 2 when Neon production database is provisioned
+    - MUST verify health check endpoint (/api/health) works with authentication
+    - Health check requires Authorization header: Bearer $(gcloud auth print-identity-token)
+    - MUST verify no cold start delay (min 2 instances always warm)
+    - Configuration should be reproducible from documentation
+    - SHOULD create docs/guides/cloud-run-production-setup.md with all setup commands
+    - Cost awareness: Min 2 instances + 2 CPU + 1 GB = ~$50-100/month (acceptable for production)
+    - Max 10 instances caps cost at ~$240/month under extreme load
+    - Production resources MUST be higher than staging (2 CPU vs 1 CPU, 1 GB vs 512 MB)
+    - CRITICAL: Production is IAM protected - manual access requires authentication token
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Production Cloud Run Service Creation</name>
+      <kind>gcloud CLI</kind>
+      <signature>
+        Initial service creation with all production settings:
+        gcloud run deploy role-directory-production \
+          --region=us-central1 \
+          --platform=managed \
+          --no-allow-unauthenticated \
+          --image=gcr.io/cloudrun/hello \
+          --min-instances=2 \
+          --max-instances=10 \
+          --cpu=2 \
+          --memory=1Gi \
+          --port=8080 \
+          --ingress=all \
+          --execution-environment=gen2 \
+          --cpu-boost \
+          --timeout=300 \
+          --concurrency=80 \
+          --set-env-vars=NODE_ENV=production \
+          --labels=environment=production,app=role-directory
+        
+        Output: Service URL (https://role-directory-production-[hash].run.app)
+        
+        Note: 2 instances will be provisioned immediately (min-instances=2)
+        No cold starts for production users
+      </signature>
+      <path>GCP Cloud Run</path>
+    </interface>
+    <interface>
+      <name>Production Secret Management</name>
+      <kind>Secret Manager</kind>
+      <signature>
+        Create production database secret:
+        gcloud secrets create production-database-url \
+          --data-file=<(echo "postgresql://user:pass@prod-host:5432/db?sslmode=require")
+        
+        Grant access to Cloud Run service account:
+        PROJECT_NUMBER=$(gcloud projects describe PROJECT_ID --format="value(projectNumber)")
+        gcloud secrets add-iam-policy-binding production-database-url \
+          --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+          --role="roles/secretmanager.secretAccessor"
+        
+        Reference in Cloud Run:
+        gcloud run services update role-directory-production \
+          --region=us-central1 \
+          --set-secrets=DATABASE_URL=production-database-url:latest
+        
+        CRITICAL: Production secret is isolated from dev/staging secrets
+        Note: Placeholder value for Story 1.8, real database URL in Epic 2
+      </signature>
+      <path>Google Secret Manager</path>
+    </interface>
+    <interface>
+      <name>Production IAM Authentication</name>
+      <kind>IAM Policy Binding</kind>
+      <signature>
+        Grant GitHub Actions service account access for automated deployments:
+        gcloud run services add-iam-policy-binding role-directory-production \
+          --region=us-central1 \
+          --member="serviceAccount:github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com" \
+          --role="roles/run.invoker"
+        
+        Manual testing with authentication:
+        TOKEN=$(gcloud auth print-identity-token)
+        curl -H "Authorization: Bearer $TOKEN" \
+          https://role-directory-production-[hash].run.app/api/health
+        
+        Expected: 200 OK with { "status": "ok", "timestamp": "..." }
+        Response time: <100ms (no cold start, min 2 instances always warm)
+        
+        Unauthenticated access (should fail):
+        curl https://role-directory-production-[hash].run.app
+        Expected: 403 Forbidden (IAM protected)
+      </signature>
+      <path>GCP IAM</path>
+    </interface>
+    <interface>
+      <name>Production Service Verification</name>
+      <kind>gcloud CLI</kind>
+      <signature>
+        Verify service exists and configuration:
+        gcloud run services list --filter="role-directory-production"
+        
+        Verify scaling (min 2, max 10):
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/minScale'])"
+        Expected: 2
+        
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/maxScale'])"
+        Expected: 10
+        
+        Verify resources (2 CPU, 1 GB):
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.spec.containers[0].resources)"
+        Expected: cpu: "2", memory: 1Gi
+        
+        Verify gen2 execution environment:
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.metadata.annotations['run.googleapis.com/execution-environment'])"
+        Expected: gen2
+        
+        Verify CPU boost enabled:
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.metadata.annotations['run.googleapis.com/cpu-boost'])"
+        Expected: true
+        
+        Verify environment variables:
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.spec.containers[0].env)"
+        Expected: NODE_ENV=production, NEXT_PUBLIC_API_URL=[url]
+        
+        Verify secrets:
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(spec.template.spec.containers[0].env[].valueFrom)"
+        Expected: DATABASE_URL from production-database-url secret
+        
+        Verify no cold starts (test response times):
+        for i in {1..10}; do
+          curl -w "Time: %{time_total}s\n" -o /dev/null -s \
+            -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+            https://role-directory-production-[hash].run.app/api/health
+        done
+        Expected: All requests under 0.1s (100ms) - no cold starts
+      </signature>
+      <path>gcloud CLI</path>
+    </interface>
+    <interface>
+      <name>Production Concurrent Load Testing</name>
+      <kind>Apache Bench (ab)</kind>
+      <signature>
+        Test concurrent request handling:
+        ab -n 100 -c 10 \
+          -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+          https://role-directory-production-[hash].run.app/api/health
+        
+        Expected results:
+        - All requests succeed (100% success rate)
+        - Mean response time: <200ms
+        - No failed requests
+        - Concurrent requests handled smoothly
+        - Min 2 instances handle load, may scale to 3-4 under concurrent load
+        
+        Verify scaling behavior:
+        gcloud run services describe role-directory-production \
+          --region=us-central1 \
+          --format="value(status.conditions)"
+        
+        Check current instance count in Cloud Console or logs
+      </signature>
+      <path>Load testing tool</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing via gcloud CLI commands to create and verify production Cloud Run service. No application code changes in this story. Focus on production-grade infrastructure: High availability (min 2 instances), performance (2 CPU, 1 GB), gen2 execution, CPU boost, authentication, no cold starts. Comprehensive testing of production configuration.
+    </standards>
+    <locations>
+      - GCP Cloud Run Console (verify service exists and configuration)
+      - gcloud CLI (all configuration and verification commands)
+      - docs/guides/cloud-run-production-setup.md (documentation to create)
+      - Production service URL: https://role-directory-production-[hash].run.app
+      - No code files modified (infrastructure only)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify production service exists with correct URL">
+        Manual: gcloud run services list --filter="role-directory-production". Verify service listed. Get URL: gcloud run services describe role-directory-production --format="value(status.url)". Verify format: https://role-directory-production-[hash].run.app.
+      </test>
+      <test id="AC-2" desc="Verify min 2 instances configured (HIGH AVAILABILITY)">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/minScale'])". Verify value: 2. CRITICAL: No cold starts for production users. At least one instance during deployments.
+      </test>
+      <test id="AC-3" desc="Verify max 10 instances configured">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/maxScale'])". Verify value: 10. Higher than staging (3) for traffic spikes.
+      </test>
+      <test id="AC-4" desc="Verify 2 CPUs and 1 GB memory (BETTER THAN STAGING)">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.spec.containers[0].resources)". Verify cpu: "2" (double staging). Verify memory: 1Gi (double staging 512Mi). Production performance requirements.
+      </test>
+      <test id="AC-5" desc="Verify IAM authentication required">
+        Manual: Try unauthenticated: curl https://role-directory-production-[hash].run.app. Expected: 403 Forbidden. Try authenticated: curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" [url]/api/health. Expected: 200 OK.
+      </test>
+      <test id="AC-6" desc="Verify environment variables set correctly">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.spec.containers[0].env)". Verify NODE_ENV=production (CRITICAL for Next.js). Verify NEXT_PUBLIC_API_URL set to service URL. Verify DATABASE_URL from secret reference.
+      </test>
+      <test id="AC-7" desc="Verify ingress set to all">
+        Manual: gcloud run services describe role-directory-production --format="value(metadata.annotations['run.googleapis.com/ingress'])". Verify value: all. Accessible from internet with auth.
+      </test>
+      <test id="AC-8" desc="Verify container port 8080">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.spec.containers[0].ports[0].containerPort)". Verify value: 8080. Matches Dockerfile EXPOSE.
+      </test>
+      <test id="AC-9" desc="Verify resource labels">
+        Manual: gcloud run services describe role-directory-production --format="value(metadata.labels)". Verify environment=production. Verify app=role-directory. Cost tracking and filtering.
+      </test>
+      <test id="AC-10" desc="Verify NOT created via Console">
+        Process: All commands in gcloud CLI. No manual Console clicks. Document commands in docs/guides/cloud-run-production-setup.md. Ensure reproducible setup.
+      </test>
+      <test id="AC-11" desc="Verify configuration documented">
+        Manual: Check docs/guides/cloud-run-production-setup.md exists. Verify contains all gcloud commands. Verify service URL recorded. Verify all production-specific settings documented (gen2, CPU boost, scaling, resources).
+      </test>
+      <test id="AC-12" desc="Verify service URL recorded for CI/CD">
+        Manual: Check documentation contains production service URL. Will be used in Story 1.10 promotion workflow. Format: https://role-directory-production-[hash].run.app.
+      </test>
+      <test id="AC-13" desc="Verify higher resources than staging">
+        Compare: Staging (Story 1.7): 1 CPU, 512Mi, min 1. Production (Story 1.8): 2 CPUs, 1Gi, min 2. Verify production has DOUBLE resources for performance and reliability.
+      </test>
+      <test id="AC-14" desc="Verify gen2 execution environment">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.metadata.annotations['run.googleapis.com/execution-environment'])". Verify value: gen2. Better performance and reliability than gen1.
+      </test>
+      <test id="AC-15" desc="Verify CPU boost enabled">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.metadata.annotations['run.googleapis.com/cpu-boost'])". Verify value: true. Faster cold starts (if min instances drop).
+      </test>
+      <test id="TIMEOUT" desc="Verify timeout and concurrency settings">
+        Manual: gcloud run services describe role-directory-production --format="value(spec.template.spec.timeoutSeconds)". Verify: 300 (5 minutes). gcloud run services describe role-directory-production --format="value(spec.template.spec.containerConcurrency)". Verify: 80 (default, explicit).
+      </test>
+      <test id="SECRET" desc="Verify production Secret Manager integration">
+        Manual: gcloud secrets describe production-database-url. Verify secret exists. Verify isolated from dev/staging secrets. Check IAM: gcloud secrets get-iam-policy production-database-url. Verify service account has secretAccessor. Check Cloud Run references correct secret.
+      </test>
+      <test id="IAM" desc="Verify GitHub Actions service account access">
+        Manual: gcloud run services get-iam-policy role-directory-production. Verify github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com has roles/run.invoker. Needed for Story 1.10 automated promotion to production.
+      </test>
+      <test id="NO-COLD-START" desc="CRITICAL: Verify no cold starts">
+        Manual: Wait 10 minutes (ensure service stable). Run health check 10 times: for i in {1..10}; do curl -w "Time: %{time_total}s\n" -H "Authorization: Bearer $(gcloud auth print-identity-token)" [url]/api/health; done. Verify ALL requests under 0.1s (100ms). NO requests show cold start delay (2-3s). Min 2 instances keep service warm.
+      </test>
+      <test id="CONCURRENT-LOAD" desc="Test concurrent request handling">
+        Manual: Run concurrent load test: ab -n 100 -c 10 -H "Authorization: Bearer $(gcloud auth print-identity-token)" [url]/api/health. Verify: 100% success rate. Mean response time <200ms. No failed requests. Service scales if needed (check Cloud Run console for instance count).
+      </test>
+      <test id="DEPLOY-TEST" desc="Test production deployment">
+        Manual: Build image: docker build -t gcr.io/PROJECT_ID/role-directory:production-test . Push: docker push gcr.io/PROJECT_ID/role-directory:production-test. Deploy: gcloud run deploy role-directory-production --image=gcr.io/PROJECT_ID/role-directory:production-test. Verify deployment succeeds. Check revisions: gcloud run revisions list --service=role-directory-production. Verify new revision created. Verify traffic switched to new revision. Verify old revision kept until new revision healthy.
+      </test>
+      <test id="HEALTH-CHECK" desc="Verify health check with auth">
+        Manual: curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://role-directory-production-[hash].run.app/api/health. Expected: 200 OK. Response: { "status": "ok", "timestamp": "..." }. Response time: <100ms (no cold start). Health endpoint from Story 1.6 works in production.
+      </test>
+      <test id="COST" desc="Verify cost implications understood and acceptable">
+        Review: Min 2 instances + 2 CPU + 1 GB = ~$50-100/month typical. Max 10 instances = ~$240/month under extreme load. 2x staging cost due to resources and min instances. Justification: High availability and performance for production users. Budget approved.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+

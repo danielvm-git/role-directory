@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 2-2-database-connection-configuration-with-zod-validated-config
+  Generated: 2025-11-07
+  Epic: 2 - Database Infrastructure & Connectivity
+  Status: ready-for-dev
+-->
+<story-context>
+  <metadata>
+    <epic-id>2</epic-id>
+    <story-id>2</story-id>
+    <story-key>2-2-database-connection-configuration-with-zod-validated-config</story-key>
+    <story-title>Database Connection Configuration with Zod-Validated Config</story-title>
+    <status>ready-for-dev</status>
+    <generated-date>2025-11-07</generated-date>
+  </metadata>
+
+  <user-story>
+    <as-a>developer</as-a>
+    <i-want>a type-safe configuration module with Zod validation and a database connection module with proper pooling</i-want>
+    <so-that>the application validates configuration on startup and can reliably connect to PostgreSQL from Cloud Run</so-that>
+  </user-story>
+
+  <acceptance-criteria>
+    <criterion id="AC-1">
+      <given>the Neon databases are set up</given>
+      <when>the application initializes</when>
+      <then>the configuration module (lib/config.ts) uses Zod to validate all required environment variables</then>
+      <and>Validates DATABASE_URL is a valid PostgreSQL URL</and>
+      <and>Validates ALLOWED_EMAILS contains valid email addresses</and>
+      <and>Parses and transforms configuration (split emails, parse port)</and>
+      <and>Provides type-safe getConfig() function</and>
+      <and>Fails fast with detailed error messages if configuration is invalid</and>
+    </criterion>
+    <criterion id="AC-2">
+      <and>the database connection module (lib/db.ts) uses getConfig() to get validated DATABASE_URL</and>
+      <and>Uses @neondatabase/serverless driver (built-in pooling)</and>
+      <and>Handles Neon cold starts gracefully (2-3 second resume time)</and>
+      <and>Logs slow queries (greater than 200ms)</and>
+      <and>Provides query() function with parameterized query support</and>
+    </criterion>
+    <criterion id="AC-3">
+      <and>I can import configuration: import { getConfig } from '@/lib/config'</and>
+      <and>I can import database utilities: import { query } from '@/lib/db'</and>
+      <and>Connection failures throw descriptive errors (not raw database errors)</and>
+      <and>The module handles connection timeouts (5 seconds max wait)</and>
+      <and>Connections are properly released after use (no leaks)</and>
+    </criterion>
+  </acceptance-criteria>
+
+  <story-tasks>
+    <task id="T1" status="pending">
+      <title>Create configuration module with Zod validation</title>
+      <subtasks>
+        <subtask>Create directory: lib/</subtask>
+        <subtask>Create file: lib/config.ts</subtask>
+        <subtask>Import Zod: import { z } from 'zod'</subtask>
+        <subtask>Define configuration schema with all environment variables</subtask>
+        <subtask>Implement getConfig() function with validation</subtask>
+        <subtask>Export Config type inferred from schema</subtask>
+        <subtask>Add detailed error messages for validation failures</subtask>
+      </subtasks>
+    </task>
+    <task id="T2" status="pending">
+      <title>Define Zod schema for database configuration</title>
+      <subtasks>
+        <subtask>Add databaseUrl field to schema with URL validation starting with postgresql://</subtask>
+        <subtask>Validate URL format (must start with postgresql://)</subtask>
+        <subtask>Make required (no default value)</subtask>
+        <subtask>Add descriptive error message if missing or invalid</subtask>
+      </subtasks>
+    </task>
+    <task id="T3" status="pending">
+      <title>Define Zod schema for authentication configuration</title>
+      <subtasks>
+        <subtask>Add allowedEmails field with string transform (split by comma, trim, lowercase)</subtask>
+        <subtask>Transform: Split by comma, trim whitespace, lowercase</subtask>
+        <subtask>Validate: Each email must be valid email format</subtask>
+        <subtask>Make required (no default value for security)</subtask>
+      </subtasks>
+    </task>
+    <task id="T4" status="pending">
+      <title>Define Zod schema for environment and runtime</title>
+      <subtasks>
+        <subtask>Add nodeEnv field with enum validation (development, staging, production) defaulting to development</subtask>
+        <subtask>Add port field with string to number transform, default 8080, validate positive int max 65535</subtask>
+        <subtask>Add optional fields for Neon Auth (Epic 3): neonAuthProjectId, neonAuthSecretKey</subtask>
+      </subtasks>
+    </task>
+    <task id="T5" status="pending">
+      <title>Implement getConfig() function with fail-fast validation</title>
+      <subtasks>
+        <subtask>Use safeParse() to catch validation errors</subtask>
+        <subtask>Format error messages clearly (field: message)</subtask>
+        <subtask>Throw error immediately (fail-fast, don't start server)</subtask>
+        <subtask>Return type-safe Config object on success</subtask>
+        <subtask>Cache validated config to avoid re-parsing on every call</subtask>
+      </subtasks>
+    </task>
+    <task id="T6" status="pending">
+      <title>Create database connection module</title>
+      <subtasks>
+        <subtask>Create file: lib/db.ts</subtask>
+        <subtask>Import dependencies: neon from @neondatabase/serverless, getConfig from @/lib/config</subtask>
+        <subtask>Get validated configuration</subtask>
+        <subtask>Initialize Neon client with DATABASE_URL</subtask>
+        <subtask>Export query() function</subtask>
+      </subtasks>
+    </task>
+    <task id="T7" status="pending">
+      <title>Initialize Neon client with validated DATABASE_URL</title>
+      <subtasks>
+        <subtask>Get config: const config = getConfig();</subtask>
+        <subtask>Initialize Neon client: const sql = neon(config.databaseUrl);</subtask>
+        <subtask>Note: Neon client is stateless (HTTP-based), no connection pooling needed</subtask>
+        <subtask>Client handles Neon auto-suspend/resume automatically</subtask>
+      </subtasks>
+    </task>
+    <task id="T8" status="pending">
+      <title>Implement query() function with parameterized queries</title>
+      <subtasks>
+        <subtask>Accept SQL text and optional parameters</subtask>
+        <subtask>Execute query via Neon client</subtask>
+        <subtask>Measure execution time</subtask>
+        <subtask>Return typed result (generic T[])</subtask>
+        <subtask>Support parameterized queries ($1, $2, etc.)</subtask>
+      </subtasks>
+    </task>
+    <task id="T9" status="pending">
+      <title>Add slow query logging</title>
+      <subtasks>
+        <subtask>Measure query duration: Date.now() - start</subtask>
+        <subtask>Log if duration greater than 200ms threshold</subtask>
+        <subtask>Include query text and duration in log</subtask>
+        <subtask>Use console.warn for visibility</subtask>
+        <subtask>Format: [DB] Slow query (350ms): SELECT * FROM ...</subtask>
+      </subtasks>
+    </task>
+    <task id="T10" status="pending">
+      <title>Add error handling and sanitization</title>
+      <subtasks>
+        <subtask>Wrap query execution in try-catch</subtask>
+        <subtask>Log full error details server-side (console.error)</subtask>
+        <subtask>Include query text and error in log</subtask>
+        <subtask>Throw sanitized error message (not raw database error)</subtask>
+        <subtask>Error message: "Database query failed" (generic, safe for client)</subtask>
+      </subtasks>
+    </task>
+    <task id="T11" status="pending">
+      <title>Create .env.local for local development</title>
+      <subtasks>
+        <subtask>Create file: .env.local (gitignored)</subtask>
+        <subtask>Add DATABASE_URL with actual Neon dev connection string</subtask>
+        <subtask>Add ALLOWED_EMAILS with your email for testing</subtask>
+        <subtask>Add NODE_ENV=development</subtask>
+        <subtask>Add PORT=3000</subtask>
+        <subtask>Verify .env.local is in .gitignore</subtask>
+        <subtask>Document in README: Copy .env.example to .env.local</subtask>
+      </subtasks>
+    </task>
+    <task id="T12" status="pending">
+      <title>Test configuration validation</title>
+      <subtasks>
+        <subtask>Start dev server with missing DATABASE_URL - verify crash with clear error</subtask>
+        <subtask>Start dev server with invalid DATABASE_URL (not a URL) - verify validation error</subtask>
+        <subtask>Start dev server with invalid ALLOWED_EMAILS (not email format) - verify validation error</subtask>
+        <subtask>Start dev server with valid .env.local - verify success</subtask>
+      </subtasks>
+    </task>
+    <task id="T13" status="pending">
+      <title>Test database connection</title>
+      <subtasks>
+        <subtask>Create test file: lib/db.test.ts or test in API route</subtask>
+        <subtask>Import query function: import { query } from '@/lib/db'</subtask>
+        <subtask>Execute test query: const result = await query('SELECT version()')</subtask>
+        <subtask>Verify: Result contains PostgreSQL version string</subtask>
+        <subtask>Execute parameterized query: const result = await query('SELECT $1 as value', [42])</subtask>
+        <subtask>Verify: Result contains [{ value: 42 }]</subtask>
+        <subtask>Measure query time (should be less than 3s cold, less than 200ms warm)</subtask>
+      </subtasks>
+    </task>
+    <task id="T14" status="pending">
+      <title>Test error handling</title>
+      <subtasks>
+        <subtask>Execute invalid query: await query('SELECT FROM invalid')</subtask>
+        <subtask>Verify: Error thrown with message "Database query failed"</subtask>
+        <subtask>Verify: Server logs show full error details (console.error)</subtask>
+        <subtask>Verify: Client does NOT see raw database error</subtask>
+        <subtask>Test connection timeout (if possible)</subtask>
+        <subtask>Verify: Timeout error handled gracefully</subtask>
+      </subtasks>
+    </task>
+    <task id="T15" status="pending">
+      <title>Document configuration and database modules</title>
+      <subtasks>
+        <subtask>Update README with configuration section</subtask>
+        <subtask>Document required environment variables</subtask>
+        <subtask>Document how to set up .env.local</subtask>
+        <subtask>Document how to use getConfig() in code</subtask>
+        <subtask>Document how to use query() function</subtask>
+        <subtask>Add examples of parameterized queries</subtask>
+        <subtask>Link to architecture.md for patterns</subtask>
+      </subtasks>
+    </task>
+  </story-tasks>
+
+  <artifacts>
+    <docs>
+      <doc id="DOC-1">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
+        <section>Configuration Management Pattern &amp; Database Connection Pattern</section>
+        <snippet>Configuration module uses Zod for runtime validation, fails fast on invalid config, provides type-safe getConfig() function. Database module uses @neondatabase/serverless driver (HTTP-based, stateless), provides query() function with parameterized query support, logs slow queries (greater than 200ms), sanitizes error messages.</snippet>
+      </doc>
+      <doc id="DOC-2">
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Configuration Management Pattern</section>
+        <snippet>Use Zod for runtime validation. Fail fast on invalid configuration (crash on startup). Cache validated configuration (don't re-validate on every access). Provide type-safe Config type inferred from schema. Example configSchema with databaseUrl, allowedEmails, nodeEnv, port fields.</snippet>
+      </doc>
+      <doc id="DOC-3">
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Connection Pattern</section>
+        <snippet>Use @neondatabase/serverless driver (not pg or pg-pool). Simple query() function with parameterized query support. Slow query logging for performance monitoring (greater than 200ms). Connection timeout handling. Error sanitization (don't expose database details to client). HTTP-based client is stateless, no persistent connections.</snippet>
+      </doc>
+      <doc id="DOC-4">
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-1: Performance targets, NFR-3: Security requirements</section>
+        <snippet>Performance: Query latency less than 200ms (P95) warm, less than 3s (P99) cold start with Neon auto-resume. Security: Never commit DATABASE_URL to git, use parameterized queries (prevent SQL injection), sanitize error messages (don't expose database schema), validate all configuration inputs.</snippet>
+      </doc>
+      <doc id="DOC-5">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification</title>
+        <section>Configuration Schema (Zod) Example</section>
+        <snippet>Complete Zod schema example with databaseUrl (URL validation, startsWith postgresql://), allowedEmails (transform split/trim/lowercase, validate email array), nodeEnv (enum development/staging/production), port (string to number transform, positive int max 65535), optional neonAuthProjectId and neonAuthSecretKey fields.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact id="CODE-1">
+        <path>package.json</path>
+        <kind>configuration</kind>
+        <symbol>dependencies</symbol>
+        <lines>27-32</lines>
+        <reason>Already includes @neondatabase/serverless v0.10.1 and zod v3.23.8 - dependencies ready for this story</reason>
+      </artifact>
+      <artifact id="CODE-2">
+        <path>tsconfig.json</path>
+        <kind>configuration</kind>
+        <symbol>paths alias</symbol>
+        <lines>24-28</lines>
+        <reason>Path alias @/* configured to resolve to project root, enabling imports like import { getConfig } from '@/lib/config'</reason>
+      </artifact>
+      <artifact id="CODE-3">
+        <path>app/api/health/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET handler</symbol>
+        <lines>30-51</lines>
+        <reason>Health check endpoint has commented database check section (lines 30-51) that will be uncommented in Story 2.5 to use the query() function from this story</reason>
+      </artifact>
+      <artifact id="CODE-4">
+        <path>.gitignore</path>
+        <kind>configuration</kind>
+        <symbol>.env.local</symbol>
+        <lines>36-42</lines>
+        <reason>.env.local already in .gitignore - ensures DATABASE_URL and other secrets are never committed to git</reason>
+      </artifact>
+      <artifact id="CODE-5">
+        <path>vitest.config.ts</path>
+        <kind>configuration</kind>
+        <symbol>test configuration</symbol>
+        <lines>1-35</lines>
+        <reason>Vitest configured for unit tests with @/* path alias resolution - can be used to test config and db modules (deferred to Phase 2 per PRD)</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@neondatabase/serverless" version="^0.10.1" scope="dependencies">HTTP-based PostgreSQL client optimized for serverless environments with built-in connection pooling and query queueing</package>
+        <package name="zod" version="^3.23.8" scope="dependencies">Runtime schema validation with TypeScript type inference for configuration validation</package>
+        <package name="next" version="^15.0.3" scope="dependencies">Next.js framework - provides process.env access for configuration</package>
+        <package name="typescript" version="^5.6.3" scope="devDependencies">TypeScript compiler with strict mode for type safety</package>
+        <package name="@types/node" version="^22.19.0" scope="devDependencies">Node.js type definitions for process.env types</package>
+      </node>
+      <external>
+        <service name="Neon PostgreSQL" version="17.0">Serverless PostgreSQL hosting with auto-suspend, HTTP-based connection protocol via @neondatabase/serverless driver</service>
+        <service name="Google Secret Manager">Provides DATABASE_URL at runtime (injected as environment variable by Cloud Run)</service>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface id="INT-1">
+      <name>Configuration Module API</name>
+      <kind>TypeScript Module Export</kind>
+      <signature>
+export function getConfig(): Config;
+export type Config = z.infer&lt;typeof configSchema&gt;;
+export const configSchema: z.ZodSchema&lt;Config&gt;;
+
+interface Config {
+  databaseUrl: string;
+  allowedEmails: string[];
+  nodeEnv: 'development' | 'staging' | 'production';
+  port: number;
+  neonAuthProjectId?: string;
+  neonAuthSecretKey?: string;
+  nextPublicApiUrl?: string;
+}
+      </signature>
+      <path>lib/config.ts</path>
+      <notes>getConfig() validates process.env using Zod schema, caches result, throws on invalid config. Config type inferred from schema for type safety.</notes>
+    </interface>
+    <interface id="INT-2">
+      <name>Database Module API</name>
+      <kind>TypeScript Module Export</kind>
+      <signature>
+export async function query&lt;T = any&gt;(
+  text: string,
+  params?: any[]
+): Promise&lt;T[]&gt;;
+
+export async function queryOne&lt;T = any&gt;(
+  text: string,
+  params?: any[]
+): Promise&lt;T | null&gt;;
+
+// Usage examples:
+const result = await query('SELECT version()');
+const users = await query&lt;User&gt;('SELECT * FROM users WHERE email = $1', ['user@example.com']);
+const user = await queryOne&lt;User&gt;('SELECT * FROM users WHERE id = $1', [userId]);
+      </signature>
+      <path>lib/db.ts</path>
+      <notes>query() executes parameterized SQL queries via Neon HTTP driver, logs slow queries (greater than 200ms), throws sanitized errors. queryOne() helper returns first result or null.</notes>
+    </interface>
+    <interface id="INT-3">
+      <name>Environment Variables Schema</name>
+      <kind>Runtime Configuration</kind>
+      <signature>
+# Required
+DATABASE_URL=postgresql://user:pass@ep-xxx.region.neon.tech/dbname?sslmode=require
+ALLOWED_EMAILS=email1@example.com,email2@example.com
+
+# Optional (with defaults)
+NODE_ENV=development  # default: development
+PORT=3000            # default: 8080
+
+# Optional (Epic 3)
+NEON_AUTH_PROJECT_ID=project-id
+NEON_AUTH_SECRET_KEY=secret-key
+NEXT_PUBLIC_API_URL=http://localhost:3000
+      </signature>
+      <path>.env.local (local dev) or process.env (Cloud Run)</path>
+      <notes>Environment variables validated by Zod schema. DATABASE_URL required, must be valid PostgreSQL URL. ALLOWED_EMAILS required, must be comma-separated valid emails.</notes>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint id="CONS-1" type="architecture">
+      <title>Configuration Management Pattern</title>
+      <description>Use Zod for runtime validation. Fail fast on invalid configuration (crash on startup). Cache validated configuration (don't re-validate on every access). Provide type-safe Config type inferred from schema.</description>
+      <source>docs/3-solutioning/architecture.md - Configuration Management Pattern</source>
+    </constraint>
+    <constraint id="CONS-2" type="architecture">
+      <title>Database Connection Pattern</title>
+      <description>Use @neondatabase/serverless driver (not pg or pg-pool). Simple query() function with parameterized query support. Slow query logging for performance monitoring. Connection timeout handling. Error sanitization (don't expose database details to client).</description>
+      <source>docs/3-solutioning/architecture.md - Database Connection Pattern</source>
+    </constraint>
+    <constraint id="CONS-3" type="security">
+      <title>Never Commit Secrets</title>
+      <description>DATABASE_URL must NEVER be in git. Use .env.local for local development (gitignored). Store credentials in Google Secret Manager for Cloud Run (injected at runtime).</description>
+      <source>docs/2-planning/PRD.md - NFR-3: Security</source>
+    </constraint>
+    <constraint id="CONS-4" type="security">
+      <title>Parameterized Queries Only</title>
+      <description>Always use parameterized queries ($1, $2) to prevent SQL injection. Never string interpolation or concatenation for SQL queries. query() function must accept params array.</description>
+      <source>docs/tech-spec-epic-2.md - Security Best Practices</source>
+    </constraint>
+    <constraint id="CONS-5" type="security">
+      <title>Error Message Sanitization</title>
+      <description>Log full error details server-side (console.error). Return generic error messages to client ("Database query failed"). Never expose database schema, connection strings, or raw errors to client.</description>
+      <source>docs/3-solutioning/architecture.md - Error Handling Pattern</source>
+    </constraint>
+    <constraint id="CONS-6" type="performance">
+      <title>Slow Query Logging</title>
+      <description>Log queries greater than 200ms (slow query threshold). Include query text (truncated if needed) and duration. Use console.warn for visibility. Format: [DB] Slow query (duration): query text</description>
+      <source>docs/2-planning/PRD.md - NFR-1: Performance</source>
+    </constraint>
+    <constraint id="CONS-7" type="architecture">
+      <title>No Traditional Connection Pooling</title>
+      <description>@neondatabase/serverless driver is HTTP-based (stateless), no persistent connections. Do not use pg-pool or other connection pooling libraries. Neon driver handles connection management automatically via HTTP protocol.</description>
+      <source>docs/tech-spec-epic-2.md - Neon Serverless Driver Features</source>
+    </constraint>
+    <constraint id="CONS-8" type="architecture">
+      <title>Configuration Caching</title>
+      <description>Cache validated configuration on first call to getConfig(). Return cached instance on subsequent calls. Avoid re-parsing environment variables on every request. Use module-level variable for cache.</description>
+      <source>docs/tech-spec-epic-2.md - Configuration Module Structure</source>
+    </constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      <summary>Manual testing approach for this story. Configuration validation tested by starting dev server with various invalid/valid configs. Database connection tested via test queries in API route or test file. Unit/integration tests documented in Tech Spec but NOT required for MVP (per PRD Phase 2 deferral). Focus on manual verification and error message clarity.</summary>
+      <framework>Manual verification via npm run dev, test API routes, console logs</framework>
+      <location>Manual testing (no test files required for MVP). Optional: lib/config.test.ts, lib/db.test.ts (deferred to Phase 2)</location>
+    </standards>
+
+    <locations>
+      <location>Manual testing only for this story (Phase 2: lib/config.test.ts, lib/db.test.ts)</location>
+    </locations>
+
+    <ideas>
+      <test-idea id="TEST-1" maps-to="AC-1">
+        <title>Test Configuration Validation with Missing DATABASE_URL</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Remove or comment out DATABASE_URL in .env.local
+          2. Run: npm run dev
+          3. Expected: Application crashes immediately with clear error message
+          4. Error should show: "Configuration validation failed: databaseUrl: Required"
+          5. Verify server does not start (no port listening)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-2" maps-to="AC-1">
+        <title>Test Configuration Validation with Invalid DATABASE_URL Format</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set DATABASE_URL to invalid value in .env.local (e.g., "not-a-url")
+          2. Run: npm run dev
+          3. Expected: Application crashes with validation error
+          4. Error should show: "Configuration validation failed: databaseUrl: Invalid url" or "databaseUrl: String must start with postgresql://"
+          5. Verify detailed error message explains the issue
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-3" maps-to="AC-1">
+        <title>Test Configuration Validation with Invalid ALLOWED_EMAILS</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set ALLOWED_EMAILS to invalid value in .env.local (e.g., "not-an-email,another-invalid")
+          2. Run: npm run dev
+          3. Expected: Application crashes with validation error
+          4. Error should show: "Configuration validation failed: allowedEmails.0: Invalid email"
+          5. Verify Zod catches invalid email format
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-4" maps-to="AC-1">
+        <title>Test Configuration Validation with Valid Config</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set all required environment variables correctly in .env.local (DATABASE_URL, ALLOWED_EMAILS)
+          2. Run: npm run dev
+          3. Expected: Application starts successfully without errors
+          4. Verify server listening on PORT (default 3000)
+          5. Visit http://localhost:3000 and verify landing page loads
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-5" maps-to="AC-2">
+        <title>Test Database Connection with Simple Query</title>
+        <approach>Manual API Test or Test File</approach>
+        <steps>
+          1. Create test API route: app/api/test-db/route.ts or test file: lib/db.test.ts
+          2. Import query function: import { query } from '@/lib/db'
+          3. Execute: const result = await query('SELECT version()')
+          4. Log result to console or return in API response
+          5. Expected: Result contains PostgreSQL version string (PostgreSQL 17.0...)
+          6. Verify query completes (may take 2-3s if cold start, less than 200ms if warm)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-6" maps-to="AC-2, AC-3">
+        <title>Test Parameterized Queries</title>
+        <approach>Manual API Test</approach>
+        <steps>
+          1. Execute parameterized query: const result = await query('SELECT $1 as value, $2 as name', [42, 'test'])
+          2. Expected: Result contains [{ value: 42, name: 'test' }]
+          3. Verify parameterized query syntax works correctly
+          4. Try multiple parameter types (number, string, boolean)
+          5. Verify SQL injection prevention (parameters properly escaped)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-7" maps-to="AC-2">
+        <title>Test Slow Query Logging</title>
+        <approach>Manual Console Observation</approach>
+        <steps>
+          1. Execute query that takes longer than 200ms (e.g., SELECT pg_sleep(0.3))
+          2. Check server console logs
+          3. Expected: console.warn message with format "[DB] Slow query (duration): query text"
+          4. Verify duration is included in log
+          5. Verify query text is included (truncated if very long)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-8" maps-to="AC-3">
+        <title>Test Error Handling and Sanitization</title>
+        <approach>Manual Error Test</approach>
+        <steps>
+          1. Execute invalid query: await query('SELECT FROM invalid')
+          2. Expected: Error thrown with generic message "Database query failed"
+          3. Check server console logs - should show full error details (console.error)
+          4. Verify client does NOT see raw database error (no SQL syntax details)
+          5. Verify error includes query text and timestamp in server logs
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-9" maps-to="AC-2">
+        <title>Test Cold Start Behavior</title>
+        <approach>Manual Performance Test</approach>
+        <steps>
+          1. Wait 5+ minutes (Neon auto-suspend after 5 minutes)
+          2. Execute query: await query('SELECT 1')
+          3. Measure query time (use Date.now() or console.time)
+          4. Expected: Query takes 2-3 seconds (database resume time)
+          5. Execute second query immediately: await query('SELECT 2')
+          6. Expected: Second query completes in less than 200ms (database now active)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-10" maps-to="AC-1, AC-2, AC-3">
+        <title>End-to-End Integration Test</title>
+        <approach>Manual Full Stack Test</approach>
+        <steps>
+          1. Start dev server with valid .env.local: npm run dev
+          2. Verify server starts without configuration errors
+          3. Create test API route that uses both getConfig() and query()
+          4. Example: GET /api/test returns { config: getConfig().nodeEnv, dbVersion: await query('SELECT version()') }
+          5. Visit test route in browser or curl
+          6. Verify response includes nodeEnv and database version
+          7. Check server logs for any warnings or errors
+          8. Expected: Full stack working (config validation + database query)
+        </steps>
+      </test-idea>
+    </ideas>
+  </tests>
+
+  <dev-notes>
+    <technical-context>
+      <note id="NOTE-1">
+        <title>Configuration Module Implementation Pattern</title>
+        <content>Create lib/config.ts with Zod schema for all environment variables. Use z.infer to derive Config type from schema. Implement getConfig() function using safeParse() for detailed error messages. Cache validated config in module-level variable to avoid re-parsing. Export getConfig(), Config type, and configSchema for testing/documentation.</content>
+      </note>
+      <note id="NOTE-2">
+        <title>Database Module Implementation Pattern</title>
+        <content>Create lib/db.ts importing neon from @neondatabase/serverless and getConfig from @/lib/config. Initialize Neon client at module level: const sql = neon(config.databaseUrl). Implement query() function accepting SQL text and optional params array. Measure query duration, log if greater than 200ms. Wrap in try-catch, log full errors server-side, throw sanitized generic error.</content>
+      </note>
+      <note id="NOTE-3">
+        <title>Neon Serverless Driver Characteristics</title>
+        <content>@neondatabase/serverless is HTTP-based (stateless), no persistent connections. Built-in connection pooling and query queueing handled by driver. Automatically handles Neon auto-suspend/resume (2-3s cold start transparent to application). No traditional connection pooling library needed (pg-pool not required). Edge runtime compatible (works in Vercel Edge, Cloudflare Workers).</content>
+      </note>
+      <note id="NOTE-4">
+        <title>Configuration Validation Error Examples</title>
+        <content>Missing DATABASE_URL: "Configuration validation failed: databaseUrl: Required". Invalid DATABASE_URL format: "databaseUrl: Invalid url" or "databaseUrl: String must start with postgresql://". Invalid ALLOWED_EMAILS: "allowedEmails.0: Invalid email". Invalid PORT: "port: Expected number, received nan". Errors are detailed and actionable.</content>
+      </note>
+      <note id="NOTE-5">
+        <title>Query Usage Examples</title>
+        <content>Simple query: await query('SELECT version()'). Parameterized query: await query('SELECT * FROM users WHERE email = $1', ['user@example.com']). Multiple parameters: await query('SELECT * FROM profiles WHERE id = $1 AND role = $2', [5, 'engineer']). Typed result: await query&lt;User&gt;('SELECT * FROM users LIMIT 10'). queryOne helper: await queryOne&lt;User&gt;('SELECT * FROM users WHERE id = $1', [userId]).</content>
+      </note>
+      <note id="NOTE-6">
+        <title>Performance Expectations</title>
+        <content>Warm query (database active): less than 50ms for simple queries. Cold start (database suspended): approximately 2-3 seconds for first query (Neon resume). Subsequent queries (after cold start): less than 50ms (database remains active). Slow query threshold: 200ms (log for investigation). Connection timeout: Neon driver has built-in timeout (approximately 30 seconds).</content>
+      </note>
+      <note id="NOTE-7">
+        <title>Error Handling Strategy</title>
+        <content>Configuration errors: Crash immediately on startup (fail-fast). Query errors: Log full details server-side, throw sanitized error. Connection errors: Handled by Neon driver, retry automatically. Timeout errors: Logged and thrown as "Database query failed". Never expose: Database schema details, connection strings, raw errors to client.</content>
+      </note>
+      <note id="NOTE-8">
+        <title>Local Development Setup</title>
+        <content>Create .env.local with DATABASE_URL (from Story 2.1 Neon dev database), ALLOWED_EMAILS (your email), NODE_ENV=development, PORT=3000. Verify .env.local in .gitignore (already configured). Document in README how to copy .env.example to .env.local. Cloud Run injects DATABASE_URL from Secret Manager (no .env.local in container).</content>
+      </note>
+    </technical-context>
+
+    <learnings-from-previous-stories>
+      <learning id="LEARN-1">
+        <from-story>Story 2.1 (Neon PostgreSQL Account and Database Setup)</from-story>
+        <status>ready-for-dev</status>
+        <content>DATABASE_URL available from Neon databases created in Story 2.1. Three databases created: role_directory_dev, role_directory_stg, role_directory_prd. Connection strings stored in Google Secret Manager. Cloud Run services configured with DATABASE_URL secret injection. Can test with dev database locally (DATABASE_URL in .env.local).</content>
+      </learning>
+      <learning id="LEARN-2">
+        <from-story>Story 1.1 (Project Initialization)</from-story>
+        <status>Done</status>
+        <content>Next.js project initialized with TypeScript, zod, and @neondatabase/serverless already installed. tsconfig.json configured with @/* path alias. .gitignore configured to exclude .env.local. Project structure established with app/ directory (App Router).</content>
+      </learning>
+      <learning id="LEARN-3">
+        <from-story>Story 1.6 (Health Check Endpoint)</from-story>
+        <status>Done</status>
+        <content>Health check endpoint exists at app/api/health/route.ts with commented database check section (lines 30-51). This section will be uncommented in Story 2.5 to use the query() function created in this story. Health check provides integration point for database connectivity verification.</content>
+      </learning>
+    </learnings-from-previous-stories>
+
+    <important-considerations>
+      <consideration id="CONS-A">
+        <title>Foundation for All Subsequent Stories</title>
+        <content>This story creates the configuration and database foundation for ALL subsequent Epic 2, 3, and 4 stories. Configuration module will be extended in Epic 3 for Neon Auth credentials. Database connection will be used in Epic 4 for dashboard queries. Critical that this implementation is solid and follows architecture patterns exactly.</content>
+      </consideration>
+      <consideration id="CONS-B">
+        <title>Fail-Fast Configuration Validation</title>
+        <content>Configuration validation MUST crash the application immediately on startup if invalid. Do not allow server to start with invalid config. Detailed error messages are critical for developer productivity. Cache validated config to avoid re-parsing on every request.</content>
+      </consideration>
+      <consideration id="CONS-C">
+        <title>Neon Driver Handles Connection Management</title>
+        <content>@neondatabase/serverless driver is HTTP-based (stateless), no persistent connections. Do NOT attempt to implement connection pooling with pg-pool or similar. Neon driver handles connection management, auto-suspend/resume, and query queueing automatically. Simple query() function is sufficient.</content>
+      </consideration>
+      <consideration id="CONS-D">
+        <title>Error Sanitization is Security Critical</title>
+        <content>Never expose database errors to client. Log full error details server-side (console.error) for debugging. Return generic "Database query failed" message to client. Prevents information leakage about database schema, connection details, or SQL syntax.</content>
+      </consideration>
+      <consideration id="CONS-E">
+        <title>Testing Approach for MVP</title>
+        <content>Manual testing is primary approach for this story (per PRD Phase 2 unit test deferral). Test configuration validation by starting dev server with various invalid configs. Test database connection via test API route or test file. Verify error messages are clear and actionable. Document testing steps for future reference.</content>
+      </consideration>
+      <consideration id="CONS-F">
+        <title>Optional queryOne() Helper Function</title>
+        <content>Consider implementing queryOne() helper function that returns first result or null. Useful for single-row queries (e.g., SELECT * FROM users WHERE id = $1). Implementation: const results = await query(text, params); return results.length greater than 0 ? results[0] : null;</content>
+      </consideration>
+    </important-considerations>
+  </dev-notes>
+
+  <references>
+    <reference id="REF-1">
+      <title>Zod Documentation</title>
+      <url>https://zod.dev/</url>
+      <relevance>Official Zod documentation for schema definition, validation, type inference, transformations, and error handling</relevance>
+    </reference>
+    <reference id="REF-2">
+      <title>Neon Serverless Driver Documentation</title>
+      <url>https://neon.tech/docs/serverless/serverless-driver</url>
+      <relevance>Official documentation for @neondatabase/serverless driver - HTTP-based PostgreSQL client for serverless environments</relevance>
+    </reference>
+    <reference id="REF-3">
+      <title>Next.js Environment Variables</title>
+      <url>https://nextjs.org/docs/app/building-your-application/configuring/environment-variables</url>
+      <relevance>Next.js conventions for environment variables (.env.local, process.env access, NEXT_PUBLIC_ prefix for client-side variables)</relevance>
+    </reference>
+    <reference id="REF-4">
+      <title>TypeScript Type Inference</title>
+      <url>https://www.typescriptlang.org/docs/handbook/type-inference.html</url>
+      <relevance>Understanding z.infer utility type for deriving Config type from Zod schema</relevance>
+    </reference>
+  </references>
+</story-context>
+

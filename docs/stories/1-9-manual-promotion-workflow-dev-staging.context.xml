@@ -1,0 +1,379 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.9</storyId>
+    <title>Manual Promotion Workflow (Dev to Staging)</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-9-manual-promotion-workflow-dev-staging.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>DevOps engineer</asA>
+    <iWant>a GitHub Actions workflow to manually promote a validated dev deployment to staging</iWant>
+    <soThat>I can promote tested changes to the staging environment with a single button click</soThat>
+    <tasks>
+      - Create GitHub Actions workflow file with workflow_dispatch trigger
+      - Configure workflow environment and GCP permissions
+      - Authenticate with Google Cloud using service account
+      - Pull dev image from GCR/Artifact Registry using provided tag
+      - Re-tag image for staging with timestamp
+      - Push re-tagged image to registry (staging-<timestamp> and staging-latest)
+      - Deploy to Cloud Run staging service
+      - Run health check against staging URL with IAM authentication
+      - Add audit logging (dev tag, staging tag, user, timestamp)
+      - Document workflow usage instructions
+      - Test promotion workflow end-to-end
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Workflow triggered manually via GitHub Actions UI (workflow_dispatch)
+    2. Requires input: dev image tag or revision to promote
+    3. Pulls the specified dev Docker image from GCR/Artifact Registry
+    4. Re-tags the image for staging: gcr.io/PROJECT_ID/role-directory:staging-<timestamp>
+    5. Pushes the re-tagged image to the registry
+    6. Deploys the image to the role-directory-staging Cloud Run service
+    7. Runs health check against staging URL: GET /api/health with IAM auth
+    8. Reports success or failure in GitHub Actions UI
+    9. Completes in under 5 minutes total
+    10. Workflow does NOT rebuild the application (uses existing dev image)
+    11. Workflow includes confirmation step or protection (manual trigger is protection)
+    12. Workflow is documented with usage instructions
+    13. Workflow logs the promoted image tag for audit trail
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/2-planning/epics.md</path>
+        <title>Epic Breakdown - Story 1.9</title>
+        <section>Story 1.9: Manual Promotion Workflow (Dev to Staging)</section>
+        <snippet>GitHub Actions workflow for manual dev to staging promotion. Manually triggered via workflow_dispatch. Pulls dev image, re-tags for staging, deploys to staging Cloud Run. Health check with IAM auth. Audit logging. Completes in under 5 minutes. No rebuild (uses existing dev image).</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>AC-9: Manual Staging Promotion</section>
+        <snippet>promote-to-staging.yml workflow. Manually triggerable from GitHub Actions UI. Accepts image tag (commit SHA) as input. Deploys SAME Docker image to staging (no rebuild). Staging environment variables injected. Health check runs against staging URL. Workflow summary displays staging URL. Complete in under 5 minutes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Workflows and Sequencing - Manual Staging Promotion</section>
+        <snippet>Developer validates feature in dev → triggers Promote to Staging workflow → Enter commit SHA → Workflow authenticates with GCP → Deploys SAME image to staging (no rebuild) → Different env vars (NODE_ENV=staging) → Different secrets (staging database) → Health check against staging URL → Report promotion status. Timing: under 3 minutes (faster than dev, no rebuild).</snippet>
+      </doc>
+      <doc>
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-6.6: Promotion Workflow</section>
+        <snippet>Manual promotion workflow from dev to staging. Triggered from GitHub Actions UI. Select dev deployment to promote. Same Docker image deployed to staging (no rebuild). Automated health check validation. Clear success/failure reporting. Audit trail of promotions (who, when, which version). Rollback capability if promotion fails.</snippet>
+      </doc>
+      <doc>
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Promotion Workflow Pattern</section>
+        <snippet>Promotion workflow promotes exact same Docker image across environments. No rebuild ensures consistency. Image re-tagged for target environment. Different environment variables per environment. Manual trigger prevents accidental promotions. Health check validates deployment before marking success. Audit log tracks promotions.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>NFR-3.1: Deployment Error Handling</section>
+        <snippet>Failed deployments do not affect running service. Cloud Run atomic deployments: new revision only receives traffic after passing health check. Previous revision continues serving until new revision healthy. Promotion workflow fails if health check fails.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>.github/workflows/ci-cd.yml</path>
+        <kind>github-actions</kind>
+        <symbol>ci-cd-dev-workflow</symbol>
+        <lines>1-34</lines>
+        <reason>Created in Story 1.5. Reference for GitHub Actions patterns, GCP authentication, Cloud Run deployment, and health checks. Promotion workflow will follow similar structure.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <githubActions>
+        <action name="actions/checkout" version="v4" type="git">Checkout source code (may be optional for promotion, but useful for workflow scripts)</action>
+        <action name="google-github-actions/auth" version="v2" type="gcp-auth">Authenticate to Google Cloud using service account credentials</action>
+        <action name="google-github-actions/setup-gcloud" version="v2" type="gcp-cli">Setup gcloud CLI for Docker authentication and Cloud Run operations</action>
+        <action name="google-github-actions/deploy-cloudrun" version="v2" type="gcp-deployment">Deploy Docker image to Cloud Run service</action>
+      </githubActions>
+      <githubSecrets>
+        <secret name="GCP_PROJECT_ID" type="string">Google Cloud project ID for image paths and Cloud Run</secret>
+        <secret name="GCP_SA_KEY" type="json">Service account JSON key for GCP authentication (or GCP_SERVICE_ACCOUNT_KEY)</secret>
+      </githubSecrets>
+      <docker>
+        <command name="docker pull" type="registry">Pull dev image from GCR/Artifact Registry</command>
+        <command name="docker tag" type="tagging">Re-tag image for staging environment</command>
+        <command name="docker push" type="registry">Push staging-tagged image to registry</command>
+      </docker>
+      <gcloud>
+        <command name="gcloud auth configure-docker" type="auth">Configure Docker to use gcloud credentials for GCR/Artifact Registry</command>
+        <command name="gcloud container images list-tags" type="registry">List available dev images for promotion</command>
+        <command name="gcloud run deploy" type="deployment">Deploy image to Cloud Run (via deploy-cloudrun action)</command>
+        <command name="gcloud auth print-identity-token" type="auth">Generate IAM token for authenticated health check</command>
+      </gcloud>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - MUST use workflow_dispatch trigger (manual trigger only, not automatic)
+    - MUST require input: dev_image_tag (string, required)
+    - MUST pull existing dev image from registry (do NOT rebuild application)
+    - MUST re-tag image for staging: staging-<timestamp> or staging-<date>
+    - MUST also tag as staging-latest (always points to current staging)
+    - MUST push both staging tags to registry (staging-<timestamp> and staging-latest)
+    - MUST deploy to role-directory-staging Cloud Run service
+    - MUST use IAM authentication for health check (gcloud auth print-identity-token)
+    - MUST run health check: GET /api/health with Authorization: Bearer <token>
+    - MUST fail workflow if health check returns non-200 status
+    - MUST complete in under 5 minutes total (target: 3-4 minutes)
+    - MUST log audit trail: dev tag, staging tag, user (github.actor), timestamp, run URL
+    - MUST NOT rebuild application (promotes exact same artifact tested in dev)
+    - MUST leave previous staging revision running if deployment fails
+    - SHOULD use specific action versions (@v2, @v4) for reproducibility
+    - SHOULD use step outputs to pass data between steps
+    - SHOULD use environment variables for GCP_PROJECT_ID and GCP_REGION
+    - SHOULD include clear step names for debugging
+    - Image naming convention: gcr.io/<PROJECT_ID>/role-directory:<tag>
+    - Dev image tag format: dev-<timestamp> or dev-<commit-sha>
+    - Staging image tag format: staging-<timestamp> (promotion time, not dev time)
+    - Health check timeout: 30-60 seconds (allows for cold start if min instances = 0)
+    - Error handling: set -e or fail-fast behavior in bash scripts
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Promotion Workflow File</name>
+      <kind>GitHub Actions Workflow</kind>
+      <signature>
+        File: .github/workflows/promote-dev-to-staging.yml
+        Name: Promote Dev to Staging
+        Trigger: workflow_dispatch
+        
+        Inputs:
+          dev_image_tag:
+            description: Dev image tag to promote (e.g., dev-20231106-123456)
+            required: true
+            type: string
+        
+        Environment Variables:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_REGION: us-central1
+          SERVICE_NAME: role-directory-staging
+        
+        Job: promote
+          Runs on: ubuntu-latest
+          Permissions:
+            contents: read
+            id-token: write
+          
+          Steps:
+            1. Checkout code (optional, for scripts)
+            2. Authenticate to Google Cloud
+            3. Set up Cloud SDK
+            4. Configure Docker for GCR
+            5. Pull dev image
+            6. Re-tag image for staging
+            7. Push staging images
+            8. Deploy to Cloud Run (Staging)
+            9. Wait for deployment (15 seconds)
+            10. Health check (with IAM auth)
+            11. Log promotion details (audit trail)
+      </signature>
+      <path>.github/workflows/promote-dev-to-staging.yml</path>
+    </interface>
+    <interface>
+      <name>Manual Workflow Trigger</name>
+      <kind>GitHub UI Interaction</kind>
+      <signature>
+        Location: Repository → Actions → "Promote Dev to Staging" workflow
+        
+        Trigger Steps:
+          1. Navigate to Actions tab in GitHub repository
+          2. Select "Promote Dev to Staging" workflow from left sidebar
+          3. Click "Run workflow" button (top right)
+          4. Select branch: main (default)
+          5. Enter input: dev_image_tag (e.g., dev-20231106-123456)
+          6. Click "Run workflow" (green button)
+        
+        Finding Dev Image Tag:
+          Option 1: From GitHub Actions dev deployment logs
+                    Look for: "Built and pushed: gcr.io/.../role-directory:dev-<TAG>"
+          Option 2: From GCR directly
+                    gcloud container images list-tags gcr.io/PROJECT_ID/role-directory \
+                      --filter="tags:dev-*" --sort-by="~timestamp" --limit=5
+          Option 3: From Cloud Run dev service
+                    gcloud run revisions list --service=role-directory-dev \
+                      --region=us-central1 --limit=1 --format="value(image)"
+        
+        Workflow Execution:
+          - Starts immediately after clicking "Run workflow"
+          - Live logs visible in Actions tab
+          - Duration: 3-4 minutes typical
+          - Result: Success (green check) or Failure (red X)
+      </signature>
+      <path>GitHub Actions UI</path>
+    </interface>
+    <interface>
+      <name>Image Re-tagging Process</name>
+      <kind>Docker Registry Management</kind>
+      <signature>
+        Input: Dev image tag (e.g., dev-20231106-123456)
+        
+        Pull dev image:
+          docker pull gcr.io/PROJECT_ID/role-directory:dev-20231106-123456
+        
+        Generate staging tag:
+          STAGING_TAG="staging-$(date +%Y%m%d-%H%M%S)"
+          Example: staging-20231106-143022
+        
+        Re-tag for staging:
+          docker tag gcr.io/PROJECT_ID/role-directory:dev-20231106-123456 \
+                     gcr.io/PROJECT_ID/role-directory:staging-20231106-143022
+          
+          docker tag gcr.io/PROJECT_ID/role-directory:dev-20231106-123456 \
+                     gcr.io/PROJECT_ID/role-directory:staging-latest
+        
+        Push staging images:
+          docker push gcr.io/PROJECT_ID/role-directory:staging-20231106-143022
+          docker push gcr.io/PROJECT_ID/role-directory:staging-latest
+        
+        Result:
+          - Same binary artifact as dev
+          - New staging-specific tags in registry
+          - Audit trail: timestamp shows when promoted (not when built)
+          - staging-latest always points to current staging version
+      </signature>
+      <path>GCR/Artifact Registry</path>
+    </interface>
+    <interface>
+      <name>Health Check with IAM Authentication</name>
+      <kind>HTTP Request with GCP Auth</kind>
+      <signature>
+        Staging service requires IAM authentication (Story 1.7)
+        
+        Generate IAM token:
+          TOKEN=$(gcloud auth print-identity-token)
+        
+        Get staging URL:
+          STAGING_URL=$(gcloud run services describe role-directory-staging \
+            --region=us-central1 --format="value(status.url)")
+          Or use: ${{ steps.deploy.outputs.url }}
+        
+        Health check request:
+          curl -f -s -w "\n%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" \
+            "$STAGING_URL/api/health"
+        
+        Expected response (200 OK):
+          {
+            "status": "ok",
+            "timestamp": "2025-11-07T15:30:00.000Z"
+          }
+        
+        Failure handling:
+          - Non-200 status code: Fail workflow with exit 1
+          - Timeout after 30-60 seconds
+          - Retry logic: Poll every 5 seconds for up to 30 seconds
+        
+        Note: Different from dev (public) - staging requires Bearer token
+      </signature>
+      <path>Cloud Run staging service</path>
+    </interface>
+    <interface>
+      <name>Audit Logging Output</name>
+      <kind>Workflow Logging</kind>
+      <signature>
+        Promotion Summary logged at end of workflow:
+        
+        🚀 Promotion Summary
+        ====================
+        Dev Image:     dev-20231106-123456
+        Staging Image: staging-20231106-143022
+        Staging URL:   https://role-directory-staging-xyz.run.app
+        Triggered by:  danielvm
+        Timestamp:     2025-11-07 14:30:22 UTC
+        Run URL:       https://github.com/user/repo/actions/runs/12345
+        
+        Captured in workflow output for:
+          - Audit trail (who promoted what and when)
+          - Debugging (which version is in staging)
+          - Compliance (deployment history)
+          - Rollback reference (previous staging tags)
+        
+        Accessible via:
+          - GitHub Actions run logs
+          - GitHub API (workflow runs endpoint)
+          - Future: Store in separate audit log file or database
+      </signature>
+      <path>GitHub Actions workflow logs</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Manual testing by triggering workflow from GitHub Actions UI and verifying promotion. Automated tests deferred to Phase 2. Focus on verification: Workflow triggers correctly, dev image pulled, staging image created and pushed, Cloud Run deployment succeeds, health check passes, audit log complete, timing under 5 minutes.
+    </standards>
+    <locations>
+      - .github/workflows/promote-dev-to-staging.yml (workflow file to create)
+      - GitHub Actions UI (workflow execution and logs)
+      - GCR/Artifact Registry (verify staging images)
+      - Cloud Run staging service (verify deployment)
+      - Staging service URL (manual health check)
+      - No test files for this story (CI/CD workflow)
+    </locations>
+    <ideas>
+      <test id="AC-1" desc="Verify manual trigger via workflow_dispatch">
+        Manual: Go to GitHub Actions tab. Select "Promote Dev to Staging" workflow. Click "Run workflow" button. Verify input field for dev_image_tag appears. Verify workflow can be triggered manually (not automatically on push/merge).
+      </test>
+      <test id="AC-2" desc="Verify requires dev image tag input">
+        Manual: Trigger workflow without entering dev_image_tag. Verify error or validation prevents execution. Enter valid dev_image_tag. Verify workflow starts. Check logs show input value used.
+      </test>
+      <test id="AC-3" desc="Verify pulls dev image from registry">
+        Manual: Check workflow logs for "Pull dev image" step. Verify command: docker pull gcr.io/PROJECT_ID/role-directory:dev-<TAG>. Verify image pulled successfully. If dev tag doesn't exist, verify workflow fails with clear error message.
+      </test>
+      <test id="AC-4" desc="Verify re-tags image for staging">
+        Manual: Check workflow logs for "Re-tag image" step. Verify new tag generated: staging-<timestamp>. Verify tag format: staging-YYYYMMDD-HHMMSS. Verify output includes new tag name. Check docker tag commands executed.
+      </test>
+      <test id="AC-5" desc="Verify pushes staging image to registry">
+        Manual: Check workflow logs for "Push staging images" step. Verify push commands executed. After workflow completes, check GCR: gcloud container images list-tags gcr.io/PROJECT_ID/role-directory --filter="tags:staging-*". Verify new staging tag appears. Verify staging-latest tag updated.
+      </test>
+      <test id="AC-6" desc="Verify deploys to Cloud Run staging">
+        Manual: Check workflow logs for "Deploy to Cloud Run" step. Verify deploy-cloudrun action executed. Verify service: role-directory-staging. Verify region: us-central1. Verify image: gcr.io/PROJECT_ID/role-directory:staging-<TAG>. After workflow completes, check Cloud Run console. Verify new revision created with staging image.
+      </test>
+      <test id="AC-7" desc="Verify health check with IAM auth">
+        Manual: Check workflow logs for "Health check" step. Verify token generated: gcloud auth print-identity-token. Verify health check request: curl with Authorization header. Verify 200 OK response. Verify response body contains "status": "ok". If health check fails, verify workflow marked as failed.
+      </test>
+      <test id="AC-8" desc="Verify success/failure reporting">
+        Manual: After workflow completes, check GitHub Actions UI. Verify workflow status: Success (green check) or Failure (red X). Verify each step shows status. If failure, verify error message clear. Check workflow summary shows staging URL.
+      </test>
+      <test id="AC-9" desc="Verify completes in under 5 minutes">
+        Manual: Note workflow start time and end time from GitHub Actions UI. Calculate duration. Verify under 5 minutes. Expected: 3-4 minutes typical. Breakdown: Auth (5s), Pull (30s), Tag (5s), Push (30s), Deploy (1-2min), Health check (30s).
+      </test>
+      <test id="AC-10" desc="Verify no rebuild (uses existing image)">
+        Manual: Check workflow logs carefully. Verify NO npm install, npm run build, or docker build commands. Verify only docker pull, docker tag, docker push. Verify image SHA matches dev image SHA (same binary).
+      </test>
+      <test id="AC-11" desc="Verify confirmation/protection (manual trigger)">
+        Manual: Verify workflow requires manual trigger (workflow_dispatch). Verify cannot be triggered automatically. Verify user must explicitly click "Run workflow". This manual action is the confirmation step (no accidental promotions).
+      </test>
+      <test id="AC-12" desc="Verify workflow documented">
+        Manual: Check docs/guides/promotion-workflow-guide.md exists. Verify documentation includes: How to trigger workflow, How to find dev image tag, Expected behavior, Verification steps, Rollback procedure, Troubleshooting.
+      </test>
+      <test id="AC-13" desc="Verify audit logging">
+        Manual: Check workflow logs for "Log promotion details" step. Verify output includes: Dev Image tag, Staging Image tag, Staging URL, Triggered by (github.actor), Timestamp (UTC), Run URL. Verify information accurate and complete.
+      </test>
+      <test id="E2E-PROMOTION" desc="End-to-end promotion test">
+        Manual: Deploy test version to dev (or use existing). Note dev image tag. Trigger promotion workflow. Enter dev image tag. Wait for completion (under 5 minutes). Check staging URL: curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://role-directory-staging-xyz.run.app/api/health. Verify staging shows promoted version. Verify audit log in workflow logs.
+      </test>
+      <test id="ROLLBACK-TEST" desc="Test rollback procedure">
+        Manual: Promote version A to staging. Note staging-A tag. Promote version B to staging. Verify staging now runs version B. Rollback to version A: Trigger promotion workflow again with dev tag for version A. OR use gcloud run services update-traffic to previous revision. Verify staging back to version A.
+      </test>
+      <test id="FAILURE-HANDLING" desc="Test failure scenarios">
+        Manual: Test 1: Enter non-existent dev image tag. Verify workflow fails at "Pull dev image" step. Test 2: Break staging health check endpoint. Promote image. Verify workflow fails at "Health check" step. Verify previous staging version still running. Test 3: Fix health check. Re-promote. Verify succeeds.
+      </test>
+    </ideas>
+  </tests>
+</story-context>
+
