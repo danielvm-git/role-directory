@@ -58,7 +58,6 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --set-env-vars NODE_ENV=development \
-            --set-secrets DATABASE_URL=role-directory-dev-db-url:latest \
             --min-instances 0 \
             --max-instances 3 \
             --cpu 1 \
