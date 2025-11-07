@@ -8,6 +8,9 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/playwright/.cache/
 
 # next.js
 /.next/
@@ -15,15 +18,19 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+*.log
+deploy-log.txt
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # local env files
 .env
@@ -32,22 +39,44 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.test
+
+# GCP credentials and service account keys
+*-key.json
+*-sa-key.json
+service-account-*.json
+gha-creds-*.json
+github-actions-key.json
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+# Note: next-env.d.ts should be committed (Next.js types)
 
-# testing
-/test-results/
-/playwright-report/
-/playwright/.cache/
-/coverage/
-.env.test
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Old/archived documentation (keep /docs in version control)
 /old_docs
+
+# Cursor AI local settings (keep .cursor/rules/ for shared rules)
+#/.cursor/workbench/
+#/.cursor/local/
 /.cursor/
+/docs/
 /bmad/
-/docs
