@@ -62,6 +62,7 @@ jobs:
             --max-instances 3 \
             --cpu 1 \
             --memory 512Mi \
+            --clear-base-image \
             --quiet
 
       - name: Get Service URL
