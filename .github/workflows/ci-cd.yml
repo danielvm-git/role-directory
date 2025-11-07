@@ -49,6 +49,13 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Temporarily rename Dockerfile to use buildpacks
+        run: |
+          if [ -f Dockerfile ]; then
+            mv Dockerfile Dockerfile.tmp
+            echo "Dockerfile renamed to use buildpacks"
+          fi
+
       - name: Deploy to Cloud Run
         id: deploy
         run: |
@@ -64,6 +71,14 @@ jobs:
             --memory 512Mi \
             --clear-base-image \
             --quiet
+      
+      - name: Restore Dockerfile
+        if: always()
+        run: |
+          if [ -f Dockerfile.tmp ]; then
+            mv Dockerfile.tmp Dockerfile
+            echo "Dockerfile restored"
+          fi
 
       - name: Get Service URL
         id: get-url
