@@ -32,6 +32,27 @@ jobs:
       - name: Build Next.js application
         run: npm run build
 
+      - name: Run Unit Tests
+        run: npm run test:unit
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E Tests
+        run: npm run test:e2e
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
   deploy-dev:
     name: Deploy to Dev Environment
     needs: build
@@ -109,6 +130,26 @@ jobs:
           echo "Deployment succeeded but health check endpoint not yet available"
           exit 1
 
+      - name: Run Post-Deployment E2E Tests
+        run: |
+          SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
+          echo "🧪 Running E2E tests against deployed service: $SERVICE_URL"
+          
+          # Run health check tests against deployed service
+          npx playwright test tests/e2e/health-check.spec.ts --reporter=list
+        env:
+          BASE_URL: ${{ steps.get-url.outputs.SERVICE_URL }}
+
+      - name: Upload Post-Deployment Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: post-deployment-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
       - name: Deployment Summary
         if: always()
         run: |
@@ -122,6 +163,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **Post-Deployment Tests:** Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
           fi

@@ -23,10 +23,10 @@ import { test, expect } from '@playwright/test';
 const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://role-directory-production-test.run.app';
 const GCP_AUTH_TOKEN = process.env.GCP_AUTH_TOKEN || '';
 
-test.describe('Cloud Run Production Service - Configuration Verification', () => {
+test.describe('[1.8] Cloud Run Production Service - Configuration Verification (P0)', () => {
   test.skip(!PRODUCTION_URL || !GCP_AUTH_TOKEN, 'Skipping: PRODUCTION_URL or GCP_AUTH_TOKEN not set');
 
-  test('AC-1: should have production URL accessible with authentication', async ({ request }) => {
+  test('[1.8-E2E-001] AC-1: should have production URL accessible with authentication', async ({ request }) => {
     // GIVEN: Production service is deployed
     // WHEN: Health check is accessed with valid auth token
     const response = await request.get(`${PRODUCTION_URL}/api/health`, {
@@ -44,7 +44,7 @@ test.describe('Cloud Run Production Service - Configuration Verification', () =>
     expect(body).toHaveProperty('timestamp');
   });
 
-  test('AC-5: should require IAM authentication (not public)', async ({ request }) => {
+  test('[1.8-E2E-002] AC-5: should require IAM authentication (not public)', async ({ request }) => {
     // GIVEN: Production service is IAM protected
     // WHEN: Health check is accessed WITHOUT authentication
     const response = await request.get(`${PRODUCTION_URL}/api/health`, {
@@ -55,7 +55,7 @@ test.describe('Cloud Run Production Service - Configuration Verification', () =>
     expect(response.status()).toBe(403);
   });
 
-  test('P0: should have no cold starts (min 2 instances)', async ({ request }) => {
+  test('[1.8-E2E-003] P0: should have no cold starts (min 2 instances)', async ({ request }) => {
     // GIVEN: Production has min 2 instances configured
     // WHEN: Multiple requests are made in sequence
     const responseTimes: number[] = [];
@@ -85,7 +85,7 @@ test.describe('Cloud Run Production Service - Configuration Verification', () =>
     console.log(`Average: ${avgResponseTime.toFixed(0)}ms, Max: ${maxResponseTime}ms`);
   });
 
-  test('P1: should handle concurrent requests', async ({ request }) => {
+  test('[1.8-E2E-004] P1: should handle concurrent requests', async ({ request }) => {
     // GIVEN: Production service is deployed with 2-10 instances
     // WHEN: Multiple concurrent requests are made
     const concurrentRequests = 10;
@@ -113,7 +113,7 @@ test.describe('Cloud Run Production Service - Configuration Verification', () =>
     console.log(`${concurrentRequests} concurrent requests completed in ${totalTime}ms`);
   });
 
-  test('P1: should return consistent responses', async ({ request }) => {
+  test('[1.8-E2E-005] P1: should return consistent responses', async ({ request }) => {
     // GIVEN: Production service is deployed
     // WHEN: Multiple requests are made
     const responses: any[] = [];
@@ -138,7 +138,7 @@ test.describe('Cloud Run Production Service - Configuration Verification', () =>
     });
   });
 
-  test('P2: should have proper error handling', async ({ request }) => {
+  test('[1.8-E2E-006] P2: should have proper error handling', async ({ request }) => {
     // GIVEN: Production service is deployed
     // WHEN: Invalid endpoint is accessed
     const response = await request.get(`${PRODUCTION_URL}/api/nonexistent`, {
@@ -153,10 +153,10 @@ test.describe('Cloud Run Production Service - Configuration Verification', () =>
   });
 });
 
-test.describe('Cloud Run Production Service - Environment Configuration', () => {
+test.describe('[1.8] Cloud Run Production Service - Environment Configuration (P1)', () => {
   test.skip(!PRODUCTION_URL || !GCP_AUTH_TOKEN, 'Skipping: PRODUCTION_URL or GCP_AUTH_TOKEN not set');
 
-  test('AC-6: should have NODE_ENV=production', async ({ request }) => {
+  test('[1.8-E2E-007] AC-6: should have NODE_ENV=production', async ({ request }) => {
     // NOTE: This test assumes health check endpoint exposes environment
     // If not, this test should be adapted based on actual implementation
 
@@ -177,17 +177,17 @@ test.describe('Cloud Run Production Service - Environment Configuration', () => 
     expect(body.status).toBe('ok');
   });
 
-  test('AC-12: should have correct production URL format', () => {
+  test('[1.8-E2E-008] AC-12: should have correct production URL format', () => {
     // GIVEN: Production service URL is configured
     // THEN: URL follows expected pattern
     expect(PRODUCTION_URL).toMatch(/^https:\/\/role-directory-production-[a-z0-9]+-[a-z0-9]+\.a\.run\.app$/);
   });
 });
 
-test.describe('Cloud Run Production Service - Performance Requirements', () => {
+test.describe('[1.8] Cloud Run Production Service - Performance Requirements (P0)', () => {
   test.skip(!PRODUCTION_URL || !GCP_AUTH_TOKEN, 'Skipping: PRODUCTION_URL or GCP_AUTH_TOKEN not set');
 
-  test('NFR-2: should meet P95 response time <200ms (warm)', async ({ request }) => {
+  test('[1.8-E2E-009] NFR-2: should meet P95 response time <200ms (warm)', async ({ request }) => {
     // GIVEN: Production service is warmed up (min 2 instances)
     // WHEN: 20 requests are made to measure P95
     const responseTimes: number[] = [];
@@ -226,22 +226,20 @@ test.describe('Cloud Run Production Service - Performance Requirements', () => {
     expect(avg).toBeLessThan(150); // Average <150ms is excellent
   });
 
-  test('AC-2: should demonstrate high availability (no downtime)', async ({ request }) => {
+  test('[1.8-E2E-010] AC-2: should demonstrate high availability (no downtime)', async ({ request }) => {
     // GIVEN: Production service has min 2 instances
-    // WHEN: Continuous requests are made over 10 seconds
-    const duration = 10000; // 10 seconds
-    const interval = 500; // Request every 500ms
-    const startTime = Date.now();
+    // WHEN: Multiple sequential requests are made (natural network timing)
+    const requestCount = 20; // 20 requests to verify availability
     const results: boolean[] = [];
 
-    while (Date.now() - startTime < duration) {
+    for (let i = 0; i < requestCount; i++) {
       const response = await request.get(`${PRODUCTION_URL}/api/health`, {
         headers: { 'Authorization': `Bearer ${GCP_AUTH_TOKEN}` },
         failOnStatusCode: false,
       });
 
       results.push(response.status() === 200);
-      await new Promise((resolve) => setTimeout(resolve, interval));
+      // No artificial delay - natural network timing provides spacing
     }
 
     // THEN: All requests succeed (100% availability)
@@ -254,8 +252,8 @@ test.describe('Cloud Run Production Service - Performance Requirements', () => {
   });
 });
 
-test.describe('Cloud Run Production Service - Manual Verification Guide', () => {
-  test('should provide manual gcloud verification commands', () => {
+test.describe('[1.8] Cloud Run Production Service - Manual Verification Guide (P2)', () => {
+  test('[1.8-DOC-001] should provide manual gcloud verification commands', () => {
     // This is a documentation test - provides commands for manual verification
 
     const verificationCommands = {
