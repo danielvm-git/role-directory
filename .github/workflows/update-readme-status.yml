@@ -1,0 +1,63 @@
+name: Update README Status
+
+# Trigger on changes to the workflow status YAML file
+on:
+  push:
+    paths:
+      - 'docs/bmm-workflow-status.yaml'
+    branches:
+      - main
+      - master
+  
+  # Allow manual triggering
+  workflow_dispatch:
+
+# Permissions needed to commit back to the repository
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Use a PAT or the default GITHUB_TOKEN
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      # Install dependencies for the script
+      - name: Install script dependencies
+        run: |
+          cd .github/scripts
+          npm install
+      
+      # Run the update script
+      - name: Update README with workflow status
+        run: |
+          node .github/scripts/update-readme-status.js
+      
+      # Commit and push changes if README was modified
+      - name: Commit changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if README.md has changes
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+          else
+            git add README.md
+            git commit -m "chore: auto-update project status in README [skip ci]"
+            git push
+            echo "✅ README.md updated successfully"
+          fi
+
