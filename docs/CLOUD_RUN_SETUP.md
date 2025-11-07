@@ -286,6 +286,24 @@ curl -I https://YOUR-SERVICE-URL
 --set-env-vars NODE_ENV=development
 ```
 
+### Issue: "Missing required argument [--clear-base-image]"
+
+**Symptom:** `ERROR: Missing required argument [--clear-base-image]: Base image is not supported for services built from Dockerfile`
+
+**Root Cause:** Service was previously deployed with different build method (buildpacks ↔ Dockerfile)
+
+**Solution:** Add `--clear-base-image` flag when switching build methods:
+```bash
+# Switching from buildpacks to Dockerfile (or vice versa)
+gcloud run deploy role-directory-dev \
+  --source . \
+  --region us-central1 \
+  --clear-base-image \
+  ... # other flags
+```
+
+**Prevention:** Once you choose a build method, stick with it to avoid this issue
+
 ### Issue: "Permission Denied" During Deployment
 
 **Solution:** Verify you have necessary roles:
@@ -382,6 +400,17 @@ gcloud run services add-iam-policy-binding SERVICE_NAME \
 **Finding:** Cloud Run buildpacks auto-detect Next.js and work well  
 **Recommendation:** Start with buildpacks (no Dockerfile), optimize later if needed  
 **Benefit:** Simpler setup, automatic optimizations, less maintenance
+
+**⚠️ Important - Switching Build Methods:**
+If you switch between buildpacks and Dockerfile, you MUST clear the base image:
+```bash
+# When switching FROM buildpacks TO Dockerfile
+gcloud run deploy SERVICE_NAME --source . --clear-base-image ...
+
+# When switching FROM Dockerfile TO buildpacks  
+gcloud run deploy SERVICE_NAME --source . --clear-base-image ...
+```
+**Error if not cleared:** `Missing required argument [--clear-base-image]`
 
 ### 4. Secrets Management
 **Best Practice:** Create secrets early, even with placeholder values  
