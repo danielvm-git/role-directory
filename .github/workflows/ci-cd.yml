@@ -1,0 +1,113 @@
+name: CI/CD - Build and Deploy to Dev
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type check
+        run: npm run type-check
+
+      - name: Build Next.js application
+        run: npm run build
+
+  deploy-dev:
+    name: Deploy to Dev Environment
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
+          gcloud run deploy role-directory-dev \
+            --source . \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars NODE_ENV=development,PORT=8080 \
+            --set-secrets DATABASE_URL=role-directory-dev-db-url:latest \
+            --min-instances 0 \
+            --max-instances 3 \
+            --cpu 1 \
+            --memory 512Mi \
+            --quiet
+
+      - name: Get Service URL
+        id: get-url
+        run: |
+          SERVICE_URL=$(gcloud run services describe role-directory-dev \
+            --region us-central1 \
+            --format 'value(status.url)')
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "✅ Deployed to: $SERVICE_URL"
+
+      - name: Health Check
+        run: |
+          SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
+          echo "🏥 Running health check against: $SERVICE_URL/api/health"
+          
+          # Wait up to 60 seconds for service to be ready
+          for i in {1..30}; do
+            if curl -sf "$SERVICE_URL/api/health" > /dev/null 2>&1; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "⏳ Waiting for service... ($i/30)"
+            sleep 2
+          done
+          
+          echo "❌ Health check failed after 60 seconds"
+          echo "Note: Health check endpoint will be implemented in Story 1.6"
+          echo "Deployment succeeded but health check endpoint not yet available"
+          exit 1
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Dev" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** role-directory-dev" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** us-central1" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.get-url.outputs.SERVICE_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
