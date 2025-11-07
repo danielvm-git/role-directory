@@ -57,6 +57,9 @@ jobs:
     name: Deploy to Dev Environment
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     
     steps:
       - name: Checkout code
@@ -129,6 +132,18 @@ jobs:
           echo "Note: Health check endpoint will be implemented in Story 1.6"
           echo "Deployment succeeded but health check endpoint not yet available"
           exit 1
+
+      - name: Setup Node.js for E2E Tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Install Dependencies for E2E Tests
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Run Post-Deployment E2E Tests
         run: |
