@@ -1,0 +1,152 @@
+name: Promote Dev to Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      dev_image_tag:
+        description: 'Dev image tag to promote (e.g., dev-20231106-123456)'
+        required: true
+        type: string
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: us-central1
+  SERVICE_NAME: role-directory-staging
+
+jobs:
+  promote:
+    name: Promote to Staging
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Pull dev image
+        run: |
+          DEV_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.dev_image_tag }}"
+          echo "📦 Pulling dev image: $DEV_IMAGE"
+          docker pull $DEV_IMAGE
+          echo "✅ Dev image pulled successfully"
+          docker images | grep role-directory
+
+      - name: Re-tag image for staging
+        id: retag
+        run: |
+          STAGING_TAG="staging-$(date +%Y%m%d-%H%M%S)"
+          echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_OUTPUT
+          
+          DEV_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.dev_image_tag }}"
+          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:$STAGING_TAG"
+          STAGING_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:staging-latest"
+          
+          echo "🏷️  Re-tagging image for staging..."
+          docker tag $DEV_IMAGE $STAGING_IMAGE
+          docker tag $DEV_IMAGE $STAGING_LATEST
+          
+          echo "✅ Tagged as: $STAGING_TAG"
+          echo "✅ Tagged as: staging-latest"
+
+      - name: Push staging images
+        run: |
+          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.STAGING_TAG }}"
+          STAGING_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:staging-latest"
+          
+          echo "📤 Pushing staging images to registry..."
+          docker push $STAGING_IMAGE
+          docker push $STAGING_LATEST
+          echo "✅ Staging images pushed successfully"
+
+      - name: Deploy to Cloud Run (Staging)
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.STAGING_TAG }}
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to stabilize..."
+          sleep 15
+          echo "✅ Deployment wait complete"
+
+      - name: Health check
+        run: |
+          TOKEN=$(gcloud auth print-identity-token)
+          STAGING_URL="${{ steps.deploy.outputs.url }}"
+          
+          echo "🏥 Running health check against: $STAGING_URL/api/health"
+          
+          # Retry logic: Poll every 5 seconds for up to 60 seconds
+          MAX_ATTEMPTS=12
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "📡 Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
+            
+            RESPONSE=$(curl -f -s -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$STAGING_URL/api/health" 2>&1 || true)
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | head -n-1)
+            
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ Health check passed!"
+              echo "Response: $BODY"
+              exit 0
+            fi
+            
+            echo "⏳ Health check returned status $HTTP_CODE, retrying in 5 seconds..."
+            sleep 5
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          echo "❌ Health check failed after $((MAX_ATTEMPTS * 5)) seconds"
+          exit 1
+
+      - name: Log promotion details
+        if: always()
+        run: |
+          echo "### 🚀 Promotion Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Dev Image** | \`${{ inputs.dev_image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Staging Image** | \`${{ steps.retag.outputs.STAGING_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Staging URL** | ${{ steps.deploy.outputs.url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Run URL** | [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status:** Promotion successful" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Promotion failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "🚀 Promotion Summary"
+          echo "═══════════════════════════════════════════════════════"
+          echo "Dev Image:     ${{ inputs.dev_image_tag }}"
+          echo "Staging Image: ${{ steps.retag.outputs.STAGING_TAG }}"
+          echo "Staging URL:   ${{ steps.deploy.outputs.url }}"
+          echo "Triggered by:  ${{ github.actor }}"
+          echo "Timestamp:     $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Run URL:       ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "═══════════════════════════════════════════════════════"
+
