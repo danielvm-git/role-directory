@@ -9,8 +9,8 @@
 
 import { test, expect } from '@playwright/test';
 
-test.describe('Health Check API', () => {
-  test('should return 200 OK with valid response', async ({ request }) => {
+test.describe('[1.6] Health Check API (P0)', () => {
+  test('[1.6-E2E-001] should return 200 OK with valid response', async ({ request }) => {
     // GIVEN: Health check endpoint exists
     const baseURL = process.env.BASE_URL || 'http://localhost:3000';
 
@@ -29,7 +29,7 @@ test.describe('Health Check API', () => {
     expect(new Date(body.timestamp).toISOString()).toBe(body.timestamp);
   });
 
-  test('should respond quickly (warm)', async ({ request }) => {
+  test('[1.6-E2E-002] should respond quickly (warm)', async ({ request }) => {
     // GIVEN: Health check endpoint exists
     const baseURL = process.env.BASE_URL || 'http://localhost:3000';
 
