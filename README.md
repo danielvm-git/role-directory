@@ -371,6 +371,59 @@ After authentication, you'll see:
 
 ---
 
+## Deployment and Operations
+
+### Operational Documentation
+
+**Deployment Workflows:**
+- [Promotion Workflow Guide](docs/guides/promotion-workflow-guide.md) - Manual promotion procedures (dev → staging → production)
+- [Cloud Run Setup](docs/CLOUD_RUN_SETUP.md) - Initial Cloud Run service configuration
+- [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md) - CI/CD pipeline configuration
+
+**Recovery Procedures:**
+- **[Rollback Procedures](docs/ROLLBACK.md)** - How to rollback deployments in any environment
+  - Quick recovery from failed deployments (<3 minutes)
+  - Zero-downtime rollback via Cloud Run revision management
+  - Tested procedures for dev, staging, and production
+
+**Infrastructure Guides:**
+- [Docker Setup](docs/DOCKER.md) - Containerization and local development
+- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - Database setup
+- [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
+
+### Quick Operational Reference
+
+**Deploy to Dev (CI/CD):**
+```bash
+# Automatically deploys on push to main
+git push origin main
+```
+
+**Promote Staging to Production:**
+```bash
+# Manually triggered via GitHub Actions
+# See: docs/guides/promotion-workflow-guide.md
+```
+
+**Rollback Production:**
+```bash
+# List available revisions
+gcloud run revisions list --service=role-directory-production --region=us-central1
+
+# Rollback to previous revision
+gcloud run services update-traffic role-directory-production \
+  --region=us-central1 \
+  --to-revisions=[PREVIOUS_REVISION]=100
+
+# Verify rollback
+curl -f -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+  [PRODUCTION_URL]/api/health
+```
+
+See [Rollback Procedures](docs/ROLLBACK.md) for comprehensive instructions.
+
+---
+
 ## Documentation
 
 ### 📚 Complete Documentation Suite

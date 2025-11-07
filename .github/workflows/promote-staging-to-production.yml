@@ -1,0 +1,180 @@
+name: Promote Staging to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      staging_image_tag:
+        description: 'Staging image tag to promote (e.g., staging-20231106-123456)'
+        required: true
+        type: string
+      confirmation:
+        description: 'Type PROMOTE_TO_PRODUCTION to confirm'
+        required: true
+        type: string
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: us-central1
+  SERVICE_NAME: role-directory-production
+
+jobs:
+  promote:
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    environment: production  # CRITICAL: Triggers approval requirement
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate confirmation
+        run: |
+          if [ "${{ inputs.confirmation }}" != "PROMOTE_TO_PRODUCTION" ]; then
+            echo "❌ Confirmation string does not match. Promotion cancelled."
+            echo "Expected: PROMOTE_TO_PRODUCTION"
+            echo "Received: ${{ inputs.confirmation }}"
+            exit 1
+          fi
+          echo "✅ Confirmation validated"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Pull staging image
+        run: |
+          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.staging_image_tag }}"
+          echo "📦 Pulling staging image: $STAGING_IMAGE"
+          docker pull $STAGING_IMAGE
+          echo "✅ Staging image pulled successfully"
+          docker images | grep role-directory
+
+      - name: Re-tag image for production
+        id: retag
+        run: |
+          PRODUCTION_TAG="production-$(date +%Y%m%d-%H%M%S)"
+          echo "PRODUCTION_TAG=$PRODUCTION_TAG" >> $GITHUB_OUTPUT
+          
+          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.staging_image_tag }}"
+          PRODUCTION_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:$PRODUCTION_TAG"
+          PRODUCTION_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:production-latest"
+          
+          echo "🏷️  Re-tagging image for production..."
+          docker tag $STAGING_IMAGE $PRODUCTION_IMAGE
+          docker tag $STAGING_IMAGE $PRODUCTION_LATEST
+          
+          echo "✅ Tagged as: $PRODUCTION_TAG"
+          echo "✅ Tagged as: production-latest"
+
+      - name: Push production images
+        run: |
+          PRODUCTION_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.PRODUCTION_TAG }}"
+          PRODUCTION_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:production-latest"
+          
+          echo "📤 Pushing production images to registry..."
+          docker push $PRODUCTION_IMAGE
+          docker push $PRODUCTION_LATEST
+          echo "✅ Production images pushed successfully"
+
+      - name: Deploy to Cloud Run (Production)
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.PRODUCTION_TAG }}
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to stabilize..."
+          sleep 15
+          echo "✅ Deployment wait complete"
+
+      - name: Health check
+        run: |
+          TOKEN=$(gcloud auth print-identity-token)
+          PRODUCTION_URL="${{ steps.deploy.outputs.url }}"
+          
+          echo "🏥 Running health check against: $PRODUCTION_URL/api/health"
+          echo "📝 Note: Production has min 2 instances (no cold start expected)"
+          
+          # Retry logic: Poll every 5 seconds for up to 60 seconds
+          MAX_ATTEMPTS=12
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "📡 Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
+            
+            START_TIME=$(date +%s%3N)
+            RESPONSE=$(curl -f -s -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$PRODUCTION_URL/api/health" 2>&1 || true)
+            END_TIME=$(date +%s%3N)
+            RESPONSE_TIME=$((END_TIME - START_TIME))
+            
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | head -n-1)
+            
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ Health check passed!"
+              echo "Response: $BODY"
+              echo "Response time: ${RESPONSE_TIME}ms"
+              if [ $RESPONSE_TIME -lt 100 ]; then
+                echo "✅ Excellent response time (<100ms, no cold start)"
+              fi
+              exit 0
+            fi
+            
+            echo "⏳ Health check returned status $HTTP_CODE, retrying in 5 seconds..."
+            sleep 5
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          echo "❌ Health check failed after $((MAX_ATTEMPTS * 5)) seconds"
+          exit 1
+
+      - name: Log promotion details
+        if: always()
+        run: |
+          echo "### 🚀 PRODUCTION Promotion Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Staging Image** | \`${{ inputs.staging_image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Production Image** | \`${{ steps.retag.outputs.PRODUCTION_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Production URL** | ${{ steps.deploy.outputs.url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Run URL** | [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Environment:** PRODUCTION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status:** Promotion successful" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Promotion failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "🚀 PRODUCTION Promotion Summary"
+          echo "═══════════════════════════════════════════════════════"
+          echo "Staging Image:    ${{ inputs.staging_image_tag }}"
+          echo "Production Image: ${{ steps.retag.outputs.PRODUCTION_TAG }}"
+          echo "Production URL:   ${{ steps.deploy.outputs.url }}"
+          echo "Triggered by:     ${{ github.actor }}"
+          echo "Timestamp:        $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Run URL:          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""
+          echo "⚠️  ENVIRONMENT: PRODUCTION"
+          echo "═══════════════════════════════════════════════════════"
+
