@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMM Status Dashboard - role-directory</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.4;
+            color: #24292e;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .main-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        header .subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .refresh-indicator {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .header-metadata {
+            display: flex;
+            gap: 1.5rem;
+            flex: 1;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .header-meta-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-meta-label {
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            opacity: 0.8;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .header-meta-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.125rem;
+        }
+
+        .split-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            background: white;
+        }
+
+        .panel {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-left {
+            border-right: 2px solid #e1e4e8;
+        }
+
+        .panel-header {
+            background: #f6f8fa;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid #e1e4e8;
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #24292e;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        /* Custom scrollbar */
+        .panel-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .panel-metadata {
+            background: #f6f8fa;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #e1e4e8;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .panel-metadata-grid {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .panel-metadata-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-metadata-label {
+            text-transform: uppercase;
+            color: #586069;
+            font-weight: 600;
+            font-size: 0.65rem;
+        }
+
+        .panel-metadata-value {
+            color: #24292e;
+            font-weight: 500;
+            font-size: 0.75rem;
+            margin-top: 0.125rem;
+        }
+
+        .phase {
+            margin-bottom: 1.25rem;
+        }
+
+        .phase:last-child {
+            margin-bottom: 0;
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        .phase-icon {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .phase-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #24292e;
+            flex: 1;
+        }
+
+        .phase-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-optional {
+            background: #dbedff;
+            color: #0969da;
+        }
+
+        .workflow-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .workflow-item {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) 2px auto auto;
+            align-items: center;
+            column-gap: 1rem;
+            padding: 0.5rem 0.75rem;
+            background: #f6f8fa;
+            border-radius: 6px;
+            border-left: 3px solid #e1e4e8;
+            font-size: 0.8rem;
+        }
+
+        .workflow-item > .workflow-status:first-child {
+            grid-column: 1;
+        }
+
+        .workflow-item > .workflow-content {
+            grid-column: 2;
+            min-width: 0;
+        }
+
+        .workflow-item > .story-divider {
+            grid-column: 3;
+            height: 100%;
+            background: #e1e4e8;
+            align-self: stretch;
+        }
+
+        .workflow-item > .workflow-next-action {
+            grid-column: 4;
+        }
+
+        .workflow-item > .copy-btn {
+            grid-column: 5;
+        }
+
+        .workflow-next-action {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.4rem 0.8rem;
+            background: #f6f8fa;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            color: #24292e;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #0366d6;
+            border-color: #0366d6;
+            color: white;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-btn.copied {
+            background: #2da44e;
+            border-color: #2da44e;
+            color: white;
+        }
+
+        .workflow-item.completed {
+            border-left-color: #2da44e;
+            background: #dafbe1;
+        }
+
+        .workflow-item.required {
+            border-left-color: #d29922;
+            background: #fff8e5;
+        }
+
+        .workflow-item.conditional {
+            border-left-color: #8250df;
+            background: #fbefff;
+        }
+
+        .workflow-item.optional {
+            border-left-color: #0969da;
+            background: #ddf4ff;
+        }
+
+        .workflow-item.backlog {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+        }
+
+        .workflow-item.contexted {
+            border-left-color: #17a2b8;
+            background: #d1ecf1;
+        }
+
+        .workflow-item.drafted {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+
+        .workflow-item.ready-for-dev {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .workflow-item.in-progress {
+            border-left-color: #007bff;
+            background: #cce5ff;
+        }
+
+        .workflow-item.review {
+            border-left-color: #fd7e14;
+            background: #ffe5d0;
+        }
+
+        .workflow-item.done {
+            border-left-color: #2da44e;
+            background: #dafbe1;
+        }
+
+        .workflow-status {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        .workflow-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .workflow-name {
+            font-weight: 600;
+            color: #24292e;
+            margin-bottom: 0.125rem;
+            font-size: 0.8rem;
+        }
+
+        .workflow-path {
+            font-size: 0.7rem;
+            color: #57606a;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .workflow-agent {
+            font-size: 0.7rem;
+            color: #0969da;
+            font-weight: 500;
+            margin-top: 0.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .workflow-command {
+            font-size: 0.7rem;
+            color: #24292e;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 3px;
+            padding: 0.25rem 0.5rem;
+            margin-top: 0.25rem;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .workflow-command:hover {
+            background: #eaeef2;
+            border-color: #0969da;
+        }
+
+        .workflow-command:active {
+            background: #dce5f0;
+        }
+
+        .copy-icon {
+            opacity: 0.6;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .workflow-command:hover .copy-icon {
+            opacity: 1;
+        }
+
+        .command-text {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .copied-feedback {
+            position: fixed;
+            top: 50%;
+            left: 25%;
+            transform: translate(-50%, -50%);
+            background: #2da44e;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: fadeInOut 2s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
+
+        .status-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+            margin-left: 0.5rem;
+        }
+
+        .status-completed { background: #2da44e; color: white; }
+        .status-required { background: #d29922; color: white; }
+        .status-conditional { background: #8250df; color: white; }
+        .status-optional { background: #0969da; color: white; }
+        .status-backlog { background: #6c757d; color: white; }
+        .status-contexted { background: #17a2b8; color: white; }
+        .status-drafted { background: #ffc107; color: white; }
+        .status-ready { background: #28a745; color: white; }
+        .status-progress { background: #007bff; color: white; }
+        .status-review { background: #fd7e14; color: white; }
+        .status-done { background: #2da44e; color: white; }
+
+        .story-pipeline {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-step {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: lowercase;
+            border: 2px solid;
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+
+        .pipeline-step.inactive {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            color: #adb5bd;
+        }
+
+        .pipeline-step.active {
+            font-weight: 600;
+        }
+
+        .pipeline-step.active.backlog {
+            background: #f8f9fa;
+            border-color: #6c757d;
+            color: #495057;
+        }
+
+        .pipeline-step.active.drafted {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .pipeline-step.active.ready {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .pipeline-step.active.progress {
+            background: #cce5ff;
+            border-color: #007bff;
+            color: #004085;
+        }
+
+        .pipeline-step.active.review {
+            background: #ffe5d0;
+            border-color: #fd7e14;
+            color: #7d3f08;
+        }
+
+        .pipeline-step.active.done {
+            background: #dafbe1;
+            border-color: #2da44e;
+            color: #0f5132;
+        }
+
+        .epic-item {
+            margin-bottom: 1rem;
+        }
+
+        .epic-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background: #e1e4e8;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .epic-status {
+            margin-right: 0.5rem;
+        }
+
+        .epic-stories {
+            margin-left: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #d73a49;
+        }
+
+        footer {
+            background: #24292e;
+            color: white;
+            padding: 0.5rem 1rem;
+            text-align: center;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .refreshing {
+            animation: pulse 1s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>🎯 BMM Status Dashboard</h1>
+                    <span class="subtitle">Project: role-directory</span>
+                    <span class="refresh-indicator" id="lastUpdated">Loading...</span>
+                </div>
+                <div class="header-metadata" id="headerMetadata">
+                    <!-- Metadata will be populated here -->
+                </div>
+            </div>
+        </header>
+
+        <div class="split-container">
+            <!-- Left Panel: Workflow Status -->
+            <div class="panel panel-left">
+                <div class="panel-header">
+                    <h2 class="panel-title">📋 Workflow Status</h2>
+                </div>
+                <div class="panel-content" id="workflowPanel">
+                    <div class="loading">Loading workflow data...</div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Sprint Status -->
+            <div class="panel panel-right">
+                <div class="panel-header">
+                    <h2 class="panel-title">⚡ Sprint Status</h2>
+                </div>
+                <div id="sprintMetadata"></div>
+                <div class="panel-content" id="sprintPanel">
+                    <div class="loading">Loading sprint data...</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Auto-refresh: Every 10 minutes | 📄 Sources: docs/bmm-workflow-status.yaml & docs/sprint-status.yaml</p>
+        </footer>
+    </div>
+
+    <script>
+        // Copy to clipboard function
+        function copyToClipboard(text, event) {
+            event.stopPropagation();
+            const button = event.target.closest('.copy-btn');
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback on button
+                const originalText = button.innerHTML;
+                button.classList.add('copied');
+                button.innerHTML = '✅ Copied!';
+                
+                // Show toast notification
+                showToast(`📋 Copied: ${text}`);
+                
+                // Reset after animation
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                showToast('❌ Failed to copy to clipboard', true);
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // Toast notification
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: ${isError ? '#dc3545' : '#2da44e'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 6px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-size: 0.9rem;
+                font-weight: 500;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // Workflow phase configuration
+        const WORKFLOW_PHASES = [
+            { key: 'phase-0', title: 'Phase 0: Discovery', icon: '🔍', badge: 'Optional' },
+            { key: 'phase-1', title: 'Phase 1: Planning', icon: '📋', badge: null },
+            { key: 'phase-2', title: 'Phase 2: Solutioning', icon: '🏗️', badge: null },
+            { key: 'phase-3', title: 'Phase 3: Implementation', icon: '⚡', badge: null }
+        ];
+
+        const WORKFLOW_MAPPING = {
+            'product-brief': { 
+                phase: 'phase-0', 
+                name: 'Product Brief',
+                agent: '@bmad/bmm/agents/pm',
+                command: '@bmad/bmm/agents/pm @bmad/bmm/workflows/product-brief'
+            },
+            'prd': { 
+                phase: 'phase-1', 
+                name: 'PRD (Product Requirements Document)',
+                agent: '@bmad/bmm/agents/pm',
+                command: '@bmad/bmm/agents/pm @bmad/bmm/workflows/prd'
+            },
+            'validate-prd': { 
+                phase: 'phase-1', 
+                name: 'Validate PRD',
+                agent: '@bmad/bmm/agents/analyst',
+                command: '@bmad/bmm/agents/analyst @bmad/bmm/workflows/prd (validation)'
+            },
+            'create-epics-and-stories': { 
+                phase: 'phase-1', 
+                name: 'Create Epics and Stories',
+                agent: '@bmad/bmm/agents/pm',
+                command: '@bmad/bmm/agents/pm @bmad/bmm/workflows/create-epics-and-stories'
+            },
+            'create-design': { 
+                phase: 'phase-1', 
+                name: 'Create Design',
+                agent: '@bmad/bmm/agents/ux-designer',
+                command: '@bmad/bmm/agents/ux-designer @bmad/bmm/workflows/create-ux-design'
+            },
+            'create-architecture': { 
+                phase: 'phase-2', 
+                name: 'Create Architecture',
+                agent: '@bmad/bmm/agents/architect',
+                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/architecture'
+            },
+            'validate-architecture': { 
+                phase: 'phase-2', 
+                name: 'Validate Architecture',
+                agent: '@bmad/bmm/agents/architect',
+                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/architecture (validation)'
+            },
+            'solutioning-gate-check': { 
+                phase: 'phase-2', 
+                name: 'Solutioning Gate Check',
+                agent: '@bmad/bmm/agents/architect',
+                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/solutioning-gate-check'
+            },
+            'sprint-planning': { 
+                phase: 'phase-3', 
+                name: 'Sprint Planning',
+                agent: '@bmad/bmm/agents/sm',
+                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/sprint-planning'
+            },
+            'create-story': {
+                phase: 'phase-3',
+                name: 'Create Story',
+                agent: '@bmad/bmm/agents/sm',
+                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/create-story'
+            },
+            'story-context': {
+                phase: 'phase-3',
+                name: 'Story Context',
+                agent: '@bmad/bmm/agents/sm',
+                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/story-context'
+            },
+            'story-ready': {
+                phase: 'phase-3',
+                name: 'Story Ready',
+                agent: '@bmad/bmm/agents/architect',
+                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/story-ready'
+            },
+            'dev-story': {
+                phase: 'phase-3',
+                name: 'Develop Story',
+                agent: '@bmad/bmm/agents/dev',
+                command: '@bmad/bmm/agents/dev @bmad/bmm/workflows/dev-story'
+            },
+            'test-story': {
+                phase: 'phase-3',
+                name: 'Test Story',
+                agent: '@bmad/bmm/agents/tea',
+                command: '@bmad/bmm/agents/tea @bmad/bmm/workflows/test-story'
+            },
+            'code-review': {
+                phase: 'phase-3',
+                name: 'Code Review',
+                agent: '@bmad/bmm/agents/architect',
+                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/code-review'
+            },
+            'story-done': {
+                phase: 'phase-3',
+                name: 'Story Done',
+                agent: '@bmad/bmm/agents/sm',
+                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/story-done'
+            },
+            'document-project': {
+                phase: 'phase-3',
+                name: 'Document Project',
+                agent: '@bmad/bmm/agents/tech-writer',
+                command: '@bmad/bmm/agents/tech-writer @bmad/bmm/workflows/document-project'
+            }
+        };
+
+        // Status mapping functions
+        function getStatusInfo(status) {
+            if (typeof status === 'string' && status.includes('/')) {
+                return { type: 'completed', icon: '✅', badge: 'completed', path: status };
+            }
+            
+            const statusMap = {
+                'required': { type: 'required', icon: '⏳', badge: 'required' },
+                'optional': { type: 'optional', icon: 'ℹ️', badge: 'optional' },
+                'conditional': { type: 'conditional', icon: '⚙️', badge: 'conditional' },
+                'recommended': { type: 'optional', icon: 'ℹ️', badge: 'recommended' },
+                'backlog': { type: 'backlog', icon: '📝', badge: 'backlog' },
+                'contexted': { type: 'contexted', icon: '📋', badge: 'contexted' },
+                'drafted': { type: 'drafted', icon: '✏️', badge: 'drafted' },
+                'ready-for-dev': { type: 'ready', icon: '🎯', badge: 'ready' },
+                'in-progress': { type: 'progress', icon: '🔄', badge: 'in progress' },
+                'review': { type: 'review', icon: '👀', badge: 'review' },
+                'done': { type: 'done', icon: '✅', badge: 'done' }
+            };
+            
+            return statusMap[status] || { type: 'backlog', icon: '❓', badge: status };
+        }
+
+        // Render workflow panel
+        function renderWorkflowPanel(data) {
+            // Update header metadata
+            const headerMetadata = `
+                <div class="header-meta-item">
+                    <span class="header-meta-label">Project Type</span>
+                    <span class="header-meta-value">${data.project_type || 'N/A'}</span>
+                </div>
+                <div class="header-meta-item">
+                    <span class="header-meta-label">Track</span>
+                    <span class="header-meta-value">${data.selected_track || 'N/A'}</span>
+                </div>
+                <div class="header-meta-item">
+                    <span class="header-meta-label">Field Type</span>
+                    <span class="header-meta-value">${data.field_type || 'N/A'}</span>
+                </div>
+            `;
+            document.getElementById('headerMetadata').innerHTML = headerMetadata;
+
+            // Group workflows by phase
+            const phases = {};
+            WORKFLOW_PHASES.forEach(phase => {
+                phases[phase.key] = { ...phase, workflows: [] };
+            });
+
+            // Populate workflows
+            if (data.workflow_status) {
+                Object.entries(data.workflow_status).forEach(([key, status]) => {
+                    const mapping = WORKFLOW_MAPPING[key];
+                    if (mapping) {
+                        const statusInfo = getStatusInfo(status);
+                        phases[mapping.phase].workflows.push({
+                            name: mapping.name,
+                            status: statusInfo,
+                            path: statusInfo.path,
+                            agent: mapping.agent,
+                            command: mapping.command
+                        });
+                    }
+                });
+            }
+
+            // Build HTML
+            let phasesHtml = '';
+            Object.values(phases).forEach(phase => {
+                if (phase.workflows.length > 0) {
+                    let workflowsHtml = '';
+                    phase.workflows.forEach(workflow => {
+                        const pathHtml = workflow.path 
+                            ? `<div class="workflow-path">📄 ${workflow.path}</div>`
+                            : '';
+                        
+                        const agentHtml = workflow.agent
+                            ? `<div class="workflow-agent">👤 Agent: ${workflow.agent}</div>`
+                            : '';
+                        
+                        const commandHtml = workflow.command
+                            ? `<div class="workflow-command" onclick="copyToClipboard('${workflow.command}', event)" title="Click to copy">
+                                <span class="command-text">${workflow.command}</span>
+                                <span class="copy-icon">📋</span>
+                               </div>`
+                            : '';
+                        
+                        workflowsHtml += `
+                            <div class="workflow-item ${workflow.status.type}">
+                                <span class="workflow-status">${workflow.status.icon}</span>
+                                <div class="workflow-content">
+                                    <div class="workflow-name">${workflow.name}</div>
+                                    ${pathHtml}
+                                    ${agentHtml}
+                                    ${commandHtml}
+                                </div>
+                                <span class="status-badge status-${workflow.status.type}">${workflow.status.badge}</span>
+                            </div>
+                        `;
+                    });
+
+                    const badgeHtml = phase.badge 
+                        ? `<span class="phase-badge badge-optional">${phase.badge}</span>`
+                        : '';
+
+                    phasesHtml += `
+                        <div class="phase">
+                            <div class="phase-header">
+                                <span class="phase-icon">${phase.icon}</span>
+                                <h2 class="phase-title">${phase.title}</h2>
+                                ${badgeHtml}
+                            </div>
+                            <div class="workflow-list">
+                                ${workflowsHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            return phasesHtml;
+        }
+
+        // Create status pipeline for a story
+        function createStatusPipeline(currentStatus) {
+            // Pipeline de status em ordem
+            const pipeline = [
+                { key: 'backlog', label: 'backlog', type: 'backlog' },
+                { key: 'drafted', label: 'drafted', type: 'drafted' },
+                { key: 'ready-for-dev', label: 'ready', type: 'ready' },
+                { key: 'in-progress', label: 'in progress', type: 'progress' },
+                { key: 'review', label: 'review', type: 'review' },
+                { key: 'done', label: 'done', type: 'done' }
+            ];
+            
+            // Encontrar índice do status atual
+            const currentIndex = pipeline.findIndex(step => step.key === currentStatus);
+            
+            // Gerar HTML das caixinhas
+            let html = '<div class="story-pipeline">';
+            pipeline.forEach((step, index) => {
+                const isActive = index <= currentIndex;
+                const isCurrent = index === currentIndex;
+                const activeClass = isActive ? `active ${step.type}` : 'inactive';
+                
+                html += `
+                    <div class="pipeline-step ${activeClass}" title="${step.label}">
+                        ${step.label}${isCurrent ? ' ✓' : ''}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            return html;
+        }
+
+        // Render sprint panel
+        function renderSprintPanel(data) {
+            const metadata = `
+                <div class="panel-metadata">
+                    <div class="panel-metadata-grid">
+                        <div class="panel-metadata-item">
+                            <span class="panel-metadata-label">Generated</span>
+                            <span class="panel-metadata-value">${data.generated || 'N/A'}</span>
+                        </div>
+                        <div class="panel-metadata-item">
+                            <span class="panel-metadata-label">Tracking System</span>
+                            <span class="panel-metadata-value">${data.tracking_system || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (!data.development_status) {
+                return {
+                    metadata: metadata,
+                    content: '<div class="error">No development status found</div>'
+                };
+            }
+
+            // Parse epics and stories
+            const epics = [];
+            let currentEpic = null;
+
+            Object.entries(data.development_status).forEach(([key, status]) => {
+                if (key.startsWith('epic-') && !key.includes('retrospective')) {
+                    if (currentEpic) {
+                        epics.push(currentEpic);
+                    }
+                    const epicNum = key.replace('epic-', '');
+                    currentEpic = {
+                        id: key,
+                        number: epicNum,
+                        status: status,
+                        stories: []
+                    };
+                } else if (currentEpic && key.startsWith(currentEpic.number + '-')) {
+                    currentEpic.stories.push({
+                        id: key,
+                        status: status
+                    });
+                }
+            });
+            
+            if (currentEpic) {
+                epics.push(currentEpic);
+            }
+
+            // Build HTML
+            let epicsHtml = '';
+            epics.forEach(epic => {
+                const epicStatusInfo = getStatusInfo(epic.status);
+                const epicTitle = `Epic ${epic.number}`;
+                
+                let storiesHtml = '';
+                epic.stories.forEach(story => {
+                    const storyStatusInfo = getStatusInfo(story.status);
+                    const storyName = story.id.replace(epic.number + '-', '').replace(/-/g, ' ');
+                    
+                    // Gerar pipeline visual de status
+                    const pipelineHtml = createStatusPipeline(story.status);
+                    
+                    // Determinar o próximo comando baseado no status atual
+                    let nextCommand = '';
+                    let nextIcon = '';
+                    let agentCommand = '';
+                    switch(story.status) {
+                        case 'backlog':
+                            nextCommand = 'sm:create';
+                            nextIcon = '📋';
+                            agentCommand = `@bmad/bmm/agents/sm *create-story ${story.id}`;
+                            break;
+                        case 'drafted':
+                            nextCommand = 'sm:context';
+                            nextIcon = '🏗️';
+                            agentCommand = `@bmad/bmm/agents/sm *story-context ${story.id}`;
+                            break;
+                        case 'ready-for-dev':
+                            nextCommand = 'dev:dev-story';
+                            nextIcon = '💻';
+                            agentCommand = `@bmad/bmm/agents/dev *dev-story ${story.id}`;
+                            break;
+                        case 'in-progress':
+                            nextCommand = 'dev:continue';
+                            nextIcon = '🔄';
+                            agentCommand = `@bmad/bmm/agents/dev *continue ${story.id}`;
+                            break;
+                        case 'review':
+                            nextCommand = 'dev:code-review';
+                            nextIcon = '👀';
+                            agentCommand = `@bmad/bmm/agents/dev *code-review ${story.id}`;
+                            break;
+                        case 'done':
+                            nextCommand = 'completed';
+                            nextIcon = '✅';
+                            agentCommand = `✅ Story completed`;
+                            break;
+                    }
+                    
+                    storiesHtml += `
+                        <div class="workflow-item ${storyStatusInfo.type}">
+                            <span class="workflow-status">${storyStatusInfo.icon}</span>
+                            <div class="workflow-content">
+                                <div class="workflow-name">${storyName}</div>
+                                <div class="workflow-path">${story.id}</div>
+                                ${pipelineHtml}
+                            </div>
+                            <div class="story-divider"></div>
+                            <div class="workflow-next-action">
+                                <span class="workflow-status">${nextIcon}</span>
+                                <div class="workflow-content">
+                                    <div class="workflow-name">Next Action</div>
+                                    <div class="workflow-path">${nextCommand}</div>
+                                </div>
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('${agentCommand.replace(/'/g, "\\'")}', event)" title="${agentCommand}">
+                                📋 Click to copy
+                            </button>
+                        </div>
+                    `;
+                });
+
+                epicsHtml += `
+                    <div class="epic-item">
+                        <div class="epic-header">
+                            <span class="epic-status">${epicStatusInfo.icon}</span>
+                            <span>${epicTitle}</span>
+                            <span class="status-badge status-${epicStatusInfo.type}" style="margin-left: auto;">${epicStatusInfo.badge}</span>
+                        </div>
+                        <div class="epic-stories">
+                            ${storiesHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return {
+                metadata: metadata,
+                content: epicsHtml
+            };
+        }
+
+        // Load data from YAML files
+        async function loadData() {
+            try {
+                // Add refreshing animation
+                document.querySelector('.main-container').classList.add('refreshing');
+
+                // Fetch both YAML files
+                const [workflowResponse, sprintResponse] = await Promise.all([
+                    fetch('docs/bmm-workflow-status.yaml'),
+                    fetch('docs/sprint-status.yaml')
+                ]);
+
+                if (!workflowResponse.ok || !sprintResponse.ok) {
+                    throw new Error('Failed to fetch YAML files');
+                }
+
+                const [workflowText, sprintText] = await Promise.all([
+                    workflowResponse.text(),
+                    sprintResponse.text()
+                ]);
+
+                // Parse YAML
+                const workflowData = jsyaml.load(workflowText);
+                const sprintData = jsyaml.load(sprintText);
+
+                // Render panels
+                document.getElementById('workflowPanel').innerHTML = renderWorkflowPanel(workflowData);
+                const sprintResult = renderSprintPanel(sprintData);
+                document.getElementById('sprintMetadata').innerHTML = sprintResult.metadata;
+                document.getElementById('sprintPanel').innerHTML = sprintResult.content;
+
+                // Update timestamp
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
+
+                // Remove refreshing animation
+                setTimeout(() => {
+                    document.querySelector('.main-container').classList.remove('refreshing');
+                }, 300);
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('workflowPanel').innerHTML = '<div class="error">Error loading workflow data</div>';
+                document.getElementById('sprintMetadata').innerHTML = '';
+                document.getElementById('sprintPanel').innerHTML = '<div class="error">Error loading sprint data</div>';
+                document.getElementById('lastUpdated').textContent = 'Error loading data';
+                
+                document.querySelector('.main-container').classList.remove('refreshing');
+            }
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard(text, event) {
+            event.stopPropagation();
+            
+            // Use the modern clipboard API
+            navigator.clipboard.writeText(text).then(() => {
+                // Show feedback
+                const feedback = document.createElement('div');
+                feedback.className = 'copied-feedback';
+                feedback.textContent = '✓ Copied to clipboard!';
+                document.body.appendChild(feedback);
+                
+                // Remove feedback after animation
+                setTimeout(() => {
+                    document.body.removeChild(feedback);
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    const feedback = document.createElement('div');
+                    feedback.className = 'copied-feedback';
+                    feedback.textContent = '✓ Copied to clipboard!';
+                    document.body.appendChild(feedback);
+                    setTimeout(() => {
+                        document.body.removeChild(feedback);
+                    }, 2000);
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // Initial load
+        loadData();
+
+        // Auto-refresh every 600 seconds (10 minutes)
+        setInterval(loadData, 600000);
+    </script>
+</body>
+</html>
