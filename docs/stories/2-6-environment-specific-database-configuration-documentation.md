@@ -155,7 +155,7 @@ so that **I can quickly troubleshoot connection issues and onboard new contribut
     1. Get Cloud Run service account email:
        ```bash
        gcloud run services describe role-directory-dev \
-         --region=us-central1 \
+         --region=southamerica-east1 \
          --format='value(spec.template.spec.serviceAccountName)'
        ```
        If empty, uses default: `PROJECT_NUMBER-compute@developer.gserviceaccount.com`
@@ -182,17 +182,17 @@ so that **I can quickly troubleshoot connection issues and onboard new contribut
     ```bash
     # Dev environment
     gcloud run services update role-directory-dev \
-      --region=us-central1 \
+      --region=southamerica-east1 \
       --set-secrets=DATABASE_URL=role-directory-dev-db-url:latest
     
     # Staging environment
     gcloud run services update role-directory-stg \
-      --region=us-central1 \
+      --region=southamerica-east1 \
       --set-secrets=DATABASE_URL=role-directory-stg-db-url:latest
     
     # Production environment
     gcloud run services update role-directory-prd \
-      --region=us-central1 \
+      --region=southamerica-east1 \
       --set-secrets=DATABASE_URL=role-directory-prd-db-url:latest
     ```
   - [ ] Document secret versioning:
@@ -202,7 +202,7 @@ so that **I can quickly troubleshoot connection issues and onboard new contribut
   - [ ] Document verification:
     ```bash
     gcloud run services describe role-directory-dev \
-      --region=us-central1 \
+      --region=southamerica-east1 \
       --format='yaml(spec.template.spec.containers[0].env)'
     ```
     Expected: `DATABASE_URL` with secret reference

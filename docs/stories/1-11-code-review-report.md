@@ -402,9 +402,9 @@ All gcloud commands have been verified against:
 ### 3.2 Environment-Specific Correctness ✅ PASS
 
 **Verification:**
-- ✅ Dev environment: `role-directory-dev`, public access, region `us-central1`
-- ✅ Staging environment: `role-directory-staging`, IAM protected, region `us-central1`
-- ✅ Production environment: `role-directory-production`, IAM protected, region `us-central1`
+- ✅ Dev environment: `role-directory-dev`, public access, region `southamerica-east1`
+- ✅ Staging environment: `role-directory-staging`, IAM protected, region `southamerica-east1`
+- ✅ Production environment: `role-directory-production`, IAM protected, region `southamerica-east1`
 - ✅ Health check endpoints correctly distinguished (public vs. IAM protected)
 - ✅ Service URLs correctly retrieved via `gcloud run services describe`
 

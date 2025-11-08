@@ -183,7 +183,7 @@ so that **deployment health checks catch database connection issues early**.
   - [ ] Get Cloud Run service URL:
     ```bash
     gcloud run services describe role-directory-dev \
-      --region=us-central1 \
+      --region=southamerica-east1 \
       --format='value(status.url)'
     ```
   - [ ] Test health endpoint:

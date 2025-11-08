@@ -178,7 +178,7 @@
         
         Environment Variables:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_REGION: us-central1
+          GCP_REGION: southamerica-east1
           SERVICE_NAME: role-directory-production
         
         Job: promote
@@ -285,7 +285,7 @@
       <kind>Cloud Run Deployment</kind>
       <signature>
         Target: role-directory-production
-        Region: us-central1
+        Region: southamerica-east1
         
         Production Configuration (Story 1.8):
           Min Instances: 2 (HIGH AVAILABILITY - no cold starts)
@@ -297,7 +297,7 @@
         
         Deployment Command:
           gcloud run deploy role-directory-production \
-            --region=us-central1 \
+            --region=southamerica-east1 \
             --image=gcr.io/PROJECT_ID/role-directory:production-<timestamp>
         
         Expected Behavior:
@@ -394,7 +394,7 @@
         Manual: Check workflow logs for "Push production images" step. Verify push commands executed. After workflow completes, check GCR: gcloud container images list-tags gcr.io/PROJECT_ID/role-directory --filter="tags:production-*". Verify new production tag appears. Verify production-latest tag updated.
       </test>
       <test id="AC-7" desc="Verify deploys to Cloud Run production">
-        Manual: Check workflow logs for "Deploy to Cloud Run" step. Verify deploy-cloudrun action executed. Verify service: role-directory-production. Verify region: us-central1. Verify image: gcr.io/PROJECT_ID/role-directory:production-<TAG>. After workflow completes, check Cloud Run console. Verify new revision created with production image. Verify min 2 instances running.
+        Manual: Check workflow logs for "Deploy to Cloud Run" step. Verify deploy-cloudrun action executed. Verify service: role-directory-production. Verify region: southamerica-east1. Verify image: gcr.io/PROJECT_ID/role-directory:production-<TAG>. After workflow completes, check Cloud Run console. Verify new revision created with production image. Verify min 2 instances running.
       </test>
       <test id="AC-8" desc="Verify health check with IAM auth (no cold start)">
         Manual: Check workflow logs for "Health check" step. Verify token generated: gcloud auth print-identity-token. Verify health check request: curl with Authorization header. Verify 200 OK response. Verify response time <100ms (no cold start, min 2 instances). Verify response body contains "status": "ok". If health check fails, verify workflow marked as failed.

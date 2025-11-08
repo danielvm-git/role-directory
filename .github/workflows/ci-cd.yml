@@ -85,7 +85,7 @@ jobs:
         run: |
           gcloud run deploy role-directory-dev \
             --source . \
-            --region us-central1 \
+            --region southamerica-east1 \
             --platform managed \
             --allow-unauthenticated \
             --set-env-vars NODE_ENV=development \
@@ -108,7 +108,7 @@ jobs:
         id: get-url
         run: |
           SERVICE_URL=$(gcloud run services describe role-directory-dev \
-            --region us-central1 \
+            --region southamerica-east1 \
             --format 'value(status.url)')
           echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
           echo "✅ Deployed to: $SERVICE_URL"
@@ -172,7 +172,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** Dev" >> $GITHUB_STEP_SUMMARY
           echo "**Service:** role-directory-dev" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** us-central1" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** southamerica-east1" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** ${{ steps.get-url.outputs.SERVICE_URL }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

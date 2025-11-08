@@ -187,7 +187,7 @@ After workflow completes:
 ```bash
 # Get the deployed service URL
 gcloud run services describe role-directory-dev \
-  --region us-central1 \
+  --region southamerica-east1 \
   --format="value(status.url)"
 
 # Test the service
@@ -195,7 +195,7 @@ curl https://role-directory-dev-[hash].run.app
 
 # View deployment logs
 gcloud run services logs read role-directory-dev \
-  --region us-central1 \
+  --region southamerica-east1 \
   --limit 50
 ```
 
@@ -225,7 +225,7 @@ The updated `.github/workflows/ci-cd.yml` now includes:
 | Setting | Value | Source |
 |---------|-------|--------|
 | **Service Name** | `role-directory-dev` | Hardcoded |
-| **Region** | `us-central1` | Hardcoded |
+| **Region** | `southamerica-east1` | Hardcoded |
 | **Source** | `.` (current directory) | Cloud Build handles Docker |
 | **CPU** | 1 vCPU | Hardcoded |
 | **Memory** | 512Mi | Hardcoded |

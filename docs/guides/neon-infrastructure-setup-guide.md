@@ -1,444 +1,859 @@
-# Infrastructure Setup: Neon PostgreSQL + Cloud Run
+# Neon PostgreSQL Infrastructure Setup Guide
 
 **Project:** role-directory  
-**Date:** 2025-11-06  
-**Cost:** ~$0-3/month (free tier infrastructure)
+**Last Updated:** 2025-11-07  
+**Story:** 2-1-neon-postgresql-account-and-database-setup
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Prerequisites](#prerequisites)
+3. [Step 1: Create Neon Account](#step-1-create-neon-account)
+4. [Step 2: Create Neon Project](#step-2-create-neon-project)
+5. [Step 3: Create Databases](#step-3-create-databases)
+6. [Step 4: Test Database Connections](#step-4-test-database-connections)
+7. [Step 5: Store Credentials in Google Secret Manager](#step-5-store-credentials-in-google-secret-manager)
+8. [Step 6: Grant Cloud Run Access to Secrets](#step-6-grant-cloud-run-access-to-secrets)
+9. [Step 7: Configure Cloud Run Services](#step-7-configure-cloud-run-services)
+10. [Step 8: Set Up Local Development](#step-8-set-up-local-development)
+11. [Connection String Format](#connection-string-format)
+12. [Neon Free Tier Details](#neon-free-tier-details)
+13. [Troubleshooting](#troubleshooting)
+14. [References](#references)
 
 ---
 
 ## Overview
 
-This document provides step-by-step instructions for setting up the cost-optimized infrastructure:
+This guide walks you through setting up **three Neon PostgreSQL databases** (dev, staging, production) for the role-directory project. Each database is:
 
-- **Hosting:** Google Cloud Run (3 services: dev, stg, prd)
-- **Database:** Neon PostgreSQL (3 databases: dev, stg, prd)
-- **Secrets:** Google Secret Manager
-- **CI/CD:** GitHub Actions
+- ✅ **Isolated** - Separate databases for dev, staging, and production
+- ✅ **Serverless** - Auto-scales and auto-suspends (cost optimization)
+- ✅ **Secure** - SSL/TLS encryption required, credentials in Secret Manager
+- ✅ **Free** - Uses Neon's free tier (0.5 GB storage, ~100 compute hours/month)
 
-**Total Cost:** ~$0-3/month (both within free tiers)
+**Architecture:**
+- **Neon Project**: `role-directory` (single project with multiple branches)
+- **Branches**: `production` (main), `development`, and optionally `staging`
+- **Database Name**: `neondb` (Neon's default, same across all branches)
+- **Branch Identification**: Via endpoint (`ep-xxx` for dev, `ep-yyy` for staging, `ep-zzz` for production)
+- **Credentials**: Stored in Google Secret Manager (not in code)
+- **Access**: Cloud Run services access via environment variable (`DATABASE_URL`)
 
 ---
 
 ## Prerequisites
 
-- Google Cloud Platform account
-- `gcloud` CLI installed and authenticated
-- GitHub account
-- Neon account (https://neon.tech - sign up free)
+Before starting, ensure you have:
 
----
+1. ✅ **Email address** for Neon account (GitHub or Google account recommended)
+2. ✅ **Google Cloud project** configured (from Epic 1)
+3. ✅ **gcloud CLI** installed and authenticated
+4. ✅ **PostgreSQL client** (`psql`) installed for testing
+5. ✅ **Cloud Run services** deployed (from Stories 1.4, 1.7, 1.8)
 
-## Step 1: Create Neon Databases
-
-### 1.1: Sign Up for Neon
-
-1. Go to https://neon.tech
-2. Sign up with GitHub or email (free)
-3. Create a new project: "role-directory"
-
-### 1.2: Create Three Databases
-
-**Development Database:**
-```
-Project: role-directory
-Database name: role_directory_dev
-Region: Choose closest to your Cloud Run region
-```
-
-**Staging Database:**
-```
-Database name: role_directory_stg
-(Same project, separate database)
-```
-
-**Production Database:**
-```
-Database name: role_directory_prd
-(Same project, separate database)
-```
-
-### 1.3: Get Connection Strings
-
-For each database, get the connection string:
-
-```
-Format:
-postgresql://[user]:[password]@[host]/[database]?sslmode=require
-
-Example:
-postgresql://daniel:abc123@ep-cool-sound-123456.us-east-2.aws.neon.tech/role_directory_dev?sslmode=require
-```
-
-**Save these connection strings securely - you'll need them for Secret Manager.**
-
----
-
-## Step 2: Configure Google Cloud Project
-
-### 2.1: Set GCP Project
-
+**Check your setup:**
 ```bash
-# Set your project ID
-export PROJECT_ID="your-project-id"
-gcloud config set project $PROJECT_ID
+# Verify gcloud CLI
+gcloud --version
+gcloud auth list
+gcloud config get-value project
 
-# Enable required APIs
-gcloud services enable run.googleapis.com
-gcloud services enable secretmanager.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-```
+# Verify psql installed
+psql --version
+# Expected: psql (PostgreSQL) 14.x or higher
 
-### 2.2: Store Database Credentials in Secret Manager
-
-```bash
-# Create secrets for each environment
-echo -n "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" | \
-  gcloud secrets create DATABASE_URL_DEV --data-file=-
-
-echo -n "postgresql://[user]:[pass]@[host]/role_directory_stg?sslmode=require" | \
-  gcloud secrets create DATABASE_URL_STG --data-file=-
-
-echo -n "postgresql://[user]:[pass]@[host]/role_directory_prd?sslmode=require" | \
-  gcloud secrets create DATABASE_URL_PRD --data-file=-
-```
-
-### 2.3: Create Session Secrets
-
-```bash
-# Generate random session secrets (32+ characters)
-# macOS/Linux:
-export SESSION_SECRET_DEV=$(openssl rand -hex 32)
-export SESSION_SECRET_STG=$(openssl rand -hex 32)
-export SESSION_SECRET_PRD=$(openssl rand -hex 32)
-
-# Store in Secret Manager
-echo -n "$SESSION_SECRET_DEV" | gcloud secrets create SESSION_SECRET_DEV --data-file=-
-echo -n "$SESSION_SECRET_STG" | gcloud secrets create SESSION_SECRET_STG --data-file=-
-echo -n "$SESSION_SECRET_PRD" | gcloud secrets create SESSION_SECRET_PRD --data-file=-
+# If psql not installed:
+# macOS: brew install postgresql
+# Ubuntu: sudo apt-get install postgresql-client
+# Windows: Download from postgresql.org
 ```
 
 ---
 
-## Step 3: Run Database Migrations
+## Step 1: Create Neon Account
 
-### 3.1: Install Dependencies Locally
+### 1.1 Navigate to Neon
 
-```bash
-cd /Users/me/Sites/role-directory
+Go to: **https://neon.tech**
 
-# Install Node.js dependencies (if using Prisma/Knex)
-npm install
+### 1.2 Sign Up
 
-# Or use raw SQL with psql
-brew install postgresql  # macOS
-```
+1. Click **"Sign Up"** button (top right)
+2. Choose authentication method:
+   - **Recommended**: Sign up with GitHub or Google
+   - Alternative: Email + password
+3. Complete authentication flow
+4. Verify email address if required
 
-### 3.2: Run Migrations Against Each Database
+### 1.3 Complete Account Setup
 
-**Option A: Using psql (Raw SQL)**
+1. You'll be redirected to Neon Console: **https://console.neon.tech**
+2. First-time wizard may appear - follow prompts or skip
+3. Note your account email and plan (should show "Free Tier")
 
-```bash
-# Development
-psql "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" \
-  -f sql/schema/01_regions.sql \
-  -f sql/schema/02_currencies.sql \
-  # ... (run all schema files)
-
-# Create new tables for sessions
-psql "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" \
-  -c "CREATE TABLE invitation_codes (
-    code VARCHAR(12) PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT NOW(),
-    expires_at TIMESTAMP NOT NULL
-  );"
-
-psql "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" \
-  -c "CREATE TABLE access_sessions (
-    session_id VARCHAR(255) PRIMARY KEY,
-    code_used VARCHAR(12) REFERENCES invitation_codes(code),
-    created_at TIMESTAMP DEFAULT NOW(),
-    expires_at TIMESTAMP NOT NULL,
-    last_accessed TIMESTAMP DEFAULT NOW()
-  );"
-
-# Repeat for staging and production databases
-```
-
-**Option B: Using Prisma Migrate**
-
-```bash
-# Configure DATABASE_URL for dev
-export DATABASE_URL="postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require"
-
-# Run migrations
-npx prisma migrate deploy
-
-# Repeat for stg and prd
-```
+**Verification:**
+- ✅ You can access Neon Console
+- ✅ Account shows "Free Tier" plan
+- ✅ No payment method required
 
 ---
 
-## Step 4: Create Cloud Run Services
+## Step 2: Create Neon Project
 
-### 4.1: Development Service
+### 2.1 Create Project
 
-```bash
-# Create Cloud Run service (initial deployment will come from CI/CD)
-gcloud run services create role-directory-dev \
-  --region=us-central1 \
-  --platform=managed \
-  --allow-unauthenticated \
-  --set-secrets="DATABASE_URL=DATABASE_URL_DEV:latest,SESSION_SECRET=SESSION_SECRET_DEV:latest" \
-  --set-env-vars="NODE_ENV=development,PORT=8080" \
-  --min-instances=0 \
-  --max-instances=3 \
-  --memory=512Mi \
-  --cpu=1
-```
+1. In Neon Console, click **"Create Project"** button
+2. Fill in project details:
+   - **Name**: `role-directory` (or `role-directory-mvp`)
+   - **Region**: Choose closest to Cloud Run (recommend: **AWS South America (São Paulo)**)
+     - Cloud Run region: `southamerica-east1` (São Paulo)
+     - Closest Neon region: AWS South America (São Paulo)
+   - **PostgreSQL version**: 17 (default, recommended)
+3. **Auto-suspend**: Leave enabled (default)
+   - Database suspends after 5 minutes of inactivity (free tier)
+   - Resumes automatically on first query (~2-3 second cold start)
+4. Click **"Create Project"**
 
-### 4.2: Staging Service
+### 2.2 Note Project Details
 
-```bash
-gcloud run services create role-directory-stg \
-  --region=us-central1 \
-  --platform=managed \
-  --allow-unauthenticated \
-  --set-secrets="DATABASE_URL=DATABASE_URL_STG:latest,SESSION_SECRET=SESSION_SECRET_STG:latest" \
-  --set-env-vars="NODE_ENV=staging,PORT=8080" \
-  --min-instances=0 \
-  --max-instances=3 \
-  --memory=512Mi \
-  --cpu=1
-```
+After creation, note:
+- **Project ID**: Displayed in URL (e.g., `https://console.neon.tech/app/projects/[PROJECT-ID]`)
+- **Project Name**: `role-directory`
+- **Region**: e.g., `aws-sa-east-1` (São Paulo) - should match your Cloud Run region
+- **Default Database**: `neondb` (auto-created, we'll create our own)
 
-### 4.3: Production Service
-
-```bash
-gcloud run services create role-directory-prd \
-  --region=us-central1 \
-  --platform=managed \
-  --allow-unauthenticated \
-  --set-secrets="DATABASE_URL=DATABASE_URL_PRD:latest,SESSION_SECRET=SESSION_SECRET_PRD:latest" \
-  --set-env-vars="NODE_ENV=production,PORT=8080" \
-  --min-instances=0 \
-  --max-instances=5 \
-  --memory=512Mi \
-  --cpu=1
-```
+**Verification:**
+- ✅ Project appears in Neon Console
+- ✅ Project shows "Active" status
+- ✅ Default database `neondb` exists (ignore this, we'll create our own)
 
 ---
 
-## Step 5: Configure GitHub Actions
+## Step 3: Create Branches (Not Databases)
 
-### 5.1: Create Service Account for GitHub Actions
+**Important:** Neon uses **branches** (like Git branches) rather than separate databases for environment isolation. Each branch is a copy-on-write clone with its own compute and can have different data.
 
-```bash
-# Create service account
-gcloud iam service-accounts create github-actions \
-  --display-name="GitHub Actions Deployer"
+We'll create **two branches** for your environments:
+1. **`main` (or `production`)** - Production environment (already exists as default branch)
+2. **`development`** - Development environment (we'll create this)
+3. **`staging`** (optional) - Staging environment (we'll create this)
 
-# Grant necessary roles
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:github-actions@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/run.admin"
+### 3.1 Identify Your Production Branch
 
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:github-actions@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
+1. In Neon Console, navigate to your project: `role-directory`
+2. You should see **"2 Branches"** at the top (as shown in your screenshot)
+3. Click **"Branches"** in the left sidebar or click "View all" under "2 Branches"
+4. You'll see:
+   - **`production`** - Primary compute is "Idle" (your default/main branch)
+   - **`development`** - Primary compute is "Active" (may already exist)
 
-# Create key
-gcloud iam service-accounts keys create github-sa-key.json \
-  --iam-account=github-actions@$PROJECT_ID.iam.gserviceaccount.com
-```
+**Note:** The default branch created with your project is typically named `main` or `production`. This will be your production database.
 
-### 5.2: Add GitHub Secrets
+### 3.2 Copy Production Branch Connection String
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions
+1. In the Branches view, click on your **`production`** branch (or whichever branch you want to use for production)
+2. Under **"Compute"** section, find the connection details
+3. Click **"Connection Details"** or look for the connection string
+4. Copy the full connection string
+5. **Format should be**:
+   ```
+   postgresql://neondb_owner:[password]@ep-xxx-xxx-xxx.aws-sa-east-1.neon.tech/neondb?sslmode=require
+   ```
+   **Note:** 
+   - Database name: `neondb` (Neon's default)
+   - Role name: `neondb_owner` (default role created with your project, has admin privileges)
+6. **Save this connection string securely** (you'll need it for Secret Manager as `production-database-url`)
 
-Add these secrets:
-- `GCP_PROJECT_ID`: Your GCP project ID
-- `GCP_SA_KEY`: Contents of `github-sa-key.json` file
-- `GCP_REGION`: `us-central1` (or your chosen region)
+### 3.3 Create Development Branch
+
+1. In the Branches view, look for **"Create branch"** button (or similar)
+2. If a `development` branch doesn't already exist, create it:
+   - **Branch name**: `development` (or `dev`)
+   - **Parent branch**: Select `production` (or your main branch)
+   - **Create from**: Latest point (or select "Current point in time")
+3. Click **"Create branch"**
+4. After creation, click on the `development` branch
+5. Copy the connection string for the development branch
+6. Save securely (you'll use this as `dev-database-url`)
+
+**Note:** If you already see a `development` branch in your console (as shown in your screenshot), you can skip creation and just copy its connection string.
+
+### 3.4 Create Staging Branch (Optional)
+
+If you need a separate staging environment:
+1. Click **"Create branch"** again
+2. **Branch name**: `staging`
+3. **Parent branch**: Select `production` (or your main branch)
+4. **Create from**: Latest point in time
+5. Click **"Create branch"**
+6. Copy the staging branch connection string
+7. Save securely (you'll use this as `staging-database-url`)
+
+**Alternative:** You can also use the `development` branch for both dev and staging initially, and create a separate `staging` branch later if needed.
+
+### 3.5 Understanding Neon Branches
+
+**Key Points:**
+- Each branch has its own **compute** (can scale independently)
+- Branches share data up to the point of divergence (copy-on-write)
+- Writes to one branch don't affect other branches
+- Perfect for testing schema changes or new features
+- **Database name is typically `neondb`** for all branches (the branch name differentiates them, not the database name)
+
+**Connection String Difference:**
+The branch is identified by the **endpoint** in the connection string, not the database name:
+- Production: `postgresql://user:pass@ep-xxx-xxx.region.neon.tech/neondb?sslmode=require`
+- Development: `postgresql://user:pass@ep-yyy-yyy.region.neon.tech/neondb?sslmode=require`
+  
+Notice the `ep-xxx-xxx` vs `ep-yyy-yyy` - different endpoints for different branches!
+
+**Verification:**
+- ✅ You can see 2-3 branches in Neon Console: `production`, `development` (and optionally `staging`)
+- ✅ Each branch shows "Active" or "Idle" status under Primary compute
+- ✅ You have 2-3 connection strings saved (one for each branch)
+- ✅ Each connection string has a different endpoint (`ep-xxx` vs `ep-yyy`)
 
 ---
 
-## Step 6: Test Database Connectivity
+## Step 4: Test Branch Connections
 
-### 6.1: Test Neon Connection Locally
+Test each branch connection locally using `psql` to verify they work before configuring Cloud Run.
+
+### 4.1 Test Development Branch
 
 ```bash
-# Test dev database
-psql "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" \
-  -c "SELECT version();"
-
-# Should return PostgreSQL version info
+# Replace with your actual development branch connection string
+# Note: Use "neondb_owner" role (created with your project) and "neondb" database
+psql "postgresql://neondb_owner:your_password@ep-xxx-xxx.aws-sa-east-1.neon.tech/neondb?sslmode=require"
 ```
 
-### 6.2: Generate Test Invitation Code
+**If connection succeeds, you'll see:**
+```
+psql (17.0)
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+Type "help" for help.
+
+neondb=>
+```
+
+**Note:** The prompt shows `neondb=>` (Neon's default database name), not `role_directory_dev`.
+
+### 4.2 Verify SSL Connection
+
+```sql
+-- Run this command in psql
+\conninfo
+```
+
+**Expected output:**
+```
+You are connected to database "neondb" as user "neondb_owner" on host "ep-xxx-xxx.aws-sa-east-1.neon.tech" at port "5432".
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+```
+
+**Note:** 
+- Database: `neondb` (Neon's default)
+- Role: `neondb_owner` (default admin role)
+- Branch identified by endpoint (`ep-xxx-xxx`)
+
+**Important**: Verify that output includes **"SSL connection"**. If not, check your connection string includes `?sslmode=require`.
+
+### 4.3 Run Test Query
+
+```sql
+-- Check PostgreSQL version
+SELECT version();
+```
+
+**Expected output** (exact version may vary):
+```
+PostgreSQL 17.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+```
+
+### 4.4 Test Additional Commands
+
+```sql
+-- List databases (will show "neondb" as the database name)
+\l
+
+-- List tables (should be empty for now)
+\dt
+
+-- Exit psql
+\q
+```
+
+### 4.5 Test Staging and Production Branches
+
+Repeat the same tests for staging and production branches:
 
 ```bash
-# Insert a test code (expires in 24 hours)
-psql "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" \
-  -c "INSERT INTO invitation_codes (code, expires_at) 
-      VALUES ('TEST1234', NOW() + INTERVAL '24 hours');"
+# Test staging branch (if created)
+# Note: Different endpoint but same role (neondb_owner) and database (neondb)
+psql "postgresql://neondb_owner:your_password@ep-yyy-yyy.aws-sa-east-1.neon.tech/neondb?sslmode=require"
+\conninfo
+SELECT version();
+\q
+
+# Test production branch
+# Note: Different endpoint but same role (neondb_owner) and database (neondb)
+psql "postgresql://neondb_owner:your_password@ep-zzz-zzz.aws-sa-east-1.neon.tech/neondb?sslmode=require"
+\conninfo
+SELECT version();
+\q
+```
+
+**Key Point:** Each branch has a **different endpoint** (`ep-xxx`, `ep-yyy`, `ep-zzz`) but typically the **same database name** (`neondb`). The endpoint identifies which branch you're connecting to.
+
+**Verification:**
+- ✅ All branches connect successfully (2-3 branches depending on whether you created staging)
+- ✅ SSL connection confirmed for each (`\conninfo` shows "SSL connection")
+- ✅ PostgreSQL version is 17.0
+- ✅ Each connection uses a different endpoint but same database name (`neondb`)
+- ✅ No errors during connection
+
+---
+
+## Step 5: Store Credentials in Google Secret Manager
+
+**Security Principle**: Never commit database credentials to git. Store them in Google Secret Manager.
+
+### 5.1 Set GCP Project
+
+```bash
+# Ensure you're in the correct GCP project
+gcloud config set project YOUR_PROJECT_ID
 
 # Verify
-psql "postgresql://[user]:[pass]@[host]/role_directory_dev?sslmode=require" \
-  -c "SELECT * FROM invitation_codes;"
+gcloud config get-value project
 ```
+
+### 5.2 Create Dev Secret
+
+```bash
+# Replace with your actual development branch connection string
+# Note: Use "neondb_owner" role (default admin), "neondb" database, endpoint identifies branch
+echo "postgresql://neondb_owner:your_password@ep-dev-xxx.aws-sa-east-1.neon.tech/neondb?sslmode=require" | \
+  gcloud secrets create dev-database-url --data-file=-
+```
+
+**Expected output:**
+```
+Created version [1] of the secret [dev-database-url].
+```
+
+### 5.3 Create Staging Secret
+
+```bash
+# Replace with your actual staging branch connection string
+# Note: Use "neondb_owner" role, "neondb" database, endpoint identifies branch
+echo "postgresql://neondb_owner:your_password@ep-staging-yyy.aws-sa-east-1.neon.tech/neondb?sslmode=require" | \
+  gcloud secrets create staging-database-url --data-file=-
+```
+
+### 5.4 Create Production Secret
+
+```bash
+# Replace with your actual production branch connection string
+# Note: Use "neondb_owner" role, "neondb" database, endpoint identifies branch
+echo "postgresql://neondb_owner:your_password@ep-prod-zzz.aws-sa-east-1.neon.tech/neondb?sslmode=require" | \
+  gcloud secrets create production-database-url --data-file=-
+```
+
+### 5.5 Verify Secrets Created
+
+```bash
+# List all secrets
+gcloud secrets list
+
+# Filter for database secrets
+gcloud secrets list | grep database-url
+```
+
+**Expected output:**
+```
+NAME                     CREATED              REPLICATION_POLICY  LOCATIONS
+dev-database-url         2025-11-07T...       automatic           -
+staging-database-url     2025-11-07T...       automatic           -
+production-database-url  2025-11-07T...       automatic           -
+```
+
+### 5.6 Verify Secret Contents (Optional)
+
+```bash
+# View dev secret (to verify it was stored correctly)
+gcloud secrets versions access latest --secret=dev-database-url
+
+# Should output your connection string
+# Example: postgresql://neondb_owner:your_password@ep-dev-xxx.aws-sa-east-1.neon.tech/neondb?sslmode=require
+```
+
+**Verification:**
+- ✅ Three secrets created: `dev-database-url`, `staging-database-url`, `production-database-url`
+- ✅ Secrets contain correct connection strings (verify with `access latest`)
+- ✅ No errors during secret creation
 
 ---
 
-## Step 7: Deploy Application
+## Step 6: Grant Cloud Run Access to Secrets
 
-### 7.1: Initial Manual Deploy (Test)
+Cloud Run services need IAM permission to read secrets from Secret Manager.
 
-```bash
-# Build Docker image
-docker build -t gcr.io/$PROJECT_ID/role-directory:latest .
-
-# Push to Google Container Registry
-docker push gcr.io/$PROJECT_ID/role-directory:latest
-
-# Deploy to dev
-gcloud run deploy role-directory-dev \
-  --image=gcr.io/$PROJECT_ID/role-directory:latest \
-  --region=us-central1
-```
-
-### 7.2: Verify Deployment
+### 6.1 Get GCP Project Number
 
 ```bash
-# Get service URL
-gcloud run services describe role-directory-dev \
-  --region=us-central1 \
-  --format="value(status.url)"
+# Get project number (not project ID)
+gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)"
 
-# Test health endpoint
-curl https://[service-url]/api/health
+# Example output: 123456789012
 ```
 
-### 7.3: Configure Auto-Deploy via GitHub Actions
+### 6.2 Construct Service Account Email
 
-Push your code to `main` branch:
+The default Compute Engine service account format:
+```
+<PROJECT_NUMBER>-compute@developer.gserviceaccount.com
+```
+
+**Example**: If project number is `123456789012`, service account is:
+```
+123456789012-compute@developer.gserviceaccount.com
+```
+
+### 6.3 Grant Dev Secret Access
 
 ```bash
-git add .
-git commit -m "Initial deployment setup"
-git push origin main
+# Replace <PROJECT_NUMBER> with your actual project number
+gcloud secrets add-iam-policy-binding dev-database-url \
+  --member="serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
 ```
 
-GitHub Actions will automatically:
-1. Lint and type check
-2. Build Docker image
-3. Deploy to Cloud Run dev service
+**Expected output:**
+```
+Updated IAM policy for secret [dev-database-url].
+bindings:
+- members:
+  - serviceAccount:123456789012-compute@developer.gserviceaccount.com
+  role: roles/secretmanager.secretAccessor
+```
+
+### 6.4 Grant Staging Secret Access
+
+```bash
+gcloud secrets add-iam-policy-binding staging-database-url \
+  --member="serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
+
+### 6.5 Grant Production Secret Access
+
+```bash
+gcloud secrets add-iam-policy-binding production-database-url \
+  --member="serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
+
+### 6.6 Verify IAM Bindings
+
+```bash
+# Check dev secret IAM policy
+gcloud secrets get-iam-policy dev-database-url
+
+# Should show secretAccessor role for compute service account
+```
+
+**Expected output:**
+```
+bindings:
+- members:
+  - serviceAccount:123456789012-compute@developer.gserviceaccount.com
+  role: roles/secretmanager.secretAccessor
+etag: BwYZXXXXXXXX
+version: 1
+```
+
+**Verification:**
+- ✅ All three secrets have IAM binding for compute service account
+- ✅ Role is `roles/secretmanager.secretAccessor` (read-only, least privilege)
+- ✅ No errors during IAM binding
 
 ---
 
-## Cost Monitoring
+## Step 7: Configure Cloud Run Services
 
-### Check Cloud Run Usage
+Inject database connection strings into Cloud Run services as environment variables.
+
+### 7.1 Update Dev Cloud Run Service
 
 ```bash
-# Check Cloud Run billing
-gcloud run services describe role-directory-dev \
-  --region=us-central1 \
-  --format="get(status.traffic)"
+gcloud run services update role-directory-dev \
+  --region=southamerica-east1 \
+  --set-secrets=DATABASE_URL=dev-database-url:latest
 ```
 
-### Check Neon Usage
+**Expected output:**
+```
+✓ Deploying... Done.
+  ✓ Creating Revision...
+  ✓ Routing traffic...
+Done.
+Service [role-directory-dev] revision [role-directory-dev-00XXX-xxx] has been deployed and is serving 100 percent of traffic.
+```
 
-Visit Neon dashboard: https://console.neon.tech
-- Monitor compute hours (free tier: 100 hours/month)
-- Monitor storage (free tier: 3GB)
+### 7.2 Update Staging Cloud Run Service
+
+```bash
+gcloud run services update role-directory-staging \
+  --region=southamerica-east1 \
+  --set-secrets=DATABASE_URL=staging-database-url:latest
+```
+
+### 7.3 Update Production Cloud Run Service
+
+```bash
+gcloud run services update role-directory-production \
+  --region=southamerica-east1 \
+  --set-secrets=DATABASE_URL=production-database-url:latest
+```
+
+### 7.4 Verify Environment Variable Injection
+
+```bash
+# Check dev service configuration
+gcloud run services describe role-directory-dev \
+  --region=southamerica-east1 \
+  --format="value(spec.template.spec.containers[0].env)"
+
+# Should show DATABASE_URL mapped to dev-database-url secret
+```
+
+**Expected output (partial)**:
+```
+[{'name': 'DATABASE_URL', 'valueFrom': {'secretKeyRef': {'key': 'latest', 'name': 'dev-database-url'}}}]
+```
+
+**Verification:**
+- ✅ All three Cloud Run services updated successfully
+- ✅ `DATABASE_URL` environment variable set for each service
+- ✅ Each service points to its corresponding secret (dev → dev-database-url, etc.)
+- ✅ No deployment errors
+
+---
+
+## Step 8: Set Up Local Development
+
+### 8.1 Copy .env.example to .env.local
+
+```bash
+# In project root
+cp .env.example .env.local
+```
+
+### 8.2 Update .env.local with Dev Connection String
+
+Edit `.env.local`:
+```bash
+# Replace with your actual development branch connection string
+# Note: Use "neondb_owner" role (default admin), "neondb" database
+DATABASE_URL=postgresql://neondb_owner:your_password@ep-dev-xxx.aws-sa-east-1.neon.tech/neondb?sslmode=require
+```
+
+### 8.3 Verify .env.local is Gitignored
+
+```bash
+# Check .gitignore includes .env.local
+grep "\.env\.local" .gitignore
+
+# Expected output: .env.local (or .env*.local)
+```
+
+### 8.4 Test Local Connection (Optional)
+
+If your application supports it, test the connection:
+```bash
+# Start local dev server
+npm run dev
+
+# App should connect to Neon dev database
+```
+
+**Verification:**
+- ✅ `.env.local` created with dev database connection string
+- ✅ `.env.local` is gitignored (won't be committed)
+- ✅ Local development can connect to Neon dev database
+
+---
+
+## Connection String Format
+
+### Standard Format
+
+```
+postgresql://[user]:[password]@[endpoint].[region].neon.tech/[database]?sslmode=require
+```
+
+### Components Explained
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| **user** | Database role (use `neondb_owner` - default admin role) | `neondb_owner` |
+| **password** | Role password (from Neon Console connection details) | `abc123xyz456` |
+| **endpoint** | Unique endpoint ID **(identifies the branch)** | `ep-cool-tree-12345678` |
+| **region** | Neon region | `aws-sa-east-1` (São Paulo) |
+| **database** | Database name (always `neondb` by default) | `neondb` |
+| **sslmode** | SSL/TLS mode (REQUIRED) | `require` |
+
+### Example Connection Strings (Using Branches)
+
+**Development Branch:**
+```
+postgresql://neondb_owner:abc123xyz456@ep-dev-12345678.aws-sa-east-1.neon.tech/neondb?sslmode=require
+```
+
+**Staging Branch:**
+```
+postgresql://neondb_owner:abc123xyz456@ep-staging-87654321.aws-sa-east-1.neon.tech/neondb?sslmode=require
+```
+
+**Production Branch:**
+```
+postgresql://neondb_owner:abc123xyz456@ep-prod-11223344.aws-sa-east-1.neon.tech/neondb?sslmode=require
+```
+
+**Note:** All examples use `neondb_owner` - the default admin role created with your Neon project. This role has full permissions via membership in the `neon_superuser` group.
+
+**Note**: Each **branch has a different endpoint** (`ep-dev-xxx`, `ep-staging-yyy`, `ep-prod-zzz`), but typically the **same database name** (`neondb`). The endpoint identifies which branch you're connecting to.
+
+### SSL/TLS Encryption
+
+**Always use**: `?sslmode=require`
+
+This ensures:
+- ✅ All data in transit is encrypted (TLS 1.3)
+- ✅ Prevents man-in-the-middle attacks
+- ✅ Required by security best practices (PRD NFR-3)
+- ✅ Default for Neon connections
+
+---
+
+## Neon Free Tier Details
+
+### What's Included (Free Tier)
+
+| Resource | Free Tier Limit | Sufficient for MVP? |
+|----------|----------------|---------------------|
+| **Projects** | 1 project | ✅ Yes (1 needed) |
+| **Databases** | Unlimited per project | ✅ Yes (3 needed) |
+| **Storage** | 0.5 GB total | ✅ Yes (MVP data <100 MB) |
+| **Compute Hours** | ~100 hours/month | ✅ Yes (with auto-suspend) |
+| **Auto-suspend** | After 5 minutes inactivity | ✅ Yes (acceptable for MVP) |
+| **Cold Start** | ~2-3 seconds | ✅ Yes (acceptable for MVP) |
+| **Connections** | Unlimited (HTTP-based) | ✅ Yes |
+
+### Auto-Suspend Behavior
+
+**How it works:**
+1. Database is active while queries are running
+2. After **5 minutes of no queries**, database suspends (free tier)
+3. Compute resources released (saves compute hours)
+4. First query after suspend: **~2-3 second cold start** (resume time)
+5. Subsequent queries: **<50ms** (while database is active)
+
+**Implications:**
+- ✅ Acceptable for MVP (cost optimization priority)
+- ✅ Transparent to application (HTTP driver handles resume)
+- ⚠️ First request after inactivity may be slower (~2-3 seconds)
+- 💡 For production with high traffic, consider upgrading to paid tier for always-on compute (~$19/month)
+
+### Cost Implications
+
+| Component | Cost (Free Tier) | Cost (Paid Tier) |
+|-----------|------------------|------------------|
+| **Neon PostgreSQL** | $0/month | $19/month (always-on) |
+| **Google Secret Manager** | $0 (3 secrets < 6 free) | $0.06/secret/month |
+| **Cloud Run** | $0 (free tier requests) | ~$1-2/month (estimated) |
+| **Total** | **$0/month** | **~$20-22/month** |
+
+**For MVP**: Free tier is sufficient. Upgrade later if needed.
 
 ---
 
 ## Troubleshooting
 
-### Database Cold Start Issues
+### Issue 1: "psql: command not found"
 
-**Symptom:** First request after idle takes 3-5 seconds
+**Cause**: PostgreSQL client not installed.
 
-**Solution:** This is expected with Neon serverless. Subsequent requests are fast.
+**Solution**:
+```bash
+# macOS
+brew install postgresql
 
-```javascript
-// Add retry logic in your database connection
-const connectWithRetry = async (retries = 3) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await pool.connect();
-    } catch (err) {
-      if (i === retries - 1) throw err;
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-};
+# Ubuntu/Debian
+sudo apt-get install postgresql-client
+
+# Windows
+# Download from: https://www.postgresql.org/download/windows/
 ```
 
-### Connection String Issues
+---
 
-**Symptom:** Cannot connect to Neon database
+### Issue 2: "SSL connection failed" or "sslmode=require not supported"
 
-**Check:**
-1. Connection string includes `?sslmode=require`
-2. Password special characters are URL-encoded
-3. Firewall/network allows outbound HTTPS
+**Cause**: Connection string missing `?sslmode=require` or SSL not configured.
 
-### Secret Manager Access Issues
+**Solution**:
+1. Verify connection string ends with `?sslmode=require`
+2. Correct:
+   ```
+   postgresql://user:pass@ep-xxx.neon.tech/role_directory_dev?sslmode=require
+   ```
+3. Incorrect (missing sslmode):
+   ```
+   postgresql://user:pass@ep-xxx.neon.tech/role_directory_dev
+   ```
 
-**Symptom:** Cloud Run cannot access secrets
+---
 
-**Fix:**
+### Issue 3: "FATAL: password authentication failed"
+
+**Cause**: Incorrect password or username in connection string.
+
+**Solution**:
+1. Go to Neon Console: https://console.neon.tech
+2. Navigate to your project → "Connection Details"
+3. Copy connection string again (includes correct password)
+4. Update connection string in Secret Manager:
+   ```bash
+   # Update dev secret
+   echo "postgresql://CORRECT_USER:CORRECT_PASSWORD@..." | \
+     gcloud secrets versions add dev-database-url --data-file=-
+   ```
+5. Re-deploy Cloud Run service to pick up new secret version
+
+---
+
+### Issue 4: "FATAL: database 'neondb' does not exist"
+
+**Cause**: Branch endpoint not correct or database name incorrect.
+
+**Solution**:
+1. Verify you're using the correct branch endpoint (different endpoints for dev/staging/production)
+2. Verify database name is `neondb` (Neon's default database name)
+3. Go to Neon Console → Branches → Select your branch → Copy connection string
+4. The database name should be `neondb`, not `role_directory_dev` or custom names
+
+---
+
+### Issue 5: "Permission denied for secret 'dev-database-url'"
+
+**Cause**: Cloud Run service account doesn't have IAM permission to access secret.
+
+**Solution**:
 ```bash
-# Grant Cloud Run service account access to secrets
-gcloud secrets add-iam-policy-binding DATABASE_URL_DEV \
-  --member="serviceAccount:$PROJECT_ID@$PROJECT_ID.iam.gserviceaccount.com" \
+# Get project number
+PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")
+
+# Grant access
+gcloud secrets add-iam-policy-binding dev-database-url \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
+
+# Verify
+gcloud secrets get-iam-policy dev-database-url
 ```
 
 ---
 
-## Migration to Cloud SQL (Future)
+### Issue 6: "Cold start takes too long (>5 seconds)"
 
-When ready to migrate from Neon to Cloud SQL:
+**Cause**: Neon auto-suspend on free tier. First query after inactivity resumes database.
 
-1. **Export from Neon:**
-```bash
-pg_dump "postgresql://[neon-connection-string]" > dump.sql
-```
-
-2. **Create Cloud SQL instance**
-3. **Import to Cloud SQL:**
-```bash
-psql "postgresql://[cloud-sql-connection-string]" < dump.sql
-```
-
-4. **Update Secret Manager with new connection string**
-5. **Redeploy Cloud Run services**
-
-No code changes needed - same PostgreSQL!
+**Solution** (Options):
+1. **Accept it** (MVP): 2-3 second cold start is acceptable for low-traffic MVP
+2. **Upgrade to paid tier** (Production): Always-on compute (~$19/month, no cold starts)
+3. **Keep-alive ping** (Advanced): Periodic health check queries to keep database active (not recommended for free tier, wastes compute hours)
 
 ---
 
-## Summary
+### Issue 7: "Environment variable DATABASE_URL not set in Cloud Run"
 
-**✅ Infrastructure Setup Complete**
+**Cause**: Secret not injected into Cloud Run service.
+
+**Solution**:
+```bash
+# Re-configure Cloud Run service
+gcloud run services update role-directory-dev \
+  --region=southamerica-east1 \
+  --set-secrets=DATABASE_URL=dev-database-url:latest
+
+# Verify
+gcloud run services describe role-directory-dev \
+  --region=southamerica-east1 \
+  --format="value(spec.template.spec.containers[0].env)"
+```
+
+---
+
+### Issue 8: "Cannot connect from local machine but Cloud Run works"
+
+**Cause**: Local machine firewall or network blocking PostgreSQL port 5432.
+
+**Solution**:
+1. Test connection with verbose output:
+   ```bash
+   psql "postgresql://user:pass@ep-xxx.neon.tech/role_directory_dev?sslmode=require" -v ON_ERROR_STOP=1
+   ```
+2. Check firewall allows outbound port 5432
+3. Try from different network (mobile hotspot) to isolate issue
+4. Verify connection string is correct (copy fresh from Neon Console)
+
+---
+
+## References
+
+### Official Documentation
+
+- **Neon Documentation**: https://neon.tech/docs/
+- **Neon Quickstart**: https://neon.tech/docs/get-started-with-neon/signing-up
+- **Neon Connection Strings**: https://neon.tech/docs/connect/connect-from-any-app
+- **Google Secret Manager**: https://cloud.google.com/secret-manager/docs
+- **Cloud Run Secret Injection**: https://cloud.google.com/run/docs/configuring/secrets
+
+### Internal Documentation
+
+- [Architecture Document](../3-solutioning/architecture.md#database) - Database technology decision
+- [PRD NFR-3](../2-planning/PRD.md#nfr-3-security) - Security requirements for credentials
+- [Tech Spec Epic 2](../tech-spec-epic-2.md) - Epic 2 technical specification
+- [Story 2-1](../stories/2-1-neon-postgresql-account-and-database-setup.md) - This story's requirements
+
+### Related Guides
+
+- [Neon Auth Setup Guide](neon-auth-setup-guide.md) - OAuth setup (Epic 3)
+- [Cloud Run Setup](../CLOUD_RUN_SETUP.md) - Cloud Run service configuration
+
+---
+
+**Setup Complete!** ✅
 
 You now have:
-- 3 Neon PostgreSQL databases (dev, stg, prd) - **$0/month**
-- 3 Cloud Run services (dev, stg, prd) - **$0-3/month**
-- Secrets in Google Secret Manager - **$0.06/month**
-- GitHub Actions CI/CD - **$0/month**
-
-**Total: ~$0-3/month**
+- ✅ Neon account and project created
+- ✅ Three databases: dev, staging, production
+- ✅ Connection strings tested and verified (SSL enabled)
+- ✅ Credentials stored in Google Secret Manager
+- ✅ Cloud Run services configured with DATABASE_URL
+- ✅ Local development environment set up (.env.local)
 
 **Next Steps:**
-1. Push code to GitHub (triggers auto-deploy to dev)
-2. Test invitation code flow
-3. Manually promote to staging
-4. Validate in staging
-5. Manually promote to production
+- **Story 2.2**: Database Connection Configuration (Zod validation, connection module)
+- **Story 2.3**: Database Schema Migration Setup (Drizzle ORM, migration scripts)
+- **Story 2.4**: Initial Database Schema Migration (create tables)
 
-**Infrastructure validation complete!** 🎉
+---
 
+**Last Updated**: 2025-11-07  
+**Maintained By**: role-directory development team

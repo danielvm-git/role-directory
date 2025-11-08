@@ -160,7 +160,7 @@
         
         Environment Variables:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_REGION: us-central1
+          GCP_REGION: southamerica-east1
           SERVICE_NAME: role-directory-staging
         
         Job: promote
@@ -206,7 +206,7 @@
                       --filter="tags:dev-*" --sort-by="~timestamp" --limit=5
           Option 3: From Cloud Run dev service
                     gcloud run revisions list --service=role-directory-dev \
-                      --region=us-central1 --limit=1 --format="value(image)"
+                      --region=southamerica-east1 --limit=1 --format="value(image)"
         
         Workflow Execution:
           - Starts immediately after clicking "Run workflow"
@@ -259,7 +259,7 @@
         
         Get staging URL:
           STAGING_URL=$(gcloud run services describe role-directory-staging \
-            --region=us-central1 --format="value(status.url)")
+            --region=southamerica-east1 --format="value(status.url)")
           Or use: ${{ steps.deploy.outputs.url }}
         
         Health check request:
@@ -341,7 +341,7 @@
         Manual: Check workflow logs for "Push staging images" step. Verify push commands executed. After workflow completes, check GCR: gcloud container images list-tags gcr.io/PROJECT_ID/role-directory --filter="tags:staging-*". Verify new staging tag appears. Verify staging-latest tag updated.
       </test>
       <test id="AC-6" desc="Verify deploys to Cloud Run staging">
-        Manual: Check workflow logs for "Deploy to Cloud Run" step. Verify deploy-cloudrun action executed. Verify service: role-directory-staging. Verify region: us-central1. Verify image: gcr.io/PROJECT_ID/role-directory:staging-<TAG>. After workflow completes, check Cloud Run console. Verify new revision created with staging image.
+        Manual: Check workflow logs for "Deploy to Cloud Run" step. Verify deploy-cloudrun action executed. Verify service: role-directory-staging. Verify region: southamerica-east1. Verify image: gcr.io/PROJECT_ID/role-directory:staging-<TAG>. After workflow completes, check Cloud Run console. Verify new revision created with staging image.
       </test>
       <test id="AC-7" desc="Verify health check with IAM auth">
         Manual: Check workflow logs for "Health check" step. Verify token generated: gcloud auth print-identity-token. Verify health check request: curl with Authorization header. Verify 200 OK response. Verify response body contains "status": "ok". If health check fails, verify workflow marked as failed.

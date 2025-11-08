@@ -699,7 +699,7 @@ gcloud logging read "resource.type=cloud_run_revision AND jsonPayload.message=~'
 - **Validation**: Reassess if migration errors become common
 
 **Assumption-4: Single-Region Deployment**
-- All three environments in same GCP region (us-central1)
+- All three environments in same GCP region (southamerica-east1)
 - Neon database in closest Neon region (US East or US West)
 - Latency acceptable for MVP (<100ms region-to-region)
 - **Validation**: Measure actual latency in production

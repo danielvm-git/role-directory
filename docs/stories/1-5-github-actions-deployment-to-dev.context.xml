@@ -158,7 +158,7 @@
     - GitHub Secrets must NOT be logged or exposed in workflow output
     - Deployment job should only run on main branch (not PRs)
     - SHOULD post service URL to workflow logs or GitHub Actions summary
-    - Region must match Story 1.4 configuration (likely us-central1)
+    - Region must match Story 1.4 configuration (likely southamerica-east1)
   </constraints>
 
   <interfaces>
@@ -206,7 +206,7 @@
       <signature>
         gcloud run deploy role-directory-dev \
           --source . \
-          --region us-central1 \
+          --region southamerica-east1 \
           --allow-unauthenticated \
           --set-env-vars NODE_ENV=development,PORT=8080 \
           --set-secrets DATABASE_URL=role-directory-dev-db-url:latest \

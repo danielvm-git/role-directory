@@ -439,17 +439,17 @@
     <note type="rollback-commands">
       <title>Key Rollback Commands</title>
       <content>
-        List revisions: gcloud run revisions list --service=role-directory-dev --region=us-central1 --limit=10
+        List revisions: gcloud run revisions list --service=role-directory-dev --region=southamerica-east1 --limit=10
         
-        Rollback dev: gcloud run services update-traffic role-directory-dev --region=us-central1 --to-revisions=[REVISION]=100
+        Rollback dev: gcloud run services update-traffic role-directory-dev --region=southamerica-east1 --to-revisions=[REVISION]=100
         
-        Rollback staging: gcloud run services update-traffic role-directory-staging --region=us-central1 --to-revisions=[REVISION]=100
+        Rollback staging: gcloud run services update-traffic role-directory-staging --region=southamerica-east1 --to-revisions=[REVISION]=100
         
-        Rollback production: gcloud run services update-traffic role-directory-production --region=us-central1 --to-revisions=[REVISION]=100
+        Rollback production: gcloud run services update-traffic role-directory-production --region=southamerica-east1 --to-revisions=[REVISION]=100
         
-        Verify traffic: gcloud run services describe role-directory-dev --region=us-central1 --format="value(status.traffic)"
+        Verify traffic: gcloud run services describe role-directory-dev --region=southamerica-east1 --format="value(status.traffic)"
         
-        Get revision image: gcloud run revisions describe [REVISION] --region=us-central1 --format="value(spec.containers[0].image)"
+        Get revision image: gcloud run revisions describe [REVISION] --region=southamerica-east1 --format="value(spec.containers[0].image)"
       </content>
     </note>
     <note type="verification-checklist">
@@ -485,8 +485,8 @@
       <content>
         1. Deploy version 1: Note revision name and behavior (e.g., health endpoint returns {"status":"ok"})
         2. Deploy version 2: Make visible change (e.g., add "version":"2" field), note revision name
-        3. List revisions: gcloud run revisions list --service=role-directory-dev --region=us-central1
-        4. Execute rollback: gcloud run services update-traffic role-directory-dev --region=us-central1 --to-revisions=[V1_REVISION]=100
+        3. List revisions: gcloud run revisions list --service=role-directory-dev --region=southamerica-east1
+        4. Execute rollback: gcloud run services update-traffic role-directory-dev --region=southamerica-east1 --to-revisions=[V1_REVISION]=100
         5. Measure time: Record actual time from command to traffic shift complete
         6. Verify: Health check passes, v1 behavior restored (version field absent)
         7. Document: Add test results to ROLLBACK.md with date, versions, actual time, issues

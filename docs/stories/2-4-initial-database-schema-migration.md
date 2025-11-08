@@ -1,6 +1,6 @@
 # Story 2.4: Initial Database Schema Migration (Existing Tables)
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -721,7 +721,7 @@ role-directory/
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- `docs/stories/2-4-initial-database-schema-migration.context.xml` - Generated 2025-11-07
 
 ### Agent Model Used
 

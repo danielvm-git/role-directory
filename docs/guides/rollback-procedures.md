@@ -111,19 +111,19 @@ List available revisions for a service:
 # Dev environment
 gcloud run revisions list \
   --service=role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=10
 
 # Staging environment
 gcloud run revisions list \
   --service=role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=10
 
 # Production environment
 gcloud run revisions list \
   --service=role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=10
 ```
 
@@ -155,7 +155,7 @@ To identify which code version is in a revision:
 ```bash
 # Get image for specific revision
 gcloud run revisions describe role-directory-dev-00004-xyz \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(spec.containers[0].image)"
 
 # Output example: gcr.io/project-id/role-directory:dev-20251107-140000
@@ -187,17 +187,17 @@ This helps correlate revisions with GitHub Actions deployments.
 # Step 1: List revisions to find target
 gcloud run revisions list \
   --service=role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=10
 
 # Step 2: Execute rollback (replace [REVISION] with target revision name)
 gcloud run services update-traffic role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=[REVISION]=100
 
 # Example with actual revision name:
 gcloud run services update-traffic role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=role-directory-dev-00004-xyz=100
 ```
 
@@ -207,17 +207,17 @@ gcloud run services update-traffic role-directory-dev \
 # Step 1: List revisions
 gcloud run revisions list \
   --service=role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=10
 
 # Step 2: Execute rollback
 gcloud run services update-traffic role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=[REVISION]=100
 
 # Example:
 gcloud run services update-traffic role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=role-directory-staging-00003-abc=100
 ```
 
@@ -229,17 +229,17 @@ gcloud run services update-traffic role-directory-staging \
 # Step 1: List revisions
 gcloud run revisions list \
   --service=role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=10
 
 # Step 2: Execute rollback
 gcloud run services update-traffic role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=[REVISION]=100
 
 # Example:
 gcloud run services update-traffic role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=role-directory-production-00008-def=100
 ```
 
@@ -256,7 +256,7 @@ Service [role-directory-dev] revision [role-directory-dev-00004-xyz] has been de
 ```bash
 # Verify traffic allocation
 gcloud run services describe role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.traffic)"
 
 # Expected output:
@@ -342,7 +342,7 @@ gcloud run services describe role-directory-dev \
 
 ```bash
 gcloud run services describe [SERVICE_NAME] \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.traffic)"
 
 # Expected: [{"revisionName":"[TARGET_REVISION]","percent":100}]
@@ -356,7 +356,7 @@ curl -f https://role-directory-dev-[HASH].run.app/api/health
 
 # Or get URL first:
 DEV_URL=$(gcloud run services describe role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.url)")
 
 curl -f $DEV_URL/api/health
@@ -378,14 +378,14 @@ TOKEN=$(gcloud auth print-identity-token)
 
 # Staging health check
 STAGING_URL=$(gcloud run services describe role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.url)")
 
 curl -f -H "Authorization: Bearer $TOKEN" $STAGING_URL/api/health
 
 # Production health check
 PRODUCTION_URL=$(gcloud run services describe role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.url)")
 
 curl -f -H "Authorization: Bearer $TOKEN" $PRODUCTION_URL/api/health
@@ -492,12 +492,12 @@ Ask yourself:
 ```bash
 # Get deployment timestamp for a revision
 gcloud run revisions describe [REVISION] \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(metadata.creationTimestamp)"
 
 # Example:
 gcloud run revisions describe role-directory-dev-00004-xyz \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(metadata.creationTimestamp)"
 
 # Output: 2025-11-07T14:00:00.000Z
@@ -518,7 +518,7 @@ gcloud run revisions describe role-directory-dev-00004-xyz \
 3. **Find Image Tag in Revision:**
    ```bash
    gcloud run revisions describe [REVISION] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(spec.containers[0].image)"
    
    # Output: gcr.io/project/role-directory:dev-20251107-140000
@@ -688,11 +688,11 @@ ALTER TABLE users DROP COLUMN email;
 **Rollback Execution:**
 ```bash
 # Listed revisions
-gcloud run revisions list --service=role-directory-dev --region=us-central1
+gcloud run revisions list --service=role-directory-dev --region=southamerica-east1
 
 # Executed rollback
 gcloud run services update-traffic role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=role-directory-dev-00004-xyz=100
 ```
 
@@ -825,18 +825,18 @@ curl: (22) The requested URL returned error: 500 Internal Server Error
 2. Verify traffic shifted to correct revision:
    ```bash
    gcloud run services describe [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(status.traffic)"
    ```
 
 3. If correct revision, may need to rollback further:
    ```bash
    # List revisions to find older one
-   gcloud run revisions list --service=[SERVICE_NAME] --region=us-central1
+   gcloud run revisions list --service=[SERVICE_NAME] --region=southamerica-east1
    
    # Rollback to older revision
    gcloud run services update-traffic [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=[OLDER_REVISION]=100
    ```
 
@@ -859,7 +859,7 @@ ERROR: (gcloud.run.services.update-traffic) Revision [role-directory-dev-00001-o
 **Solution:**
 1. List available revisions:
    ```bash
-   gcloud run revisions list --service=[SERVICE_NAME] --region=us-central1
+   gcloud run revisions list --service=[SERVICE_NAME] --region=southamerica-east1
    ```
 
 2. Check revision retention policy:
@@ -876,7 +876,7 @@ ERROR: (gcloud.run.services.update-traffic) Revision [role-directory-dev-00001-o
    
    # Redeploy using previous image
    gcloud run deploy [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --image=gcr.io/[PROJECT_ID]/role-directory:[PREVIOUS_TAG]
    ```
 
@@ -900,7 +900,7 @@ ERROR: (gcloud.run.services.update-traffic) Revision [role-directory-dev-00001-o
 1. Verify traffic actually shifted:
    ```bash
    gcloud run services describe [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(status.traffic)"
    ```
 
@@ -944,7 +944,7 @@ ERROR: (gcloud.run.services.update-traffic) Revision [role-directory-dev-00001-o
 1. Check current traffic split:
    ```bash
    gcloud run services describe [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(status.traffic)"
    
    # May show: [{"revisionName":"rev-1","percent":50},{"revisionName":"rev-2","percent":50}]
@@ -953,7 +953,7 @@ ERROR: (gcloud.run.services.update-traffic) Revision [role-directory-dev-00001-o
 2. Consolidate to single revision:
    ```bash
    gcloud run services update-traffic [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=[TARGET_REVISION]=100
    
    # This sets target to 100%, all others to 0%
@@ -962,7 +962,7 @@ ERROR: (gcloud.run.services.update-traffic) Revision [role-directory-dev-00001-o
 3. Verify consolidated:
    ```bash
    gcloud run services describe [SERVICE_NAME] \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(status.traffic)"
    
    # Should show: [{"revisionName":"[TARGET_REVISION]","percent":100}]

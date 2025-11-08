@@ -54,7 +54,7 @@
         <path>docs/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-7: Cloud Run Service Setup (Staging)</section>
-        <snippet>Staging service: role-directory-staging. Region: us-central1. Min 1 instance (warm), max 3 instances. 1 CPU, 512 MB memory. IAM authentication required (not public). Environment: NODE_ENV=staging. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
+        <snippet>Staging service: role-directory-staging. Region: southamerica-east1. Min 1 instance (warm), max 3 instances. 1 CPU, 512 MB memory. IAM authentication required (not public). Environment: NODE_ENV=staging. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
       </doc>
       <doc>
         <path>docs/2-planning/PRD.md</path>
@@ -66,7 +66,7 @@
         <path>docs/3-solutioning/architecture.md</path>
         <title>Architecture Document</title>
         <section>Cloud Run Configuration</section>
-        <snippet>Environment-specific Cloud Run services. Naming: role-directory-{environment}. Region: us-central1. Dev: min 0, public. Staging: min 1 (warm), IAM protected. Production: min 2 (high availability), IAM protected. Resources: 1 CPU, 512 MB memory. Port: 8080. Environment variables per environment. Secrets from Secret Manager.</snippet>
+        <snippet>Environment-specific Cloud Run services. Naming: role-directory-{environment}. Region: southamerica-east1. Dev: min 0, public. Staging: min 1 (warm), IAM protected. Production: min 2 (high availability), IAM protected. Resources: 1 CPU, 512 MB memory. Port: 8080. Environment variables per environment. Secrets from Secret Manager.</snippet>
       </doc>
       <doc>
         <path>docs/3-solutioning/architecture.md</path>
@@ -132,7 +132,7 @@
 
   <constraints>
     - MUST create service named: role-directory-staging (environment-specific naming)
-    - MUST use region: us-central1 (same as dev for consistency)
+    - MUST use region: southamerica-east1 (same as dev for consistency)
     - MUST set min instances: 1 (warm standby, staging should be responsive)
     - MUST set max instances: 3 (cost control, higher than dev for pre-prod testing)
     - MUST set CPU: 1 and memory: 512Mi (consistent with dev)
@@ -163,7 +163,7 @@
       <signature>
         Initial service creation:
         gcloud run deploy role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --platform=managed \
           --no-allow-unauthenticated \
           --image=gcr.io/cloudrun/hello \
@@ -196,7 +196,7 @@
         
         Reference in Cloud Run:
         gcloud run services update role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --set-secrets=DATABASE_URL=staging-database-url:latest
         
         Note: Placeholder value for Story 1.7, real database URL in Epic 2
@@ -209,7 +209,7 @@
       <signature>
         Grant GitHub Actions service account access:
         gcloud run services add-iam-policy-binding role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --member="serviceAccount:github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com" \
           --role="roles/run.invoker"
         
@@ -235,31 +235,31 @@
         
         Verify scaling configuration:
         gcloud run services describe role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.metadata.annotations)"
         Expected: min-instances: 1, max-instances: 3
         
         Verify resources:
         gcloud run services describe role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.spec.containers[0].resources)"
         Expected: cpu: 1, memory: 512Mi
         
         Verify environment variables:
         gcloud run services describe role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.spec.containers[0].env)"
         Expected: NODE_ENV=staging, NEXT_PUBLIC_API_URL=[url]
         
         Verify secrets:
         gcloud run services describe role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.spec.containers[0].env[].valueFrom)"
         Expected: DATABASE_URL from staging-database-url secret
         
         Verify labels:
         gcloud run services describe role-directory-staging \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(metadata.labels)"
         Expected: environment=staging, app=role-directory
       </signature>

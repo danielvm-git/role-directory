@@ -135,7 +135,7 @@ so that **changes are immediately available for validation without manual interv
            run: |
              gcloud run deploy role-directory-dev \
                --source . \
-               --region us-central1 \
+               --region southamerica-east1 \
                --allow-unauthenticated \
                --set-env-vars NODE_ENV=development,PORT=8080,NEON_AUTH_PROJECT_ID=${{ secrets.NEON_AUTH_PROJECT_ID }} \
                --set-secrets DATABASE_URL=role-directory-dev-db-url:latest \
@@ -149,7 +149,7 @@ so that **changes are immediately available for validation without manual interv
            id: get-url
            run: |
              SERVICE_URL=$(gcloud run services describe role-directory-dev \
-               --region us-central1 \
+               --region southamerica-east1 \
                --format 'value(status.url)')
              echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
              echo "Deployed to: $SERVICE_URL"

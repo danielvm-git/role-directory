@@ -192,17 +192,17 @@ echo -n "danielvm@example.com,collaborator@example.com" | \
 # Development
 gcloud run services update role-directory-dev \
   --set-secrets="NEON_AUTH_PROJECT_ID=NEON_AUTH_PROJECT_ID:latest,NEON_AUTH_SECRET_KEY=NEON_AUTH_SECRET_KEY:latest,ALLOWED_EMAILS=ALLOWED_EMAILS:latest" \
-  --region=us-central1
+  --region=southamerica-east1
 
 # Staging
 gcloud run services update role-directory-stg \
   --set-secrets="NEON_AUTH_PROJECT_ID=NEON_AUTH_PROJECT_ID:latest,NEON_AUTH_SECRET_KEY=NEON_AUTH_SECRET_KEY:latest,ALLOWED_EMAILS=ALLOWED_EMAILS:latest" \
-  --region=us-central1
+  --region=southamerica-east1
 
 # Production
 gcloud run services update role-directory-prd \
   --set-secrets="NEON_AUTH_PROJECT_ID=NEON_AUTH_PROJECT_ID:latest,NEON_AUTH_SECRET_KEY=NEON_AUTH_SECRET_KEY:latest,ALLOWED_EMAILS=ALLOWED_EMAILS:latest" \
-  --region=us-central1
+  --region=southamerica-east1
 ```
 
 ---
@@ -408,12 +408,12 @@ docker push gcr.io/$PROJECT_ID/role-directory:latest
 ```bash
 gcloud run deploy role-directory-dev \
   --image=gcr.io/$PROJECT_ID/role-directory:latest \
-  --region=us-central1
+  --region=southamerica-east1
 ```
 
 ### 7.3: Test in Dev Environment
 
-1. Get dev URL: `gcloud run services describe role-directory-dev --region=us-central1 --format="value(status.url)"`
+1. Get dev URL: `gcloud run services describe role-directory-dev --region=southamerica-east1 --format="value(status.url)"`
 2. Navigate to URL
 3. Test OAuth flow
 4. Verify dashboard works
@@ -434,7 +434,7 @@ echo -n "danielvm@example.com,new-user@example.com" | \
   gcloud secrets versions add ALLOWED_EMAILS --data-file=-
 
 # Redeploy (to pick up new secret)
-gcloud run services update role-directory-dev --region=us-central1
+gcloud run services update role-directory-dev --region=southamerica-east1
 ```
 
 ### Remove User from Whitelist
@@ -445,7 +445,7 @@ echo -n "danielvm@example.com" | \
   gcloud secrets versions add ALLOWED_EMAILS --data-file=-
 
 # Redeploy
-gcloud run services update role-directory-dev --region=us-central1
+gcloud run services update role-directory-dev --region=southamerica-east1
 ```
 
 ---

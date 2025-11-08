@@ -151,7 +151,7 @@ So that **the application can be deployed and accessed via a public URL**.
 **When** I create the dev Cloud Run service  
 **Then** the following are configured:
 - Service name: `role-directory-dev`
-- Region: Selected region (e.g., `us-central1`)
+- Region: Selected region (e.g., `southamerica-east1`)
 - Allow unauthenticated access (public URL)
 - Environment variables injected: `NODE_ENV=development`, `DATABASE_URL` (placeholder initially), `PORT=8080`
 - Minimum instances: 0 (scale to zero)

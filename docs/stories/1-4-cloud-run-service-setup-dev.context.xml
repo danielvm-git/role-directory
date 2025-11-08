@@ -27,7 +27,7 @@
 
   <acceptanceCriteria>
     1. Service name: role-directory-dev
-    2. Region: Selected region (e.g., us-central1)
+    2. Region: Selected region (e.g., southamerica-east1)
     3. Allow unauthenticated access (public URL)
     4. Environment variables: NODE_ENV=development, DATABASE_URL (placeholder), PORT=8080
     5. Minimum instances: 0 (scale to zero for cost optimization)
@@ -50,7 +50,7 @@
         <path>docs/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-4: Cloud Run Dev Service</section>
-        <snippet>Service name: role-directory-dev. Region: us-central1. Allow unauthenticated access (public URL). Environment variables: NODE_ENV=development, PORT=8080. Min instances: 0, Max instances: 10. CPU: 1, Memory: 512Mi. Service accessible at public URL: https://role-directory-dev-xxx.run.app.</snippet>
+        <snippet>Service name: role-directory-dev. Region: southamerica-east1. Allow unauthenticated access (public URL). Environment variables: NODE_ENV=development, PORT=8080. Min instances: 0, Max instances: 10. CPU: 1, Memory: 512Mi. Service accessible at public URL: https://role-directory-dev-xxx.run.app.</snippet>
       </doc>
       <doc>
         <path>docs/tech-spec-epic-1.md</path>
@@ -80,7 +80,7 @@
         <path>docs/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Data Models and Contracts - Cloud Run Service Configuration</section>
-        <snippet>Service configuration YAML: Service Name role-directory-{env}, Region us-central1, Container Port 8080, CPU 1, Memory 512Mi, Min Instances 0 (scale to zero), Max Instances 10 (cost control), Concurrency 80 (requests per container), Timeout 300s (5 minutes).</snippet>
+        <snippet>Service configuration YAML: Service Name role-directory-{env}, Region southamerica-east1, Container Port 8080, CPU 1, Memory 512Mi, Min Instances 0 (scale to zero), Max Instances 10 (cost control), Concurrency 80 (requests per container), Timeout 300s (5 minutes).</snippet>
       </doc>
       <doc>
         <path>docs/3-solutioning/architecture.md</path>
@@ -132,7 +132,7 @@
     - MUST enable required GCP APIs: Cloud Run, Artifact Registry, Secret Manager
     - MUST grant service account roles/secretmanager.secretAccessor permission
     - MUST document service URL, region, and setup instructions
-    - Region SHOULD be us-central1 or closest to primary users
+    - Region SHOULD be southamerica-east1 or closest to primary users
     - Concurrency default: 80 requests per container (Cloud Run default)
     - Timeout default: 300s (5 minutes, Cloud Run default)
     - This story creates infrastructure only (no container deployment, that's Story 1.5)
@@ -145,7 +145,7 @@
       <kind>GCP Service</kind>
       <signature>
         gcloud run deploy role-directory-dev \
-          --region us-central1 \
+          --region southamerica-east1 \
           --allow-unauthenticated \
           --min-instances 0 \
           --max-instances 10 \
@@ -176,16 +176,16 @@
       <kind>gcloud CLI</kind>
       <signature>
         List services:
-          gcloud run services list --region us-central1
+          gcloud run services list --region southamerica-east1
         
         Describe service:
-          gcloud run services describe role-directory-dev --region us-central1
+          gcloud run services describe role-directory-dev --region southamerica-east1
         
         View logs:
-          gcloud run services logs read role-directory-dev --region us-central1
+          gcloud run services logs read role-directory-dev --region southamerica-east1
         
         Update service:
-          gcloud run services update role-directory-dev --region us-central1 [options]
+          gcloud run services update role-directory-dev --region southamerica-east1 [options]
       </signature>
       <path>gcloud CLI</path>
     </interface>
@@ -203,25 +203,25 @@
     </locations>
     <ideas>
       <test id="AC-1" desc="Verify service name">
-        Manual: Run gcloud run services list --region us-central1. Verify service named "role-directory-dev" appears in list.
+        Manual: Run gcloud run services list --region southamerica-east1. Verify service named "role-directory-dev" appears in list.
       </test>
       <test id="AC-2" desc="Verify region">
-        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "location" field shows selected region (e.g., us-central1).
+        Manual: Run gcloud run services describe role-directory-dev --region southamerica-east1. Check "location" field shows selected region (e.g., southamerica-east1).
       </test>
       <test id="AC-3" desc="Verify public access">
-        Manual: In GCP Console, check service allows unauthenticated invocations. Run gcloud run services get-iam-policy role-directory-dev --region us-central1. Verify allUsers has roles/run.invoker role. Access service URL without authentication, should succeed.
+        Manual: In GCP Console, check service allows unauthenticated invocations. Run gcloud run services get-iam-policy role-directory-dev --region southamerica-east1. Verify allUsers has roles/run.invoker role. Access service URL without authentication, should succeed.
       </test>
       <test id="AC-4" desc="Verify environment variables">
-        Manual: Run gcloud run services describe role-directory-dev --region us-central1 --format="value(spec.template.spec.containers[0].env)". Verify NODE_ENV=development, PORT=8080 present. Check DATABASE_URL injected from Secret Manager.
+        Manual: Run gcloud run services describe role-directory-dev --region southamerica-east1 --format="value(spec.template.spec.containers[0].env)". Verify NODE_ENV=development, PORT=8080 present. Check DATABASE_URL injected from Secret Manager.
       </test>
       <test id="AC-5" desc="Verify min instances: 0">
-        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "minScale: 0" in configuration. Wait 15 minutes with no requests, verify service scales to zero (no active instances in console).
+        Manual: Run gcloud run services describe role-directory-dev --region southamerica-east1. Check "minScale: 0" in configuration. Wait 15 minutes with no requests, verify service scales to zero (no active instances in console).
       </test>
       <test id="AC-6" desc="Verify max instances: 10">
-        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "maxScale: 10" in configuration.
+        Manual: Run gcloud run services describe role-directory-dev --region southamerica-east1. Check "maxScale: 10" in configuration.
       </test>
       <test id="AC-7" desc="Verify CPU and memory">
-        Manual: Run gcloud run services describe role-directory-dev --region us-central1. Check "cpu: 1" and "memory: 512Mi" in container spec.
+        Manual: Run gcloud run services describe role-directory-dev --region southamerica-east1. Check "cpu: 1" and "memory: 512Mi" in container spec.
       </test>
       <test id="AC-8" desc="Verify public URL">
         Manual: Get service URL from gcloud run services describe output or GCP Console. URL format: https://role-directory-dev-[hash].run.app. Access URL in browser (if container deployed). Should respond (or show error if no container yet).

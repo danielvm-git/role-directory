@@ -542,7 +542,7 @@ When automated testing is introduced (Phase 2):
 ### Story 1.4 - Cloud Run Service Setup (Dev)
 
 - [ ] Dev service created: `role-directory-dev`
-- [ ] Region selected (e.g., us-central1)
+- [ ] Region selected (e.g., southamerica-east1)
 - [ ] Service allows unauthenticated access (public URL)
 - [ ] Environment variables configured: NODE_ENV=development, PORT=8080
 - [ ] Min instances = 0 (scale to zero)
