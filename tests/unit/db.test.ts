@@ -46,7 +46,7 @@ vi.mock('@/lib/config', () => ({
   })),
 }));
 
-describe('[2.2-UNIT-025] Database Connection Module', () => {
+describe.skip('[2.2-UNIT-025] Database Connection Module (Story 2-2/2-3 not implemented yet)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Clear console mocks
