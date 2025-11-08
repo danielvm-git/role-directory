@@ -15,7 +15,7 @@ so that **I can deploy and test pre-production versions of the application befor
 **Then** the service:
 - Has a public staging URL: `https://role-directory-staging-<hash>.run.app`
 - Uses minimum 0 instances (scale to zero, same as dev for cost optimization)
-- Uses maximum 3 instances (minimal for solo usage, same as dev)
+- Uses maximum 2 instances (minimal for solo usage, same as dev)
 - Uses 1 CPU and 512 MB memory per instance
 - Requires authentication via Google IAM (not fully public)
 - Sets environment variables: `NODE_ENV=staging`, `DATABASE_URL` (from Secret Manager), `NEXT_PUBLIC_API_URL` (staging URL)
@@ -38,18 +38,18 @@ so that **I can deploy and test pre-production versions of the application befor
 
 - [x] Task 2: Create staging Cloud Run service using gcloud CLI (AC: Service exists, public URL)
   - [x] Use command: `gcloud run deploy role-directory-staging`
-  - [x] Set region: `us-central1` (or preferred region, same as dev)
+  - [x] Set region: `southamerica-east1` (or preferred region, same as dev)
   - [x] Set image: Use latest successful dev image or placeholder: `gcr.io/cloudrun/hello`
   - [x] Set platform: `managed`
   - [x] Allow unauthenticated: `--no-allow-unauthenticated` (IAM protected)
   - [x] Record service URL after creation
   - [x] Verify service exists: `gcloud run services list --filter="role-directory-staging"`
 
-- [x] Task 3: Configure instance scaling (AC: Min 0, max 3 instances)
+- [x] Task 3: Configure instance scaling (AC: Min 0, max 2 instances)
   - [x] Set min instances: `gcloud run services update role-directory-staging --min-instances=0`
-  - [x] Set max instances: `gcloud run services update role-directory-staging --max-instances=3`
+  - [x] Set max instances: `gcloud run services update role-directory-staging --max-instances=2`
   - [x] Verify: `gcloud run services describe role-directory-staging --format="value(spec.template.spec.containerConcurrency,spec.template.metadata.annotations)"`
-  - [x] Rationale: Min 0 for cost optimization (same as dev/prod), max 3 minimal for solo usage
+  - [x] Rationale: Min 0 for cost optimization (same as dev/prod), max 2 minimal for solo usage
 
 - [x] Task 4: Configure CPU and memory (AC: 1 CPU, 512 MB memory)
   - [x] Set CPU: `gcloud run services update role-directory-staging --cpu=1`
@@ -90,7 +90,7 @@ so that **I can deploy and test pre-production versions of the application befor
   - [x] Document service URL (for CI/CD reference)
   - [x] Document environment variables set
   - [x] Document IAM bindings created
-  - [x] Document scaling configuration (min 0, max 3 - same as dev/prod)
+  - [x] Document scaling configuration (min 0, max 2 - same as dev/prod)
   - [x] Note: This manual setup will be replaced by Terraform/IaC in future
 
 - [x] Task 10: Test staging service deployment (AC: Service receives deployments correctly)
@@ -115,7 +115,7 @@ so that **I can deploy and test pre-production versions of the application befor
 1. **Service Configuration Summary:**
    ```yaml
    service_name: role-directory-staging
-   region: us-central1
+   region: southamerica-east1
    platform: managed
    
    scaling:
@@ -147,43 +147,43 @@ so that **I can deploy and test pre-production versions of the application befor
    ```bash
    # Create service
    gcloud run deploy role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --platform=managed \
      --no-allow-unauthenticated \
      --image=gcr.io/cloudrun/hello
    
    # Configure scaling
    gcloud run services update role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --min-instances=0 \
      --max-instances=3
    
    # Configure resources
    gcloud run services update role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --cpu=1 \
      --memory=512Mi
    
    # Configure environment
    gcloud run services update role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --set-env-vars=NODE_ENV=staging,NEXT_PUBLIC_API_URL=<SERVICE_URL> \
      --set-secrets=DATABASE_URL=staging-database-url:latest
    
    # Configure ingress and port
    gcloud run services update role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --ingress=all \
      --port=8080
    
    # Add labels
    gcloud run services update role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --labels=environment=staging,app=role-directory
    
    # Grant IAM access
    gcloud run services add-iam-policy-binding role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --member="serviceAccount:<GHA_SA_EMAIL>" \
      --role="roles/run.invoker"
    ```
@@ -262,7 +262,7 @@ role-directory/
 **Expected Results:**
 - Service exists and is running
 - Public staging URL accessible with authentication
-- Min 0 instances (scale to zero), max 3 instances (same as dev/prod)
+- Min 0 instances (scale to zero), max 2 instances (same as dev/prod)
 - 1 CPU, 512 MB memory per instance
 - Environment variables set correctly (NODE_ENV=staging, etc.)
 - IAM authentication required (not public)
@@ -274,7 +274,7 @@ role-directory/
 **MUST Follow:**
 1. **Cloud Run Naming Convention** (architecture.md):
    - Service name: `role-directory-staging`
-   - Region: `us-central1` (same as dev for simplicity)
+   - Region: `southamerica-east1` (same as dev for simplicity)
    - Consistent with dev/production naming
 
 2. **Environment Configuration** (architecture.md):
@@ -335,7 +335,7 @@ role-directory/
 **Important Notes:**
 - This is a **manual setup** story (gcloud CLI commands)
 - Story 1.9 will create **automated promotion workflow** (dev → staging)
-- Staging uses **same configuration as dev** (min 0, max 3) for cost optimization
+- Staging uses **same configuration as dev** (min 0, max 2) for cost optimization
 - Staging is **IAM protected** (not public) vs. dev public (easier testing)
 - Actual database URL will be set in Epic 2 when Neon staging database is provisioned
 - For now, use placeholder secret or skip database secret until Epic 2
@@ -363,7 +363,7 @@ Claude Sonnet 4.5
 ### Completion Notes List
 
 **Summary:**
-Successfully created comprehensive documentation and automation for setting up the Cloud Run staging service. The staging environment is configured for pre-production validation with scale-to-zero (min 0 instances, same as dev/prod), IAM authentication (not publicly accessible), and minimal resource allocation (1 CPU, 512 MB memory, max 3 instances for solo usage). This story provides all necessary tools for manual setup, with the automated script handling prerequisite verification, service creation, scaling configuration, secret management, and IAM setup.
+Successfully created comprehensive documentation and automation for setting up the Cloud Run staging service. The staging environment is configured for pre-production validation with scale-to-zero (min 0 instances, same as dev/prod), IAM authentication (not publicly accessible), and minimal resource allocation (1 CPU, 512 MB memory, max 2 instances for solo usage). This story provides all necessary tools for manual setup, with the automated script handling prerequisite verification, service creation, scaling configuration, secret management, and IAM setup.
 
 **Key Deliverables:**
 
@@ -383,7 +383,7 @@ Successfully created comprehensive documentation and automation for setting up t
    - Prerequisite verification (gcloud CLI, authentication, APIs)
    - Interactive service creation/update with safety checks
    - Automatic API enabling (Cloud Run, Secret Manager, Cloud Build)
-   - Scaling configuration (min 0, max 3 instances - same as dev/prod)
+   - Scaling configuration (min 0, max 2 instances - same as dev/prod)
    - Resource configuration (1 CPU, 512 MB memory)
    - Environment variables setup (NODE_ENV, NEXT_PUBLIC_API_URL)
    - Placeholder database secret creation in Secret Manager
@@ -396,7 +396,7 @@ Successfully created comprehensive documentation and automation for setting up t
 
 ```yaml
 service_name: role-directory-staging
-region: us-central1
+region: southamerica-east1
 platform: managed
 
 scaling:
@@ -464,7 +464,7 @@ The script and documentation include comprehensive verification:
 
 **Architectural Decisions:**
 
-1. **Same Scaling as Dev/Prod (Min 0):** All environments use identical scaling (min 0, max 3) for cost optimization with solo usage. Cold starts are acceptable for testing.
+1. **Same Scaling as Dev/Prod (Min 0):** All environments use identical scaling (min 0, max 2) for cost optimization with solo usage. Cold starts are acceptable for testing.
 
 2. **IAM Protected (Not Public):** Staging requires authentication via IAM (unlike dev which is public), preventing unauthorized access to pre-production environment
 
@@ -570,7 +570,7 @@ The Cloud Run staging service setup demonstrates exemplary quality with comprehe
 
 **Architecture Review:**
 - ✅ Scale to zero (min 0) same as dev/prod for cost optimization with solo usage
-- ✅ Minimal scaling (max 3) sufficient for hello world testing across all environments
+- ✅ Minimal scaling (max 2) sufficient for hello world testing across all environments
 - ✅ IAM authentication for security (vs. dev public access)
 - ✅ Secret Manager for DATABASE_URL (best practice)
 - ✅ Resource labels for cost tracking and organization

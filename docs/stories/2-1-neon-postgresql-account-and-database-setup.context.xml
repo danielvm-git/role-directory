@@ -55,7 +55,7 @@
       <subtasks>
         <subtask>In Neon Console, click "Create Project"</subtask>
         <subtask>Project name: role-directory or role-directory-mvp</subtask>
-        <subtask>Select region: Choose closest to Cloud Run region (us-central1) - if unavailable, choose US East or US West</subtask>
+        <subtask>Select region: Choose closest to Cloud Run region (southamerica-east1) - if unavailable, choose US East or US West</subtask>
         <subtask>Leave auto-suspend enabled (default, cost savings)</subtask>
         <subtask>Create project</subtask>
         <subtask>Note project ID (displayed in URL or project settings)</subtask>
@@ -134,9 +134,9 @@
     <task id="T9" status="pending">
       <title>Configure Cloud Run services with database secrets</title>
       <subtasks>
-        <subtask>Update dev Cloud Run service: gcloud run services update role-directory-dev --region=us-central1 --set-secrets=DATABASE_URL=dev-database-url:latest</subtask>
-        <subtask>Update staging Cloud Run service: gcloud run services update role-directory-staging --region=us-central1 --set-secrets=DATABASE_URL=staging-database-url:latest</subtask>
-        <subtask>Update production Cloud Run service: gcloud run services update role-directory-production --region=us-central1 --set-secrets=DATABASE_URL=production-database-url:latest</subtask>
+        <subtask>Update dev Cloud Run service: gcloud run services update role-directory-dev --region=southamerica-east1 --set-secrets=DATABASE_URL=dev-database-url:latest</subtask>
+        <subtask>Update staging Cloud Run service: gcloud run services update role-directory-staging --region=southamerica-east1 --set-secrets=DATABASE_URL=staging-database-url:latest</subtask>
+        <subtask>Update production Cloud Run service: gcloud run services update role-directory-production --region=southamerica-east1 --set-secrets=DATABASE_URL=production-database-url:latest</subtask>
         <subtask>Verify: gcloud run services describe role-directory-dev --format="value(spec.template.spec.containers[0].env)"</subtask>
       </subtasks>
     </task>
@@ -370,7 +370,7 @@
         <title>Verify Cloud Run Services Have DATABASE_URL</title>
         <approach>Manual CLI Test</approach>
         <steps>
-          1. Run: gcloud run services describe role-directory-dev --region=us-central1 --format="yaml(spec.template.spec.containers[0].env)"
+          1. Run: gcloud run services describe role-directory-dev --region=southamerica-east1 --format="yaml(spec.template.spec.containers[0].env)"
           2. Expected: DATABASE_URL environment variable with secret reference (dev-database-url:latest)
           3. Repeat for role-directory-staging and role-directory-production
           4. Verify each service references its corresponding secret (dev, staging, production)
@@ -430,7 +430,7 @@
       <learning id="LEARN-2">
         <from-story>Story 1.4 (Cloud Run Dev Service)</from-story>
         <status>Done</status>
-        <content>Dev Cloud Run service (role-directory-dev) exists and is accessible at https://role-directory-dev-q5xt7ys22a-uc.a.run.app. Service account: PROJECT_NUMBER-compute@developer.gserviceaccount.com. Region: us-central1. This service will receive DATABASE_URL secret in Task 9.</content>
+        <content>Dev Cloud Run service (role-directory-dev) exists and is accessible at https://role-directory-dev-q5xt7ys22a-uc.a.run.app. Service account: PROJECT_NUMBER-compute@developer.gserviceaccount.com. Region: southamerica-east1. This service will receive DATABASE_URL secret in Task 9.</content>
       </learning>
       <learning id="LEARN-3">
         <from-story>Story 1.7, 1.8 (Staging/Production Services)</from-story>

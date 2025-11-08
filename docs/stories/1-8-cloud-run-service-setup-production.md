@@ -15,7 +15,7 @@ so that **I can deploy the live application with appropriate scaling, security, 
 **Then** the service:
 - Has a public production URL: `https://role-directory-production-<hash>.run.app`
 - Uses minimum 0 instances (scale to zero, same as dev/staging for cost)
-- Uses maximum 3 instances (minimal for solo usage, same as dev/staging)
+- Uses maximum 2 instances (minimal for solo usage, same as dev/staging)
 - Uses 1 CPU and 512 MB memory per instance (same as dev/staging)
 - Requires authentication via Google IAM (not fully public, like staging)
 - Sets environment variables: `NODE_ENV=production`, `DATABASE_URL` (from Secret Manager), `NEXT_PUBLIC_API_URL` (production URL)
@@ -39,18 +39,18 @@ so that **I can deploy the live application with appropriate scaling, security, 
 
 - [x] Task 2: Create production Cloud Run service using gcloud CLI (AC: Service exists, public URL)
   - [x] Use command: `gcloud run deploy role-directory-production`
-  - [x] Set region: `us-central1` (or preferred region, same as dev/staging)
+  - [x] Set region: `southamerica-east1` (or preferred region, same as dev/staging)
   - [x] Set image: Use latest successful staging image or placeholder: `gcr.io/cloudrun/hello`
   - [x] Set platform: `managed`
   - [x] Allow unauthenticated: `--no-allow-unauthenticated` (IAM protected)
   - [x] Record service URL after creation
   - [x] Verify service exists: `gcloud run services list --filter="role-directory-production"`
 
-- [x] Task 3: Configure instance scaling (AC: Min 0, max 3 instances)
+- [x] Task 3: Configure instance scaling (AC: Min 0, max 2 instances)
   - [x] Set min instances: `gcloud run services update role-directory-production --min-instances=0`
-  - [x] Set max instances: `gcloud run services update role-directory-production --max-instances=3`
+  - [x] Set max instances: `gcloud run services update role-directory-production --max-instances=2`
   - [x] Verify: `gcloud run services describe role-directory-production --format="value(spec.template.spec.containerConcurrency,spec.template.metadata.annotations)"`
-  - [x] Rationale: Min 0 for cost optimization (same as dev/staging), max 3 minimal for solo usage
+  - [x] Rationale: Min 0 for cost optimization (same as dev/staging), max 2 minimal for solo usage
 
 - [x] Task 4: Configure CPU and memory (AC: 1 CPU, 512 MB memory)
   - [x] Set CPU: `gcloud run services update role-directory-production --cpu=1`
@@ -97,7 +97,7 @@ so that **I can deploy the live application with appropriate scaling, security, 
   - [x] Document service URL (for CI/CD reference)
   - [x] Document environment variables set
   - [x] Document IAM bindings created
-  - [x] Document scaling configuration (min 0, max 3 - same as dev/staging)
+  - [x] Document scaling configuration (min 0, max 2 - same as dev/staging)
   - [x] Document resource allocation (1 CPU, 512 MB memory - same as dev/staging)
   - [x] Document that all environments use identical configuration for cost
   - [x] Note: This manual setup will be replaced by Terraform/IaC in future
@@ -125,7 +125,7 @@ so that **I can deploy the live application with appropriate scaling, security, 
 1. **Service Configuration Summary:**
    ```yaml
    service_name: role-directory-production
-   region: us-central1
+   region: southamerica-east1
    platform: managed
    
    scaling:
@@ -163,43 +163,43 @@ so that **I can deploy the live application with appropriate scaling, security, 
    ```bash
    # Create service
    gcloud run deploy role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --platform=managed \
      --no-allow-unauthenticated \
      --image=gcr.io/cloudrun/hello
    
    # Configure scaling
    gcloud run services update role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --min-instances=2 \
      --max-instances=10
    
    # Configure resources
    gcloud run services update role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --cpu=2 \
      --memory=1Gi
    
    # Configure environment
    gcloud run services update role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --set-env-vars=NODE_ENV=production,NEXT_PUBLIC_API_URL=<SERVICE_URL> \
      --set-secrets=DATABASE_URL=production-database-url:latest
    
    # Configure ingress and port
    gcloud run services update role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --ingress=all \
      --port=8080
    
    # Add labels
    gcloud run services update role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --labels=environment=production,app=role-directory
    
    # Production-specific settings
    gcloud run services update role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --execution-environment=gen2 \
      --cpu-boost \
      --timeout=300 \
@@ -207,7 +207,7 @@ so that **I can deploy the live application with appropriate scaling, security, 
    
    # Grant IAM access
    gcloud run services add-iam-policy-binding role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --member="serviceAccount:<GHA_SA_EMAIL>" \
      --role="roles/run.invoker"
    ```
@@ -323,7 +323,7 @@ role-directory/
 **MUST Follow:**
 1. **Cloud Run Naming Convention** (architecture.md):
    - Service name: `role-directory-production`
-   - Region: `us-central1` (same as dev/staging for simplicity)
+   - Region: `southamerica-east1` (same as dev/staging for simplicity)
    - Consistent with dev/staging naming pattern
 
 2. **Environment Configuration** (architecture.md):
@@ -470,7 +470,7 @@ Successfully created comprehensive documentation and automation for setting up t
 
 ```yaml
 service_name: role-directory-production
-region: us-central1
+region: southamerica-east1
 platform: managed
 
 scaling:
@@ -536,7 +536,7 @@ Follow step-by-step instructions in `docs/guides/cloud-run-production-setup.md`
 
 **Cost Comparison Across Environments:**
 - **Dev:** ~$5-10/month (min 0, max 2, 1 CPU, 512 MB, public access)
-- **Staging:** ~$17-30/month (min 1, max 3, 1 CPU, 512 MB, IAM protected)
+- **Staging:** ~$17-30/month (min 1, max 2, 1 CPU, 512 MB, IAM protected)
 - **Production:** ~$50-100/month (min 2, max 10, 2 CPUs, 1 GB, IAM protected, gen2, CPU boost)
 
 **Architectural Decisions:**

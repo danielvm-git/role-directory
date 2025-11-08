@@ -347,7 +347,7 @@ docker push gcr.io/$PROJECT_ID/role-directory:latest
 # Deploy to dev
 gcloud run deploy role-directory-dev \
   --image=gcr.io/$PROJECT_ID/role-directory:latest \
-  --region=us-central1
+  --region=southamerica-east1
 ```
 
 See [Architecture: Deployment Flow](docs/3-solutioning/architecture.md#deployment-flow)
@@ -381,14 +381,14 @@ After authentication, you'll see:
 - [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md) - CI/CD pipeline configuration
 
 **Recovery Procedures:**
-- **[Rollback Procedures](docs/ROLLBACK.md)** - How to rollback deployments in any environment
+- **[Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy)** - How to rollback deployments in any environment
   - Quick recovery from failed deployments (<3 minutes)
   - Zero-downtime rollback via Cloud Run revision management
   - Tested procedures for dev, staging, and production
 
 **Infrastructure Guides:**
 - [Docker Setup](docs/DOCKER.md) - Containerization and local development
-- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - Database setup
+- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (dev, staging, production)
 - [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
 
 ### Quick Operational Reference
@@ -408,11 +408,11 @@ git push origin main
 **Rollback Production:**
 ```bash
 # List available revisions
-gcloud run revisions list --service=role-directory-production --region=us-central1
+gcloud run revisions list --service=role-directory-production --region=southamerica-east1
 
 # Rollback to previous revision
 gcloud run services update-traffic role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=[PREVIOUS_REVISION]=100
 
 # Verify rollback
@@ -420,7 +420,7 @@ curl -f -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
   [PRODUCTION_URL]/api/health
 ```
 
-See [Rollback Procedures](docs/ROLLBACK.md) for comprehensive instructions.
+See [Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy) for comprehensive instructions.
 
 ---
 

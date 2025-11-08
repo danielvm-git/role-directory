@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Story Context: 2-4-initial-database-schema-migration
+  Generated: 2025-11-07
+  Epic: 2 - Database Infrastructure & Connectivity
+  Status: ready-for-dev
+-->
+<story-context>
+  <metadata>
+    <epic-id>2</epic-id>
+    <story-id>4</story-id>
+    <story-key>2-4-initial-database-schema-migration</story-key>
+    <story-title>Initial Database Schema Migration (Existing Tables)</story-title>
+    <status>ready-for-dev</status>
+    <generated-date>2025-11-07</generated-date>
+  </metadata>
+
+  <user-story>
+    <as-a>developer</as-a>
+    <i-want>the existing role/pricing tables migrated to all three Neon databases</i-want>
+    <so-that>the Hello World dashboard can query real data and validate database connectivity</so-that>
+  </user-story>
+
+  <acceptance-criteria>
+    <criterion id="AC-1">
+      <given>the migration system is set up</given>
+      <when>I create and run the initial migration</when>
+      <then>the following tables are created in all three databases: role_profiles, profile_pricing, and supporting reference tables</then>
+      <and>Proper column types, constraints, and indexes</and>
+      <and>Sample data inserted (optional, for Hello World query testing)</and>
+    </criterion>
+    <criterion id="AC-2">
+      <and>The migration runs successfully against role_directory_dev</and>
+      <and>The migration runs successfully against role_directory_stg</and>
+      <and>The migration runs successfully against role_directory_prd</and>
+      <and>I can query the tables using psql or a PostgreSQL client</and>
+      <and>Schema is consistent across all three environments</and>
+    </criterion>
+  </acceptance-criteria>
+
+  <story-tasks>
+    <task id="T1" status="pending">
+      <title>Review existing schema files</title>
+      <subtasks>
+        <subtask>Review existing schema structure from story documentation (10 tables)</subtask>
+        <subtask>Identify table dependencies and creation order</subtask>
+        <subtask>Document dependency chain: Phase 1 (base reference tables), Phase 2 (career progression), Phase 3 (job families), Phase 4 (locations), Phase 5 (role profiles), Phase 6 (pricing)</subtask>
+      </subtasks>
+    </task>
+    <task id="T2" status="pending">
+      <title>Create initial migration files</title>
+      <subtasks>
+        <subtask>Create migration: npm run migrate:create initial_schema</subtask>
+        <subtask>Files created: [timestamp]_initial_schema.up.sql and [timestamp]_initial_schema.down.sql</subtask>
+        <subtask>Note timestamp for documentation</subtask>
+      </subtasks>
+    </task>
+    <task id="T3" status="pending">
+      <title>Create update_updated_at_column function</title>
+      <subtasks>
+        <subtask>Add to up migration: CREATE OR REPLACE FUNCTION update_updated_at_column() that updates NEW.updated_at to CURRENT_TIMESTAMP</subtask>
+        <subtask>Add to down migration: DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE</subtask>
+      </subtasks>
+    </task>
+    <task id="T4" status="pending">
+      <title>Create base reference tables (Phase 1)</title>
+      <subtasks>
+        <subtask>Create regions table: region_id PK, region_name, region_code, timestamps</subtask>
+        <subtask>Create currencies table: currency_id PK, currency_code, currency_name, currency_symbol</subtask>
+        <subtask>Create price_types table: price_type_id PK, price_type_name, description</subtask>
+        <subtask>Create seniority_levels table: seniority_level_id PK, seniority_name, seniority_order</subtask>
+        <subtask>Add indexes where appropriate</subtask>
+        <subtask>Add to down migration: DROP TABLE IF EXISTS statements (reverse order)</subtask>
+      </subtasks>
+    </task>
+    <task id="T5" status="pending">
+      <title>Create career progression tables (Phase 2)</title>
+      <subtasks>
+        <subtask>Create career_levels table with FK to seniority_levels</subtask>
+        <subtask>Fields: career_level_id PK, level_code, level_name, level_order, seniority_level_id FK</subtask>
+        <subtask>Add indexes: idx_level_code, idx_cl_seniority_level_id</subtask>
+        <subtask>Add to down migration: DROP TABLE statement</subtask>
+      </subtasks>
+    </task>
+    <task id="T6" status="pending">
+      <title>Create job family structure tables (Phase 3)</title>
+      <subtasks>
+        <subtask>Create job_families table: job_family_id PK, family_name, family_code, description</subtask>
+        <subtask>Create career_tracks table with FK to job_families</subtask>
+        <subtask>Add indexes for foreign keys and lookups</subtask>
+        <subtask>Add to down migration: DROP TABLE statements (reverse order)</subtask>
+      </subtasks>
+    </task>
+    <task id="T7" status="pending">
+      <title>Create location tables (Phase 4)</title>
+      <subtasks>
+        <subtask>Create locations table with FK to regions</subtask>
+        <subtask>Fields: location_id PK, location_name, location_code, country_code, region_id FK</subtask>
+        <subtask>Add indexes: idx_location_name, idx_l_region_id</subtask>
+        <subtask>Add to down migration: DROP TABLE statement</subtask>
+      </subtasks>
+    </task>
+    <task id="T8" status="pending">
+      <title>Create role_profiles table (Phase 5)</title>
+      <subtasks>
+        <subtask>Create role_profiles table with FKs to job_families, career_tracks, career_levels, seniority_levels</subtask>
+        <subtask>Fields: profile_id PK, role_title, profile_name, regionalized names (latam, na, emea, apac, oceania), FKs, description, timestamps</subtask>
+        <subtask>Add trigger: update_role_profiles_updated_at</subtask>
+        <subtask>Add indexes on role_title, profile_name, and all FKs</subtask>
+        <subtask>Add table comment</subtask>
+        <subtask>Add to down migration: DROP TABLE statement</subtask>
+      </subtasks>
+    </task>
+    <task id="T9" status="pending">
+      <title>Create profile_pricing table (Phase 6)</title>
+      <subtasks>
+        <subtask>Create profile_pricing table with FKs to role_profiles, regions, locations, currencies, price_types</subtask>
+        <subtask>Fields: pricing_id PK, FKs, annual_price, hourly_rate, tax rates, markup rates, effective/expiration dates, is_active, timestamps</subtask>
+        <subtask>Add unique constraint: uk_pricing_unique on (profile_id, region_id, location_id, price_type_id, effective_date)</subtask>
+        <subtask>Add check constraints: chk_annual_price (>=0), chk_hourly_rate (>=0 or NULL), chk_tax_rate (0-1), chk_markup_rate (0-1), chk_expiration_date (>=effective_date)</subtask>
+        <subtask>Add trigger: update_profile_pricing_updated_at</subtask>
+        <subtask>Add indexes on all FKs, is_active, effective_date</subtask>
+        <subtask>Add table and column comments</subtask>
+        <subtask>Add to down migration: DROP TABLE statement</subtask>
+      </subtasks>
+    </task>
+    <task id="T10" status="pending">
+      <title>Complete down migration</title>
+      <subtasks>
+        <subtask>Add DROP statements in REVERSE dependency order: profile_pricing, role_profiles, locations, career_tracks, job_families, career_levels, seniority_levels, price_types, currencies, regions, update_updated_at_column function</subtask>
+        <subtask>Use CASCADE to handle dependencies</subtask>
+      </subtasks>
+    </task>
+    <task id="T11" status="pending">
+      <title>Add sample data (optional)</title>
+      <subtasks>
+        <subtask>Create separate migration (optional): npm run migrate:create sample_data</subtask>
+        <subtask>Insert minimal sample data: 1-2 regions, currencies, price types, seniority levels, career levels, job families, career tracks, locations, role profiles, pricing records</subtask>
+        <subtask>Create rollback migration: DELETE FROM tables in reverse order</subtask>
+        <subtask>Note: Sample data migration is OPTIONAL for MVP</subtask>
+      </subtasks>
+    </task>
+    <task id="T12" status="pending">
+      <title>Test migration locally</title>
+      <subtasks>
+        <subtask>Set DATABASE_URL for dev environment</subtask>
+        <subtask>Run npm run migrate:status - verify pending migration shown</subtask>
+        <subtask>Run npm run migrate:up - verify success</subtask>
+        <subtask>Verify tables created: psql $DATABASE_URL -c "\dt" (expect 10 tables)</subtask>
+        <subtask>Verify schema_migrations updated: psql $DATABASE_URL -c "SELECT * FROM schema_migrations"</subtask>
+        <subtask>Query sample table: psql $DATABASE_URL -c "SELECT COUNT(*) FROM role_profiles"</subtask>
+      </subtasks>
+    </task>
+    <task id="T13" status="pending">
+      <title>Test rollback locally</title>
+      <subtasks>
+        <subtask>Run npm run migrate:down - verify success</subtask>
+        <subtask>Verify tables dropped: psql $DATABASE_URL -c "\dt" (only schema_migrations remains)</subtask>
+        <subtask>Verify schema_migrations updated (migration removed)</subtask>
+        <subtask>Re-apply migration: npm run migrate:up - verify idempotency</subtask>
+      </subtasks>
+    </task>
+    <task id="T14" status="pending">
+      <title>Apply migration to staging</title>
+      <subtasks>
+        <subtask>Set DATABASE_URL for staging environment</subtask>
+        <subtask>Run npm run migrate:status and npm run migrate:up</subtask>
+        <subtask>Verify tables created: psql $DATABASE_URL -c "\dt"</subtask>
+        <subtask>Document staging migration timestamp</subtask>
+      </subtasks>
+    </task>
+    <task id="T15" status="pending">
+      <title>Apply migration to production</title>
+      <subtasks>
+        <subtask>Set DATABASE_URL for production environment</subtask>
+        <subtask>Run npm run migrate:status and npm run migrate:up</subtask>
+        <subtask>Verify tables created: psql $DATABASE_URL -c "\dt"</subtask>
+        <subtask>Document production migration timestamp</subtask>
+        <subtask>Verify schema consistency across all three environments (compare table counts)</subtask>
+      </subtasks>
+    </task>
+    <task id="T16" status="pending">
+      <title>Document schema in DATABASE.md</title>
+      <subtasks>
+        <subtask>Update docs/DATABASE.md with "Database Schema" section</subtask>
+        <subtask>Document all 10 tables with brief descriptions</subtask>
+        <subtask>Document table relationships (ERD or text description)</subtask>
+        <subtask>Document key constraints and indexes</subtask>
+        <subtask>Add example queries (role profiles with seniority, pricing for specific profile)</subtask>
+      </subtasks>
+    </task>
+    <task id="T17" status="pending">
+      <title>Update README with schema information</title>
+      <subtasks>
+        <subtask>Add "Database Schema" section in README.md</subtask>
+        <subtask>Link to DATABASE.md for detailed documentation</subtask>
+        <subtask>Document table count: "10 tables managing role profiles and pricing"</subtask>
+        <subtask>Document migration status: "Schema migrated to all three environments"</subtask>
+      </subtasks>
+    </task>
+    <task id="T18" status="pending">
+      <title>Verify migration system integration</title>
+      <subtasks>
+        <subtask>Query schema_migrations table in all three environments</subtask>
+        <subtask>Verify initial_schema migration recorded in all environments</subtask>
+        <subtask>Document migration history in completion notes</subtask>
+      </subtasks>
+    </task>
+  </story-tasks>
+
+  <artifacts>
+    <docs>
+      <doc id="DOC-1">
+        <path>docs/tech-spec-epic-2.md</path>
+        <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
+        <section>Initial Schema Migration (Story 2.4)</section>
+        <snippet>Story 2.4 creates initial database schema migration with existing role/pricing tables. 10 tables total: regions, currencies, price_types, seniority_levels, career_levels, job_families, career_tracks, locations, role_profiles, profile_pricing. Tables have proper foreign keys, indexes, triggers. Migration applied to all three environments (dev, staging, production).</snippet>
+      </doc>
+      <doc id="DOC-2">
+        <path>docs/stories/2-4-initial-database-schema-migration.md</path>
+        <title>Story 2.4 Documentation</title>
+        <section>Table Dependencies and Schemas</section>
+        <snippet>Detailed table schemas with complete field definitions, foreign keys, constraints, indexes, and triggers. Dependency chain: Phase 1 (base reference), Phase 2 (career progression), Phase 3 (job families), Phase 4 (locations), Phase 5 (role profiles), Phase 6 (pricing). Complete SQL examples for role_profiles and profile_pricing tables.</snippet>
+      </doc>
+      <doc id="DOC-3">
+        <path>docs/2-planning/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Role/Pricing Data Model</section>
+        <snippet>Role directory manages role profiles with regionalized names and pricing across multiple regions/locations. Supports job families, career tracks, seniority levels for career progression. Pricing includes tax rates, markup rates, effective dates for temporal pricing.</snippet>
+      </doc>
+      <doc id="DOC-4">
+        <path>docs/3-solutioning/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema Design</section>
+        <snippet>SQL-based schema with explicit foreign keys and indexes. Trigger functions for automatic updated_at timestamps. Check constraints for data validation. Unique constraints to prevent duplicate pricing records. Proper dependency chain for migration ordering.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact id="CODE-1">
+        <path>migrations/</path>
+        <kind>directory</kind>
+        <symbol>Migration files location</symbol>
+        <lines>N/A</lines>
+        <reason>Directory where initial_schema migration files will be created (from Story 2.3 migration system)</reason>
+      </artifact>
+      <artifact id="CODE-2">
+        <path>package.json</path>
+        <kind>configuration</kind>
+        <symbol>migrate scripts</symbol>
+        <lines>9-22</lines>
+        <reason>Migration commands (migrate:up, migrate:down, migrate:status, migrate:create) available from Story 2.3</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="@neondatabase/serverless" version="^0.10.1" scope="dependencies">Used by migration script (from Story 2.3) to execute SQL statements</package>
+      </node>
+      <external>
+        <service name="Neon PostgreSQL" version="17.0">Target database for migrations - dev, staging, production databases created in Story 2.1</service>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface id="INT-1">
+      <name>Migration Commands (from Story 2.3)</name>
+      <kind>CLI - npm scripts</kind>
+      <signature>
+# Create migration files
+npm run migrate:create initial_schema
+
+# Apply migration to dev
+export DATABASE_URL="postgresql://...dev..."
+npm run migrate:up
+
+# Apply to staging
+export DATABASE_URL="postgresql://...stg..."
+npm run migrate:up
+
+# Apply to production
+export DATABASE_URL="postgresql://...prd..."
+npm run migrate:up
+
+# Test rollback (dev only)
+npm run migrate:down
+      </signature>
+      <path>scripts/migrate.js</path>
+      <notes>Migration system from Story 2.3 used to apply initial schema to all three environments</notes>
+    </interface>
+    <interface id="INT-2">
+      <name>role_profiles Table Schema</name>
+      <kind>Database Table</kind>
+      <signature>
+CREATE TABLE role_profiles (
+    profile_id VARCHAR(50) PRIMARY KEY,
+    role_title VARCHAR(255) NOT NULL,
+    profile_name VARCHAR(255) NOT NULL,
+    profile_name_latam VARCHAR(255),
+    profile_name_na VARCHAR(255),
+    profile_name_emea VARCHAR(255),
+    profile_name_apac VARCHAR(255),
+    profile_name_oceania VARCHAR(255),
+    job_family_id VARCHAR(50),
+    career_track_id VARCHAR(50),
+    career_level_id VARCHAR(50) NOT NULL,
+    seniority_level_id VARCHAR(50) NOT NULL,
+    profile_description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Foreign keys to job_families, career_tracks, career_levels, seniority_levels
+    -- Indexes on role_title, profile_name, all FKs
+    -- Trigger: update_role_profiles_updated_at
+);
+      </signature>
+      <path>migrations/[timestamp]_initial_schema.up.sql</path>
+      <notes>Core table storing role profile definitions with regionalized names and career progression metadata</notes>
+    </interface>
+    <interface id="INT-3">
+      <name>profile_pricing Table Schema</name>
+      <kind>Database Table</kind>
+      <signature>
+CREATE TABLE profile_pricing (
+    pricing_id VARCHAR(50) PRIMARY KEY,
+    profile_id VARCHAR(50) NOT NULL,
+    region_id VARCHAR(50) NOT NULL,
+    location_id VARCHAR(50) NOT NULL,
+    currency_id VARCHAR(3) NOT NULL,
+    price_type_id VARCHAR(50) NOT NULL,
+    annual_price DECIMAL(15,2) NOT NULL,
+    hourly_rate DECIMAL(15,2),
+    tax_rate_decimal DECIMAL(5,4),
+    annual_price_with_tax DECIMAL(15,2),
+    hourly_rate_with_tax DECIMAL(15,2),
+    markup_rate_decimal DECIMAL(5,4),
+    effective_date DATE,
+    expiration_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Foreign keys, unique constraint, check constraints
+    -- Indexes on all FKs, is_active, effective_date
+);
+      </signature>
+      <path>migrations/[timestamp]_initial_schema.up.sql</path>
+      <notes>Pricing records for role profiles across regions/locations with temporal pricing support</notes>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint id="CONS-1" type="architecture">
+      <title>Dependency-Ordered Migration</title>
+      <description>Tables must be created in dependency order: Phase 1 (base reference tables with no dependencies), Phase 2-6 (tables with foreign keys). Down migration must DROP in reverse order. Use CASCADE to handle dependent objects.</description>
+      <source>docs/stories/2-4-initial-database-schema-migration.md - Table Dependencies</source>
+    </constraint>
+    <constraint id="CONS-2" type="architecture">
+      <title>Foreign Key Constraints Required</title>
+      <description>All foreign keys must have explicit CONSTRAINT names (e.g., fk_role_profiles_job_family). All FKs must have corresponding indexes for query performance. Define ON DELETE and ON UPDATE behavior per business rules.</description>
+      <source>docs/3-solutioning/architecture.md - Database Schema Design</source>
+    </constraint>
+    <constraint id="CONS-3" type="architecture">
+      <title>Automatic Timestamp Updates</title>
+      <description>Use update_updated_at_column() function with BEFORE UPDATE trigger for all tables with updated_at column. Function automatically sets NEW.updated_at to CURRENT_TIMESTAMP. Function must be created in migration before any tables use it.</description>
+      <source>docs/stories/2-4-initial-database-schema-migration.md - Technical Context</source>
+    </constraint>
+    <constraint id="CONS-4" type="reliability">
+      <title>Idempotent Table Creation</title>
+      <description>Use CREATE TABLE IF NOT EXISTS for idempotency. Use DROP TABLE IF EXISTS CASCADE in rollback migration. Ensure migration can be run multiple times safely (Story 2.3 requirement).</description>
+      <source>docs/tech-spec-epic-2.md - Idempotent Migrations</source>
+    </constraint>
+    <constraint id="CONS-5" type="reliability">
+      <title>Schema Consistency Across Environments</title>
+      <description>Same migration must be applied to all three environments (dev, staging, production). Verify schema consistency by comparing table counts and structure. Document migration timestamps for each environment.</description>
+      <source>docs/2-planning/PRD.md - NFR-3: Reliability</source>
+    </constraint>
+    <constraint id="CONS-6" type="architecture">
+      <title>Indexes on Foreign Keys and Lookups</title>
+      <description>Create index on every foreign key column for JOIN performance. Create index on columns used in WHERE clauses (e.g., role_title, profile_name, is_active). Name indexes with idx_ prefix (e.g., idx_rp_job_family_id).</description>
+      <source>docs/3-solutioning/architecture.md - Performance Optimization</source>
+    </constraint>
+    <constraint id="CONS-7" type="architecture">
+      <title>Check Constraints for Data Validation</title>
+      <description>Use CHECK constraints for data validation (e.g., annual_price >= 0, tax_rate BETWEEN 0 AND 1). Name constraints with chk_ prefix. Check constraints enforced at database level for data integrity.</description>
+      <source>docs/stories/2-4-initial-database-schema-migration.md - profile_pricing Schema</source>
+    </constraint>
+    <constraint id="CONS-8" type="documentation">
+      <title>Schema Documentation Required</title>
+      <description>Document all 10 tables in docs/DATABASE.md with descriptions, relationships, and example queries. Update README with schema summary and link to DATABASE.md. Document migration history in completion notes.</description>
+      <source>docs/tech-spec-epic-2.md - Documentation Requirements</source>
+    </constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      <summary>Manual testing via psql and migration commands. Verify migration applies successfully to all three environments. Test rollback in dev only (do not rollback in staging/production). Verify tables created with correct schema, foreign keys, indexes, and triggers. Query schema_migrations to verify tracking. No automated tests required for MVP.</summary>
+      <framework>Manual CLI testing with npm run migrate:* and psql verification</framework>
+      <location>Manual testing only (no test files). Verification via psql queries against all three databases.</location>
+    </standards>
+
+    <locations>
+      <location>Manual testing only for this story (no automated test files)</location>
+    </locations>
+
+    <ideas>
+      <test-idea id="TEST-1" maps-to="AC-1">
+        <title>Verify Migration File Creation</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Run: npm run migrate:create initial_schema
+          2. Expected: Two files created in migrations/ directory
+          3. Verify filenames: [timestamp]_initial_schema.up.sql and [timestamp]_initial_schema.down.sql
+          4. Note timestamp for future reference
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-2" maps-to="AC-1, AC-2">
+        <title>Test Migration Application to Dev</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set DATABASE_URL for dev: export DATABASE_URL="postgresql://...role_directory_dev..."
+          2. Run: npm run migrate:status (verify pending migration shown)
+          3. Run: npm run migrate:up
+          4. Expected: Success message "✅ [timestamp]_initial_schema applied"
+          5. Verify tables created: psql $DATABASE_URL -c "\dt"
+          6. Expected: 10 tables listed (regions, currencies, price_types, seniority_levels, career_levels, job_families, career_tracks, locations, role_profiles, profile_pricing)
+          7. Verify schema_migrations: psql $DATABASE_URL -c "SELECT * FROM schema_migrations ORDER BY applied_at"
+          8. Expected: Two rows (bootstrap + initial_schema)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-3" maps-to="AC-1">
+        <title>Verify Table Schema Correctness</title>
+        <approach>Manual psql Test</approach>
+        <steps>
+          1. Describe role_profiles table: psql $DATABASE_URL -c "\d role_profiles"
+          2. Expected: All columns present (profile_id PK, role_title, profile_name, regionalized names, FKs, timestamps)
+          3. Expected: Foreign keys listed (to job_families, career_tracks, career_levels, seniority_levels)
+          4. Expected: Indexes listed (idx_role_title, idx_profile_name, FK indexes)
+          5. Expected: Trigger listed (update_role_profiles_updated_at)
+          6. Repeat for profile_pricing table
+          7. Expected: All columns, FKs, unique constraint, check constraints, indexes, trigger
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-4" maps-to="AC-1">
+        <title>Test Rollback Migration</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Run: npm run migrate:down
+          2. Expected: Success message "✅ [timestamp]_initial_schema rolled back"
+          3. Verify tables dropped: psql $DATABASE_URL -c "\dt"
+          4. Expected: Only schema_migrations table remains (10 application tables gone)
+          5. Verify schema_migrations: psql $DATABASE_URL -c "SELECT * FROM schema_migrations"
+          6. Expected: Only bootstrap migration remains (initial_schema removed)
+          7. Re-apply migration: npm run migrate:up
+          8. Expected: Migration applies successfully (idempotency test)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-5" maps-to="AC-2">
+        <title>Apply Migration to Staging</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set DATABASE_URL for staging: export DATABASE_URL="postgresql://...role_directory_stg..."
+          2. Run: npm run migrate:status (verify pending migration)
+          3. Run: npm run migrate:up
+          4. Expected: Success message
+          5. Verify tables created: psql $DATABASE_URL -c "\dt"
+          6. Expected: 10 application tables + schema_migrations
+          7. Verify migration tracked: psql $DATABASE_URL -c "SELECT * FROM schema_migrations"
+          8. Note migration timestamp for documentation
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-6" maps-to="AC-2">
+        <title>Apply Migration to Production</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. Set DATABASE_URL for production: export DATABASE_URL="postgresql://...role_directory_prd..."
+          2. Run: npm run migrate:status (verify pending migration)
+          3. Run: npm run migrate:up
+          4. Expected: Success message with production warning
+          5. Verify tables created: psql $DATABASE_URL -c "\dt"
+          6. Expected: 10 application tables + schema_migrations
+          7. Verify migration tracked: psql $DATABASE_URL -c "SELECT * FROM schema_migrations"
+          8. Note migration timestamp for documentation
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-7" maps-to="AC-2">
+        <title>Verify Schema Consistency Across Environments</title>
+        <approach>Manual Comparison</approach>
+        <steps>
+          1. Compare table counts in all environments:
+             psql $DATABASE_URL_DEV -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'"
+             psql $DATABASE_URL_STG -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'"
+             psql $DATABASE_URL_PRD -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'"
+          2. Expected: Same table count in all environments (11 tables: 10 application + schema_migrations)
+          3. Compare specific table structure (role_profiles):
+             psql $DATABASE_URL_DEV -c "\d role_profiles"
+             psql $DATABASE_URL_STG -c "\d role_profiles"
+             psql $DATABASE_URL_PRD -c "\d role_profiles"
+          4. Expected: Identical structure (columns, types, constraints, indexes)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-8" maps-to="AC-1">
+        <title>Test Sample Data Migration (Optional)</title>
+        <approach>Manual CLI Test</approach>
+        <steps>
+          1. If sample data migration created: npm run migrate:create sample_data
+          2. Edit sample_data.up.sql with INSERT statements
+          3. Run: npm run migrate:up
+          4. Verify data inserted: psql $DATABASE_URL -c "SELECT COUNT(*) FROM regions"
+          5. Expected: Sample data count matches inserts
+          6. Query joined data: psql $DATABASE_URL -c "SELECT rp.profile_name, sl.seniority_name FROM role_profiles rp JOIN seniority_levels sl ON rp.seniority_level_id = sl.seniority_level_id"
+          7. Expected: Sample role profiles with seniority displayed
+          8. Test rollback: npm run migrate:down
+          9. Expected: Sample data deleted (tables empty but still exist)
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-9" maps-to="AC-1">
+        <title>Verify Foreign Key Constraints</title>
+        <approach>Manual psql Test</approach>
+        <steps>
+          1. Attempt to insert role_profile with invalid seniority_level_id:
+             psql $DATABASE_URL -c "INSERT INTO role_profiles (profile_id, role_title, profile_name, career_level_id, seniority_level_id) VALUES ('TEST', 'Test Role', 'Test', 'L1', 'INVALID')"
+          2. Expected: Foreign key violation error
+          3. Attempt to delete seniority_level referenced by role_profile (if sample data exists):
+             psql $DATABASE_URL -c "DELETE FROM seniority_levels WHERE seniority_level_id = 'MID'"
+          4. Expected: Foreign key violation error (or CASCADE deletes role_profiles, depending on ON DELETE behavior)
+          5. Verify constraint enforces data integrity
+        </steps>
+      </test-idea>
+      <test-idea id="TEST-10" maps-to="AC-1">
+        <title>Verify Check Constraints</title>
+        <approach>Manual psql Test</approach>
+        <steps>
+          1. Attempt to insert pricing with negative annual_price:
+             psql $DATABASE_URL -c "INSERT INTO profile_pricing (pricing_id, profile_id, region_id, location_id, currency_id, price_type_id, annual_price) VALUES ('TEST', 'P1', 'R1', 'L1', 'USD', 'STD', -1000)"
+          2. Expected: Check constraint violation error (chk_annual_price)
+          3. Attempt to insert pricing with invalid tax_rate (>1):
+             psql $DATABASE_URL -c "INSERT INTO profile_pricing (..., tax_rate_decimal) VALUES (..., 1.5)"
+          4. Expected: Check constraint violation error (chk_tax_rate)
+          5. Verify constraints prevent invalid data
+        </steps>
+      </test-idea>
+    </ideas>
+  </tests>
+
+  <dev-notes>
+    <technical-context>
+      <note id="NOTE-1">
+        <title>Table Dependency Chain</title>
+        <content>10 tables created in 6 phases based on dependencies. Phase 1 (base reference): regions, currencies, price_types, seniority_levels (no FKs). Phase 2 (career progression): career_levels (FK to seniority_levels). Phase 3 (job families): job_families, career_tracks (FK to job_families). Phase 4 (locations): locations (FK to regions). Phase 5 (role profiles): role_profiles (FKs to job_families, career_tracks, career_levels, seniority_levels). Phase 6 (pricing): profile_pricing (FKs to role_profiles, regions, locations, currencies, price_types). Down migration must DROP in reverse order.</content>
+      </note>
+      <note id="NOTE-2">
+        <title>role_profiles Table - Core Entity</title>
+        <content>role_profiles is the core entity storing role definitions. Key features: regionalized names (profile_name_latam, _na, _emea, _apac, _oceania) for localization, FKs to job_families (optional), career_tracks (optional), career_levels (required), seniority_levels (required) for career progression mapping, profile_description for detailed information, automatic updated_at via trigger. Indexes on role_title, profile_name, all FKs for query performance.</content>
+      </note>
+      <note id="NOTE-3">
+        <title>profile_pricing Table - Complex Constraints</title>
+        <content>profile_pricing has complex business rules enforced by constraints. Unique constraint uk_pricing_unique prevents duplicate pricing (same profile, region, location, price_type, effective_date). Check constraints: annual_price >= 0 (no negative pricing), tax_rate_decimal BETWEEN 0 AND 1 (0-100%), markup_rate_decimal BETWEEN 0 AND 1 (0-100%), expiration_date >= effective_date (valid date range). Indexes on all FKs, is_active (for active pricing queries), effective_date (for temporal queries).</content>
+      </note>
+      <note id="NOTE-4">
+        <title>Automatic Timestamp Updates</title>
+        <content>update_updated_at_column() function created in migration for automatic timestamp updates. Function definition: CREATE OR REPLACE FUNCTION update_updated_at_column() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = CURRENT_TIMESTAMP; RETURN NEW; END; $$ language 'plpgsql'. Trigger applied to tables: role_profiles, profile_pricing (and others with updated_at). Trigger: CREATE TRIGGER update_[table]_updated_at BEFORE UPDATE ON [table] FOR EACH ROW EXECUTE FUNCTION update_updated_at_column().</content>
+      </note>
+      <note id="NOTE-5">
+        <title>Migration Execution Workflow</title>
+        <content>Apply migration to all three environments sequentially. Dev first (test thoroughly including rollback), staging second (validation before production), production last (schedule if needed). Set DATABASE_URL for each environment, run npm run migrate:status, run npm run migrate:up, verify tables created via psql, document migration timestamp. Do NOT rollback in staging/production after successful application - only test rollback in dev.</content>
+      </note>
+      <note id="NOTE-6">
+        <title>Sample Data Migration (Optional)</title>
+        <content>Sample data migration is OPTIONAL for MVP. If created, use separate migration file (20250106000001_sample_data.up.sql). Insert minimal test data: 1-2 regions, currencies, price types, seniority levels, career levels, job families, career tracks, locations, role profiles, pricing records. Rollback migration: DELETE FROM tables in reverse order (respect FK constraints). Purpose: Enable Hello World dashboard testing without manual data entry.</content>
+      </note>
+      <note id="NOTE-7">
+        <title>Schema Documentation</title>
+        <content>Document schema in docs/DATABASE.md with "Database Schema" section. Include table descriptions (10 tables), relationships (FK chains), key constraints (unique, check, FK), indexes (performance), example queries (role profiles with seniority, pricing for profile). Update README with schema summary and link to DATABASE.md. Document: "10 tables managing role profiles and pricing across regions/locations with career progression support".</content>
+      </note>
+      <note id="NOTE-8">
+        <title>Idempotency and Rollback Safety</title>
+        <content>Use CREATE TABLE IF NOT EXISTS for idempotency (migration can be run multiple times). Use DROP TABLE IF EXISTS CASCADE in rollback migration (handles dependent objects). Test rollback in dev before applying to staging/production. Rollback drops all 10 application tables plus update_updated_at_column() function. Only schema_migrations table remains after rollback.</content>
+      </note>
+    </technical-context>
+
+    <learnings-from-previous-stories>
+      <learning id="LEARN-1">
+        <from-story>Story 2.3 (Database Schema Migration Setup)</from-story>
+        <status>ready-for-dev</status>
+        <content>Migration system available with migrate:create, migrate:up, migrate:down, migrate:status commands. Migration files use [timestamp]_[name].up.sql and .down.sql format. Migrations tracked in schema_migrations table. Commands require DATABASE_URL environment variable. Bootstrap migration (000_create_schema_migrations.sql) already applied to all environments.</content>
+      </learning>
+      <learning id="LEARN-2">
+        <from-story>Story 2.1 (Neon PostgreSQL Account and Database Setup)</from-story>
+        <status>ready-for-dev</status>
+        <content>Three Neon databases available: role_directory_dev, role_directory_stg, role_directory_prd. DATABASE_URL format: postgresql://user:pass@ep-xxx.region.neon.tech/dbname?sslmode=require. Databases accessible via psql for verification. Secret Manager configured for Cloud Run (but migrations run locally via CLI for MVP).</content>
+      </learning>
+      <learning id="LEARN-3">
+        <from-story>Story 2.2 (Database Connection Configuration)</from-story>
+        <status>ready-for-dev</status>
+        <content>Database connection module (lib/db.ts) will exist after Story 2.2 with query() function. Configuration module (lib/config.ts) validates DATABASE_URL format. This migration doesn't use lib/db.ts - uses migration script directly (from Story 2.3). Future stories (Epic 4) will use lib/db.ts to query these tables.</content>
+      </learning>
+    </learnings-from-previous-stories>
+
+    <important-considerations>
+      <consideration id="CONS-A">
+        <title>Largest Single Migration</title>
+        <content>This is the largest single migration in Epic 2 - creates 10 tables with complete schema (columns, FKs, indexes, triggers, constraints). Migration file will be approximately 300-500 lines of SQL. Take time to review and test thoroughly in dev before applying to staging/production. Consider breaking into smaller migrations post-MVP if schema becomes more complex.</content>
+      </consideration>
+      <consideration id="CONS-B">
+        <title>Dependency Order is Critical</title>
+        <content>Tables MUST be created in dependency order (Phase 1-6). Creating role_profiles before career_levels will fail (FK constraint violation). Down migration MUST drop in reverse order. Use CASCADE in DROP statements to handle dependent triggers and indexes. Test rollback in dev to verify correct order.</content>
+      </consideration>
+      <consideration id="CONS-C">
+        <title>Foreign Key Performance</title>
+        <content>Every foreign key must have corresponding index for JOIN performance. Profile_pricing has 5 FKs (profile_id, region_id, location_id, currency_id, price_type_id) - all need indexes. Dashboard queries (Epic 4) will JOIN across these tables - indexes are critical for acceptable query performance.</content>
+      </consideration>
+      <consideration id="CONS-D">
+        <title>Regionalized Names Pattern</title>
+        <content>role_profiles has regionalized name columns (profile_name_latam, _na, _emea, _apac, _oceania) for localization. This is denormalized design (not separate translations table). Acceptable for MVP with 5 regions. Post-MVP: Consider normalized translations table if regions grow or need dynamic translation support.</content>
+      </consideration>
+      <consideration id="CONS-E">
+        <title>Sample Data is Optional</title>
+        <content>Sample data migration is OPTIONAL for MVP. Can test Hello World dashboard with empty tables (zero rows) or manually inserted data. If sample data migration created, keep it minimal (1-2 rows per table). Purpose is testing, not production data. Production data will be added later (Epic 5-6, post-MVP).</content>
+      </consideration>
+      <consideration id="CONS-F">
+        <title>Schema Consistency Verification</title>
+        <content>After applying migration to all three environments, VERIFY schema consistency by comparing table counts and structure. Use: SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' in each environment. Use \d table_name to compare structure. Inconsistent schemas between environments will cause deployment issues (Story 1.9, 1.10 promotions).</content>
+      </consideration>
+    </important-considerations>
+  </dev-notes>
+
+  <references>
+    <reference id="REF-1">
+      <title>PostgreSQL Foreign Key Documentation</title>
+      <url>https://www.postgresql.org/docs/17/ddl-constraints.html#DDL-CONSTRAINTS-FK</url>
+      <relevance>Foreign key syntax, ON DELETE/UPDATE options, constraint naming conventions</relevance>
+    </reference>
+    <reference id="REF-2">
+      <title>PostgreSQL Check Constraints</title>
+      <url>https://www.postgresql.org/docs/17/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS</url>
+      <relevance>Check constraint syntax for data validation (e.g., annual_price >= 0, tax_rate BETWEEN 0 AND 1)</relevance>
+    </reference>
+    <reference id="REF-3">
+      <title>PostgreSQL Triggers</title>
+      <url>https://www.postgresql.org/docs/17/sql-createtrigger.html</url>
+      <relevance>Trigger creation for automatic updated_at timestamp updates</relevance>
+    </reference>
+    <reference id="REF-4">
+      <title>PostgreSQL Indexes</title>
+      <url>https://www.postgresql.org/docs/17/indexes.html</url>
+      <relevance>Index creation for foreign keys and frequently queried columns</relevance>
+    </reference>
+  </references>
+</story-context>
+

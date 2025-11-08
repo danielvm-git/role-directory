@@ -143,12 +143,12 @@ inputs:
 **Cloud Run Service Configuration:**
 ```yaml
 Service Name: role-directory-{env}  # dev, stg, prd
-Region: us-central1
+Region: southamerica-east1
 Container Port: 8080
 CPU: 1             # Minimal for solo usage
 Memory: 512Mi      # Minimal for solo usage
 Min Instances: 0   # Scale to zero for cost optimization (all environments)
-Max Instances: 3   # Minimal for hello world + testing (all environments)
+Max Instances: 2   # Minimal for hello world + testing (all environments)
 Concurrency: 80    # Requests per container
 Timeout: 300s      # 5 minutes
 
@@ -243,12 +243,12 @@ Host: role-directory-dev-xxx.run.app
 ```bash
 gcloud run deploy role-directory-dev \
   --source . \
-  --region us-central1 \
+  --region southamerica-east1 \
   --allow-unauthenticated \
   --set-env-vars=NODE_ENV=development,PORT=8080 \
   --set-secrets=DATABASE_URL=role-directory-dev-db-url:latest \
   --min-instances=0 \
-  --max-instances=3 \
+  --max-instances=2 \
   --cpu=1 \
   --memory=512Mi \
   --timeout=300
@@ -259,12 +259,12 @@ gcloud run deploy role-directory-dev \
 # List available revisions
 gcloud run revisions list \
   --service=role-directory-dev \
-  --region=us-central1
+  --region=southamerica-east1
 
 # Rollback to specific revision
 gcloud run services update-traffic role-directory-dev \
   --to-revisions=role-directory-dev-00042-xyz=100 \
-  --region=us-central1
+  --region=southamerica-east1
 ```
 
 ### Workflows and Sequencing
@@ -407,14 +407,14 @@ Issue detected in deployed environment (dev, staging, or production)
 [Option 2] Rollback via gcloud CLI (MVP approach)
   ↓
 List available Cloud Run revisions:
-  $ gcloud run revisions list --service=role-directory-prd --region=us-central1
+  $ gcloud run revisions list --service=role-directory-prd --region=southamerica-east1
   ↓
 Identify previous stable revision (previous commit SHA)
   ↓
 Update traffic routing to previous revision:
   $ gcloud run services update-traffic role-directory-prd \
       --to-revisions=role-directory-prd-00042-xyz=100 \
-      --region=us-central1
+      --region=southamerica-east1
   ↓
 Verify rollback successful:
   $ curl https://role-directory-prd-xxx.run.app/api/health
@@ -555,7 +555,7 @@ Verify rollback successful:
 - **Implementation:**
   - Cloud Run logs: GCP Console → Cloud Run → Select Service → Logs tab
   - GitHub Actions logs: GitHub → Actions → Select Workflow Run
-  - CLI access: `gcloud run services logs read role-directory-dev --region=us-central1`
+  - CLI access: `gcloud run services logs read role-directory-dev --region=southamerica-east1`
 - **Validation:** Access logs via console and CLI, verify structured JSON format
 
 ## Dependencies and Integrations
@@ -639,7 +639,7 @@ These acceptance criteria are derived from the PRD and Epic 1 stories. All crite
 
 **AC-4: Cloud Run Dev Service (Story 1.4)**
 - ✅ Service name: `role-directory-dev`
-- ✅ Region configured (e.g., `us-central1`)
+- ✅ Region configured (e.g., `southamerica-east1`)
 - ✅ Allow unauthenticated access (public URL)
 - ✅ Environment variables configured: `NODE_ENV=development`, `PORT=8080`
 - ✅ Min instances: 0, Max instances: 3 (minimal for solo usage)
@@ -871,8 +871,8 @@ These acceptance criteria are derived from the PRD and Epic 1 stories. All crite
 7. **Rollback Test (Dev):**
    - Deploy version 1 to dev (e.g., commit "v1")
    - Deploy version 2 to dev (e.g., commit "v2")
-   - List revisions: `gcloud run revisions list --service=role-directory-dev --region=us-central1`
-   - Rollback to v1: `gcloud run services update-traffic role-directory-dev --to-revisions=role-directory-dev-00001-abc=100 --region=us-central1`
+   - List revisions: `gcloud run revisions list --service=role-directory-dev --region=southamerica-east1`
+   - Rollback to v1: `gcloud run services update-traffic role-directory-dev --to-revisions=role-directory-dev-00001-abc=100 --region=southamerica-east1`
    - Verify v1 is running: Access dev URL, verify expected content
 
 8. **End-to-End Flow Test:**

@@ -49,9 +49,9 @@ so that **I can quickly recover from failed deployments or production issues in 
 
 - [x] Task 3: Document rollback via gcloud CLI (AC: Complete gcloud commands)
   - [x] Document traffic shift command for each environment:
-    - Dev: `gcloud run services update-traffic role-directory-dev --region=us-central1 --to-revisions=[REVISION]=100`
-    - Staging: `gcloud run services update-traffic role-directory-staging --region=us-central1 --to-revisions=[REVISION]=100`
-    - Production: `gcloud run services update-traffic role-directory-production --region=us-central1 --to-revisions=[REVISION]=100`
+    - Dev: `gcloud run services update-traffic role-directory-dev --region=southamerica-east1 --to-revisions=[REVISION]=100`
+    - Staging: `gcloud run services update-traffic role-directory-staging --region=southamerica-east1 --to-revisions=[REVISION]=100`
+    - Production: `gcloud run services update-traffic role-directory-production --region=southamerica-east1 --to-revisions=[REVISION]=100`
   - [x] Document how to find [REVISION] name from previous task
   - [x] Document expected output and success indicators
   - [x] Document verification command: `gcloud run services describe [SERVICE] --format="value(status.traffic)"`
@@ -112,9 +112,9 @@ so that **I can quickly recover from failed deployments or production issues in 
   - [x] Record v2 revision name and verify it's active
   - [x] Perform rollback from v2 to v1:
     ```bash
-    gcloud run revisions list --service=role-directory-dev --region=us-central1
+    gcloud run revisions list --service=role-directory-dev --region=southamerica-east1
     gcloud run services update-traffic role-directory-dev \
-      --region=us-central1 \
+      --region=southamerica-east1 \
       --to-revisions=[V1_REVISION]=100
     ```
   - [x] Verify rollback: Health check passes, v1 behavior restored
@@ -211,7 +211,7 @@ so that **I can quickly recover from failed deployments or production issues in 
    # List revisions for a service
    gcloud run revisions list \
      --service=role-directory-dev \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --limit=10
    
    # Output format:
@@ -222,7 +222,7 @@ so that **I can quickly recover from failed deployments or production issues in 
    
    # Get image for a specific revision
    gcloud run revisions describe role-directory-dev-00004-xyz \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(spec.containers[0].image)"
    # Output: gcr.io/project-id/role-directory:dev-20231106-140000
    ```
@@ -231,22 +231,22 @@ so that **I can quickly recover from failed deployments or production issues in 
    ```bash
    # Dev environment rollback
    gcloud run services update-traffic role-directory-dev \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=role-directory-dev-00004-xyz=100
    
    # Staging environment rollback
    gcloud run services update-traffic role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=role-directory-staging-00003-abc=100
    
    # Production environment rollback
    gcloud run services update-traffic role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=role-directory-production-00008-def=100
    
    # Verify traffic shift
    gcloud run services describe role-directory-dev \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(status.traffic)"
    # Output: [{"revisionName":"role-directory-dev-00004-xyz","percent":100}]
    ```
@@ -269,7 +269,7 @@ so that **I can quickly recover from failed deployments or production issues in 
    ```bash
    # 1. Verify traffic shifted
    gcloud run services describe role-directory-dev \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --format="value(status.traffic)"
    
    # 2. Health check (dev - public)
@@ -334,13 +334,13 @@ so that **I can quickly recover from failed deployments or production issues in 
    # Verify v2 behavior (new field present)
    
    # Step 3: List revisions
-   gcloud run revisions list --service=role-directory-dev --region=us-central1
+   gcloud run revisions list --service=role-directory-dev --region=southamerica-east1
    # Identify v1 revision name (previous to current)
    
    # Step 4: Perform rollback (measure time)
    START_TIME=$(date +%s)
    gcloud run services update-traffic role-directory-dev \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=<V1_REVISION>=100
    
    # Step 5: Verify rollback

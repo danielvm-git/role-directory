@@ -58,7 +58,7 @@
         <path>docs/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-8: Cloud Run Service Setup (Production)</section>
-        <snippet>Production service: role-directory-production. Region: us-central1. Min 2 instances (high availability, no cold starts), max 10 instances. 2 CPUs, 1 GB memory (better than staging). IAM authentication required. Gen2 execution environment. CPU boost enabled. Timeout: 300s. Environment: NODE_ENV=production. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
+        <snippet>Production service: role-directory-production. Region: southamerica-east1. Min 2 instances (high availability, no cold starts), max 10 instances. 2 CPUs, 1 GB memory (better than staging). IAM authentication required. Gen2 execution environment. CPU boost enabled. Timeout: 300s. Environment: NODE_ENV=production. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
       </doc>
       <doc>
         <path>docs/2-planning/PRD.md</path>
@@ -137,7 +137,7 @@
 
   <constraints>
     - MUST create service named: role-directory-production (environment-specific naming)
-    - MUST use region: us-central1 (same as dev/staging for consistency)
+    - MUST use region: southamerica-east1 (same as dev/staging for consistency)
     - MUST set min instances: 2 (HIGH AVAILABILITY - no cold starts for production users)
     - MUST set max instances: 10 (handle traffic spikes, higher capacity than staging)
     - MUST set CPU: 2 (DOUBLE staging, better performance)
@@ -176,7 +176,7 @@
       <signature>
         Initial service creation with all production settings:
         gcloud run deploy role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --platform=managed \
           --no-allow-unauthenticated \
           --image=gcr.io/cloudrun/hello \
@@ -216,7 +216,7 @@
         
         Reference in Cloud Run:
         gcloud run services update role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --set-secrets=DATABASE_URL=production-database-url:latest
         
         CRITICAL: Production secret is isolated from dev/staging secrets
@@ -230,7 +230,7 @@
       <signature>
         Grant GitHub Actions service account access for automated deployments:
         gcloud run services add-iam-policy-binding role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --member="serviceAccount:github-actions-deployer@PROJECT_ID.iam.gserviceaccount.com" \
           --role="roles/run.invoker"
         
@@ -257,42 +257,42 @@
         
         Verify scaling (min 2, max 10):
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/minScale'])"
         Expected: 2
         
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.metadata.annotations['autoscaling.knative.dev/maxScale'])"
         Expected: 10
         
         Verify resources (2 CPU, 1 GB):
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.spec.containers[0].resources)"
         Expected: cpu: "2", memory: 1Gi
         
         Verify gen2 execution environment:
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.metadata.annotations['run.googleapis.com/execution-environment'])"
         Expected: gen2
         
         Verify CPU boost enabled:
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.metadata.annotations['run.googleapis.com/cpu-boost'])"
         Expected: true
         
         Verify environment variables:
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.spec.containers[0].env)"
         Expected: NODE_ENV=production, NEXT_PUBLIC_API_URL=[url]
         
         Verify secrets:
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(spec.template.spec.containers[0].env[].valueFrom)"
         Expected: DATABASE_URL from production-database-url secret
         
@@ -324,7 +324,7 @@
         
         Verify scaling behavior:
         gcloud run services describe role-directory-production \
-          --region=us-central1 \
+          --region=southamerica-east1 \
           --format="value(status.conditions)"
         
         Check current instance count in Cloud Console or logs

@@ -127,7 +127,7 @@ The Docker image is optimized for:
 # Cloud Build handles the Docker build automatically
 gcloud run deploy role-directory \
   --source . \
-  --region us-central1 \
+  --region southamerica-east1 \
   --allow-unauthenticated
 ```
 

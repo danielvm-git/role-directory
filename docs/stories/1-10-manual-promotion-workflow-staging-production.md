@@ -49,7 +49,7 @@ so that **I can promote fully tested changes to the production environment with 
   - [x] Document environment setup in `docs/guides/promotion-workflow-guide.md`
 
 - [x] Task 3: Configure workflow environment and permissions (AC: GCP authentication)
-  - [x] Set environment variables: `GCP_PROJECT_ID`, `GCP_REGION=us-central1`
+  - [x] Set environment variables: `GCP_PROJECT_ID`, `GCP_REGION=southamerica-east1`
   - [x] Use GitHub Secrets: `GCP_SA_KEY` (service account key for GCP)
   - [x] Set permissions: `contents: read`, `id-token: write` (for Workload Identity Federation if used)
   - [x] Configure job to run on: `ubuntu-latest`
@@ -177,7 +177,7 @@ so that **I can promote fully tested changes to the production environment with 
    
    env:
      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-     GCP_REGION: us-central1
+     GCP_REGION: southamerica-east1
      SERVICE_NAME: role-directory-production
    
    jobs:
@@ -321,7 +321,7 @@ so that **I can promote fully tested changes to the production environment with 
    # Option 3: From Cloud Run staging service
    gcloud run revisions list \
      --service=role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --limit=1 \
      --format="value(spec.containers[0].image)"
    ```
@@ -375,12 +375,12 @@ so that **I can promote fully tested changes to the production environment with 
    
    # Option 2: Manually deploy previous production revision
    gcloud run services update-traffic role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=PREVIOUS_REVISION=100
    
    # Option 3: Deploy previous production image
    gcloud run deploy role-directory-production \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --image=gcr.io/<PROJECT_ID>/role-directory:production-<PREVIOUS_TAG>
    
    # See Story 1.11 for complete rollback documentation

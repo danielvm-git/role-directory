@@ -14,7 +14,7 @@ so that **the application can be deployed and accessed via a public URL**.
 **When** I create the dev Cloud Run service  
 **Then** the following are configured:
 - Service name: `role-directory-dev`
-- Region: Selected region (e.g., `us-central1`)
+- Region: Selected region (e.g., `southamerica-east1`)
 - Allow unauthenticated access (public URL)
 - Environment variables injected: `NODE_ENV=development`, `DATABASE_URL` (placeholder initially), `PORT=8080`
 - Minimum instances: 0 (scale to zero)
@@ -35,7 +35,7 @@ so that **the application can be deployed and accessed via a public URL**.
   - [ ] Enable Secret Manager API (for secrets)
 
 - [ ] Task 2: Create Cloud Run service (AC: Service name, region, resources)
-  - [ ] Decide on region (e.g., `us-central1` for central US)
+  - [ ] Decide on region (e.g., `southamerica-east1` for central US)
   - [ ] Create service using `gcloud run deploy` or GCP Console
   - [ ] Set service name: `role-directory-dev`
   - [ ] Set region: chosen region
@@ -109,7 +109,7 @@ so that **the application can be deployed and accessed via a public URL**.
    
    # Create service (initial placeholder or wait for Story 1.5)
    gcloud run deploy role-directory-dev \
-     --region us-central1 \
+     --region southamerica-east1 \
      --allow-unauthenticated \
      --min-instances 0 \
      --max-instances 10 \
@@ -137,13 +137,13 @@ so that **the application can be deployed and accessed via a public URL**.
 3. **Inject Secrets into Cloud Run:**
    ```bash
    gcloud run services update role-directory-dev \
-     --region us-central1 \
+     --region southamerica-east1 \
      --set-secrets=DATABASE_URL=role-directory-dev-db-url:latest
    ```
 
 4. **Service Configuration Summary:**
    - **Service Name**: `role-directory-dev`
-   - **Region**: `us-central1` (or chosen region)
+   - **Region**: `southamerica-east1` (or chosen region)
    - **CPU**: 1 vCPU
    - **Memory**: 512Mi
    - **Concurrency**: 80 (default)
@@ -183,12 +183,12 @@ role-directory/
 **For This Story:**
 - **Manual Testing**: Create service via gcloud CLI or GCP Console, verify configuration
 - **Verification Steps**:
-  1. Run `gcloud run services list --region us-central1`
+  1. Run `gcloud run services list --region southamerica-east1`
   2. Verify `role-directory-dev` service appears
-  3. Check service details: `gcloud run services describe role-directory-dev --region us-central1`
+  3. Check service details: `gcloud run services describe role-directory-dev --region southamerica-east1`
   4. Verify CPU: 1, Memory: 512Mi, Min/Max instances correct
   5. Access service URL in browser (if container deployed)
-  6. Check service logs: `gcloud run services logs read role-directory-dev --region us-central1`
+  6. Check service logs: `gcloud run services logs read role-directory-dev --region southamerica-east1`
   7. Verify secrets accessible (check logs for DATABASE_URL injection)
 
 **Expected Results:**
@@ -223,7 +223,7 @@ role-directory/
 
 5. **Region Selection** (latency):
    - Choose region closest to primary users
-   - US regions: `us-central1`, `us-east1`, `us-west1`
+   - US regions: `southamerica-east1`, `us-east1`, `us-west1`
    - Consistent across all environments (dev, stg, prd)
 
 ### References
@@ -323,7 +323,7 @@ Follow docs/CLOUD_RUN_SETUP.md step-by-step
 
 **Configuration Specifications:**
 - **Service Name:** `role-directory-dev`
-- **Region:** `us-central1` (default, user can change)
+- **Region:** `southamerica-east1` (default, user can change)
 - **CPU:** 1 vCPU
 - **Memory:** 512Mi
 - **Min Instances:** 0 (scale to zero)
@@ -357,7 +357,7 @@ Follow docs/CLOUD_RUN_SETUP.md step-by-step
 5. Verify configuration matches specifications
 
 **Architectural Decisions:**
-- **Region Selection:** Default to `us-central1` (central US, good latency)
+- **Region Selection:** Default to `southamerica-east1` (central US, good latency)
   - User can change via script prompt or manual configuration
   - Should be consistent across all environments (dev/stg/prod)
 - **Scale to Zero:** Enabled for dev environment to minimize costs

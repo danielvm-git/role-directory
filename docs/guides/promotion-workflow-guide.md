@@ -73,7 +73,7 @@ Run this command to see what image is currently deployed to dev:
 ```bash
 gcloud run revisions list \
   --service=role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=1 \
   --format="value(image)"
 ```
@@ -113,7 +113,7 @@ The staging service URL is displayed in the workflow summary. You can also get i
 
 ```bash
 gcloud run services describe role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.url)"
 ```
 
@@ -127,7 +127,7 @@ TOKEN=$(gcloud auth print-identity-token)
 
 # Get staging URL
 STAGING_URL=$(gcloud run services describe role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.url)")
 
 # Health check
@@ -181,12 +181,12 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 # List recent revisions
 gcloud run revisions list \
   --service=role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=5
 
 # Route 100% traffic to previous revision
 gcloud run services update-traffic role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=<PREVIOUS_REVISION>=100
 ```
 
@@ -201,7 +201,7 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 
 # Deploy previous staging image
 gcloud run deploy role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --image=gcr.io/<PROJECT_ID>/role-directory:staging-<PREVIOUS_TAG>
 ```
 
@@ -238,8 +238,8 @@ This information is available in:
 **Cause**: Staging service didn't start properly or health endpoint is unavailable
 
 **Solution**:
-1. Check Cloud Run logs: `gcloud run services logs read role-directory-staging --region=us-central1`
-2. Verify staging service is running: `gcloud run services describe role-directory-staging --region=us-central1`
+1. Check Cloud Run logs: `gcloud run services logs read role-directory-staging --region=southamerica-east1`
+2. Verify staging service is running: `gcloud run services describe role-directory-staging --region=southamerica-east1`
 3. Check if previous revision is still serving traffic (rollback succeeded)
 4. If needed, manually test health endpoint with IAM token
 
@@ -348,7 +348,7 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 **Option 3: From Cloud Run Staging Service**
 ```bash
 gcloud run services describe role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(spec.template.spec.containers[0].image)"
 ```
 
@@ -428,7 +428,7 @@ After production promotion completes:
 ```bash
 # Get production URL
 PRODUCTION_URL=$(gcloud run services describe role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.url)")
 
 echo "Production URL: $PRODUCTION_URL"
@@ -468,7 +468,7 @@ You should see:
 ```bash
 gcloud run revisions list \
   --service=role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=3
 ```
 
@@ -502,12 +502,12 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 # List recent revisions
 gcloud run revisions list \
   --service=role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --limit=5
 
 # Rollback to specific revision
 gcloud run services update-traffic role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=PREVIOUS_REVISION=100
 ```
 
@@ -515,7 +515,7 @@ Example:
 ```bash
 # Rollback to previous revision
 gcloud run services update-traffic role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --to-revisions=role-directory-production-00008-abc=100
 ```
 
@@ -532,7 +532,7 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 
 # Deploy previous production image
 gcloud run deploy role-directory-production \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --image=gcr.io/<PROJECT_ID>/role-directory:production-<PREVIOUS_TAG>
 ```
 
@@ -562,7 +562,7 @@ gcloud run deploy role-directory-production \
 **Cause**: Production service didn't start properly
 
 **Solution**:
-1. Check Cloud Run logs: `gcloud run services logs read role-directory-production --region=us-central1`
+1. Check Cloud Run logs: `gcloud run services logs read role-directory-production --region=southamerica-east1`
 2. Verify staging was healthy (might be app issue)
 3. Check if previous revision still running (auto-rollback on failure)
 4. If critical: Use Option 2 rollback (previous revision)

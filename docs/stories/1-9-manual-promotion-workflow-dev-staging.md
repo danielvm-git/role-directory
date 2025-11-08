@@ -39,7 +39,7 @@ so that **I can promote tested changes to the staging environment with a single 
   - [x] Document workflow purpose in comments
 
 - [x] Task 2: Configure workflow environment and permissions (AC: GCP authentication)
-  - [x] Set environment variables: `GCP_PROJECT_ID`, `GCP_REGION=us-central1`
+  - [x] Set environment variables: `GCP_PROJECT_ID`, `GCP_REGION=southamerica-east1`
   - [x] Use GitHub Secrets: `GCP_SA_KEY` (service account key for GCP)
   - [x] Set permissions: `contents: read`, `id-token: write` (for Workload Identity Federation if used)
   - [x] Configure job to run on: `ubuntu-latest`
@@ -148,7 +148,7 @@ so that **I can promote tested changes to the staging environment with a single 
    
    env:
      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-     GCP_REGION: us-central1
+     GCP_REGION: southamerica-east1
      SERVICE_NAME: role-directory-staging
    
    jobs:
@@ -265,7 +265,7 @@ so that **I can promote tested changes to the staging environment with a single 
    # Option 3: From Cloud Run dev service
    gcloud run revisions list \
      --service=role-directory-dev \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --limit=1 \
      --format="value(metadata.name)"
    ```
@@ -306,12 +306,12 @@ so that **I can promote tested changes to the staging environment with a single 
    
    # Option 2: Manually deploy previous staging revision
    gcloud run services update-traffic role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --to-revisions=PREVIOUS_REVISION=100
    
    # Option 3: Deploy previous staging image
    gcloud run deploy role-directory-staging \
-     --region=us-central1 \
+     --region=southamerica-east1 \
      --image=gcr.io/<PROJECT_ID>/role-directory:staging-<PREVIOUS_TAG>
    ```
 

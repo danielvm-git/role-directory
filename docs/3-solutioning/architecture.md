@@ -3,8 +3,8 @@
 **Project:** role-directory  
 **Author:** danielvm (with Winston, Architect)  
 **Date:** 2025-11-06  
-**Last Updated:** 2025-11-07 (Post Epic 1 - Version verification dates added)  
-**Version:** 1.1
+**Last Updated:** 2025-11-08 (Regional migration: us-central1 → southamerica-east1)  
+**Version:** 1.2
 
 ---
 
@@ -72,7 +72,7 @@ git commit -m "Initial commit: Next.js 15 with TypeScript and Tailwind"
 
 ## Decision Summary
 
-**Versions Verified:** 2025-11-06 (Initial architecture) | 2025-11-07 (Post Epic 1 validation)  
+**Versions Verified:** 2025-11-06 (Initial architecture) | 2025-11-07 (Post Epic 1 validation) | 2025-11-08 (Regional migration)  
 **Next Review:** Before Epic 3 implementation (auth dependencies)
 
 | Category | Decision | Version | Verified | Affects Epics | Rationale |
@@ -87,6 +87,7 @@ git commit -m "Initial commit: Next.js 15 with TypeScript and Tailwind"
 | **Auth Provider** | Neon Auth | Latest | 2025-11-06 | Epic 3 | OAuth + session management, saves 2-3 days vs custom |
 | **Container** | Docker | 27.3.1 | 2025-11-07 | Epic 1 | Multi-stage builds for optimized images |
 | **Hosting** | GCP Cloud Run | N/A | 2025-11-07 | Epic 1, 4 | Serverless, auto-scale, free tier |
+| **Region** | southamerica-east1 (São Paulo) | N/A | 2025-11-08 | All | Co-located with database, optimized for Brazil |
 | **CI/CD** | GitHub Actions | N/A | 2025-11-07 | Epic 1 | Integrated with GitHub, free tier |
 | **Secrets (Runtime)** | Google Secret Manager | N/A | 2025-11-07 | All | 6 secrets free, runtime injection |
 | **Secrets (CI/CD)** | GitHub Secrets | N/A | 2025-11-07 | Epic 1 | Deployment credentials for CI/CD |
@@ -371,7 +372,7 @@ jobs:
         run: |
           gcloud run deploy role-directory-dev \
             --source . \
-            --region us-central1 \
+            --region southamerica-east1 \
             --allow-unauthenticated \
             --set-secrets=DATABASE_URL=role-directory-dev-db-url:latest,NEON_AUTH_SECRET_KEY=neon-auth-dev-secret:latest \
             --set-env-vars=NODE_ENV=development,NEON_AUTH_PROJECT_ID=${{ secrets.NEON_AUTH_PROJECT_ID }},ALLOWED_EMAILS=${{ secrets.ALLOWED_EMAILS_DEV }}
@@ -1114,7 +1115,7 @@ logError('Database connection failed', {
 https://console.cloud.google.com/run/detail/[region]/role-directory-dev/logs
 
 # gcloud CLI
-gcloud run services logs read role-directory-dev --region=us-central1
+gcloud run services logs read role-directory-dev --region=southamerica-east1
 
 # Filter by level
 gcloud run services logs read role-directory-dev --filter="jsonPayload.level=error"
@@ -1458,7 +1459,7 @@ ALLOWED_EMAILS_PRD          - Email whitelist for production
 **Cloud Run (All Environments Identical):**
 - Scale to zero when idle (no idle costs)
 - Minimal CPU/memory allocation (512Mi RAM, 1 CPU)
-- Max 3 instances per environment (sufficient for solo usage)
+- Max 2 instances per environment (sufficient for solo usage)
 - Request-based billing (first 2M requests/month free)
 - **All environments (dev/staging/production) use same configuration**
 
@@ -1467,7 +1468,7 @@ ALLOWED_EMAILS_PRD          - Email whitelist for production
 - 100 compute hours/month free (sufficient for MVP)
 - 3GB storage free
 
-**Total Monthly Cost:** ~$0-2/month (within free tiers, solo usage)
+**Total Monthly Cost:** ~$0-3/month (within free tiers, solo usage)
 
 ---
 
@@ -1542,12 +1543,12 @@ Manual promotion to Production:
 **Rollback Steps:**
 ```bash
 # List revisions
-gcloud run revisions list --service=role-directory-prd --region=us-central1
+gcloud run revisions list --service=role-directory-prd --region=southamerica-east1
 
 # Rollback to previous revision
 gcloud run services update-traffic role-directory-prd \
   --to-revisions=role-directory-prd-00042-xyz=100 \
-  --region=us-central1
+  --region=southamerica-east1
 
 # Verify rollback
 curl https://role-directory-prd-xxx.run.app/api/health

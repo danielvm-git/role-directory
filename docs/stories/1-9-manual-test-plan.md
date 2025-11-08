@@ -82,7 +82,7 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 **Option 3: From Cloud Run Dev Service**
 ```bash
 gcloud run services describe role-directory-dev \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(spec.template.spec.containers[0].image)"
 ```
 
@@ -185,7 +185,7 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 **Expected Result:**
 - ✅ Step uses `google-github-actions/deploy-cloudrun@v2`
 - ✅ Service name: `role-directory-staging`
-- ✅ Region: `us-central1`
+- ✅ Region: `southamerica-east1`
 - ✅ Image: `gcr.io/<PROJECT>/role-directory:staging-<timestamp>`
 - ✅ Deployment succeeds (green checkmark)
 - ✅ Service URL captured in outputs
@@ -393,7 +393,7 @@ gcloud container images list-tags gcr.io/<PROJECT_ID>/role-directory \
 **Steps:**
 ```bash
 gcloud run services describe role-directory-staging \
-  --region=us-central1 \
+  --region=southamerica-east1 \
   --format="value(status.latestReadyRevisionName,spec.template.spec.containers[0].image)"
 ```
 
