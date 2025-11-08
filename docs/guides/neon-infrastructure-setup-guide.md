@@ -834,7 +834,8 @@ gcloud run services describe role-directory-dev \
 ### Related Guides
 
 - [Neon Auth Setup Guide](neon-auth-setup-guide.md) - OAuth setup (Epic 3)
-- [Cloud Run Setup](../CLOUD_RUN_SETUP.md) - Cloud Run service configuration
+- [Cloud Run Production Setup](cloud-run-production-setup.md) - Production environment setup
+- [Cloud Run Staging Setup](cloud-run-staging-setup.md) - Staging environment setup
 
 ---
 

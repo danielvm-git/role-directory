@@ -24,7 +24,6 @@
 .DS_Store
 *.pem
 *.log
-deploy-log.txt
 
 # debug
 npm-debug.log*
@@ -33,13 +32,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # local env files
-.env
-.env*.local
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.test
+.env*
 
 # GCP credentials and service account keys
 *-key.json
@@ -71,11 +64,9 @@ tmp/
 temp/
 *.tmp
 
-# Old/archived documentation (keep /docs in version control)
-/old_docs
-
 # Cursor AI local settings (keep .cursor/rules/ for shared rules)
 #/.cursor/workbench/
 #/.cursor/local/
+!.cursor/rules/
 /.cursor/
 /bmad/
