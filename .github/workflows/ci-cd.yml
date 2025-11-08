@@ -60,6 +60,10 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: southamerica-east1
+      SERVICE_NAME: role-directory-dev
     
     steps:
       - name: Checkout code
@@ -82,7 +86,7 @@ jobs:
           DEV_TAG="dev-$(date +%Y%m%d-%H%M%S)"
           echo "DEV_TAG=$DEV_TAG" >> $GITHUB_OUTPUT
           
-          IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/role-directory"
+          IMAGE_NAME="gcr.io/${GCP_PROJECT_ID}/role-directory"
           DEV_IMAGE="$IMAGE_NAME:$DEV_TAG"
           DEV_LATEST="$IMAGE_NAME:dev-latest"
           
@@ -101,22 +105,22 @@ jobs:
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: role-directory-dev
-          region: southamerica-east1
-          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/role-directory:${{ steps.build.outputs.DEV_TAG }}
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.GCP_REGION }}
+          image: gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.build.outputs.DEV_TAG }}
           flags: |
             --allow-unauthenticated
             --set-env-vars=NODE_ENV=development
             --min-instances=0
-            --max-instances=3
+            --max-instances=2
             --cpu=1
             --memory=512Mi
 
       - name: Get Service URL
         id: get-url
         run: |
-          SERVICE_URL=$(gcloud run services describe role-directory-dev \
-            --region southamerica-east1 \
+          SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
+            --region ${GCP_REGION} \
             --format 'value(status.url)')
           echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
           echo "✅ Deployed to: $SERVICE_URL"
