@@ -2103,6 +2103,7 @@ This architecture is supported by the following operational guides:
 
 - [Docker Usage Guide](../guides/docker-usage-guide.md)
 - [Auto README Status Implementation](../guides/auto-readme-status-implementation.md)
+- [Project Structure Guide](../guides/project-structure-guide.md)
 
 > **Note:** These guides provide step-by-step instructions for implementing and operating the systems described in this architecture document.
 
