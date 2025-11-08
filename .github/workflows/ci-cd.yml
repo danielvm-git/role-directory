@@ -73,36 +73,44 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Temporarily rename Dockerfile to use buildpacks
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Build and tag Docker image
+        id: build
         run: |
-          if [ -f Dockerfile ]; then
-            mv Dockerfile Dockerfile.tmp
-            echo "Dockerfile renamed to use buildpacks"
-          fi
+          DEV_TAG="dev-$(date +%Y%m%d-%H%M%S)"
+          echo "DEV_TAG=$DEV_TAG" >> $GITHUB_OUTPUT
+          
+          IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/role-directory"
+          DEV_IMAGE="$IMAGE_NAME:$DEV_TAG"
+          DEV_LATEST="$IMAGE_NAME:dev-latest"
+          
+          echo "🐳 Building Docker image..."
+          docker build -t $DEV_IMAGE -t $DEV_LATEST .
+          
+          echo "✅ Built and tagged as: $DEV_TAG"
+          echo "✅ Built and tagged as: dev-latest"
+          
+          echo "📤 Pushing to GCR..."
+          docker push $DEV_IMAGE
+          docker push $DEV_LATEST
+          echo "✅ Images pushed to registry"
 
       - name: Deploy to Cloud Run
         id: deploy
-        run: |
-          gcloud run deploy role-directory-dev \
-            --source . \
-            --region southamerica-east1 \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-env-vars NODE_ENV=development \
-            --min-instances 0 \
-            --max-instances 3 \
-            --cpu 1 \
-            --memory 512Mi \
-            --clear-base-image \
-            --quiet
-      
-      - name: Restore Dockerfile
-        if: always()
-        run: |
-          if [ -f Dockerfile.tmp ]; then
-            mv Dockerfile.tmp Dockerfile
-            echo "Dockerfile restored"
-          fi
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: role-directory-dev
+          region: southamerica-east1
+          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/role-directory:${{ steps.build.outputs.DEV_TAG }}
+          flags: |
+            --allow-unauthenticated
+            --set-env-vars=NODE_ENV=development
+            --min-instances=0
+            --max-instances=3
+            --cpu=1
+            --memory=512Mi
 
       - name: Get Service URL
         id: get-url
@@ -173,12 +181,16 @@ jobs:
           echo "**Environment:** Dev" >> $GITHUB_STEP_SUMMARY
           echo "**Service:** role-directory-dev" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** southamerica-east1" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** \`${{ steps.build.outputs.DEV_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** ${{ steps.get-url.outputs.SERVICE_URL }}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Post-Deployment Tests:** Passed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "To promote this image to staging, run the **Promote Dev to Staging** workflow with tag: \`${{ steps.build.outputs.DEV_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
           fi
