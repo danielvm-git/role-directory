@@ -730,103 +730,103 @@
                 phase: 'phase-0', 
                 name: 'Product Brief',
                 agent: '@bmad/bmm/agents/pm',
-                command: '@bmad/bmm/agents/pm @bmad/bmm/workflows/product-brief'
+                command: '/bmad:bmm:workflows:product-brief'
             },
             'prd': { 
                 phase: 'phase-1', 
                 name: 'PRD (Product Requirements Document)',
                 agent: '@bmad/bmm/agents/pm',
-                command: '@bmad/bmm/agents/pm @bmad/bmm/workflows/prd'
+                command: '/bmad:bmm:workflows:prd'
             },
             'validate-prd': { 
                 phase: 'phase-1', 
                 name: 'Validate PRD',
                 agent: '@bmad/bmm/agents/analyst',
-                command: '@bmad/bmm/agents/analyst @bmad/bmm/workflows/prd (validation)'
+                command: '/bmad:bmm:workflows:validate-prd'
             },
             'create-epics-and-stories': { 
                 phase: 'phase-1', 
                 name: 'Create Epics and Stories',
                 agent: '@bmad/bmm/agents/pm',
-                command: '@bmad/bmm/agents/pm @bmad/bmm/workflows/create-epics-and-stories'
+                command: '/bmad:bmm:workflows:create-epics-and-stories'
             },
             'create-design': { 
                 phase: 'phase-1', 
                 name: 'Create Design',
                 agent: '@bmad/bmm/agents/ux-designer',
-                command: '@bmad/bmm/agents/ux-designer @bmad/bmm/workflows/create-ux-design'
+                command: '/bmad:bmm:workflows:create-ux-design'
             },
             'create-architecture': { 
                 phase: 'phase-2', 
                 name: 'Create Architecture',
                 agent: '@bmad/bmm/agents/architect',
-                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/architecture'
+                command: '/bmad:bmm:workflows:architecture'
             },
             'validate-architecture': { 
                 phase: 'phase-2', 
                 name: 'Validate Architecture',
                 agent: '@bmad/bmm/agents/architect',
-                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/architecture (validation)'
+                command: '/bmad:bmm:workflows:validate-architecture'
             },
             'solutioning-gate-check': { 
                 phase: 'phase-2', 
                 name: 'Solutioning Gate Check',
                 agent: '@bmad/bmm/agents/architect',
-                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/solutioning-gate-check'
+                command: '/bmad:bmm:workflows:solutioning-gate-check'
             },
             'sprint-planning': { 
                 phase: 'phase-3', 
                 name: 'Sprint Planning',
                 agent: '@bmad/bmm/agents/sm',
-                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/sprint-planning'
+                command: '/bmad:bmm:workflows:sprint-planning'
             },
             'create-story': {
                 phase: 'phase-3',
                 name: 'Create Story',
                 agent: '@bmad/bmm/agents/sm',
-                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/create-story'
+                command: '/bmad:bmm:workflows:create-story'
             },
             'story-context': {
                 phase: 'phase-3',
                 name: 'Story Context',
                 agent: '@bmad/bmm/agents/sm',
-                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/story-context'
+                command: '/bmad:bmm:workflows:story-context'
             },
             'story-ready': {
                 phase: 'phase-3',
                 name: 'Story Ready',
                 agent: '@bmad/bmm/agents/architect',
-                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/story-ready'
+                command: '/bmad:bmm:workflows:story-ready'
             },
             'dev-story': {
                 phase: 'phase-3',
                 name: 'Develop Story',
                 agent: '@bmad/bmm/agents/dev',
-                command: '@bmad/bmm/agents/dev @bmad/bmm/workflows/dev-story'
+                command: '/bmad:bmm:workflows:dev-story'
             },
             'test-story': {
                 phase: 'phase-3',
                 name: 'Test Story',
                 agent: '@bmad/bmm/agents/tea',
-                command: '@bmad/bmm/agents/tea @bmad/bmm/workflows/test-story'
+                command: '/bmad:bmm:workflows:test-story'
             },
             'code-review': {
                 phase: 'phase-3',
                 name: 'Code Review',
                 agent: '@bmad/bmm/agents/architect',
-                command: '@bmad/bmm/agents/architect @bmad/bmm/workflows/code-review'
+                command: '/bmad:bmm:workflows:code-review'
             },
             'story-done': {
                 phase: 'phase-3',
                 name: 'Story Done',
                 agent: '@bmad/bmm/agents/sm',
-                command: '@bmad/bmm/agents/sm @bmad/bmm/workflows/story-done'
+                command: '/bmad:bmm:workflows:story-done'
             },
             'document-project': {
                 phase: 'phase-3',
                 name: 'Document Project',
                 agent: '@bmad/bmm/agents/tech-writer',
-                command: '@bmad/bmm/agents/tech-writer @bmad/bmm/workflows/document-project'
+                command: '/bmad:bmm:workflows:document-project'
             }
         };
 
@@ -1057,29 +1057,29 @@
                     let agentCommand = '';
                     switch(story.status) {
                         case 'backlog':
-                            nextCommand = 'sm:create';
+                            nextCommand = 'create-story';
                             nextIcon = '📋';
-                            agentCommand = `@bmad/bmm/agents/sm *create-story ${story.id}`;
+                            agentCommand = `/bmad:bmm:workflows:create-story ${story.id}`;
                             break;
                         case 'drafted':
-                            nextCommand = 'sm:context';
+                            nextCommand = 'story-context';
                             nextIcon = '🏗️';
-                            agentCommand = `@bmad/bmm/agents/sm *story-context ${story.id}`;
+                            agentCommand = `/bmad:bmm:workflows:story-context ${story.id}`;
                             break;
                         case 'ready-for-dev':
-                            nextCommand = 'dev:dev-story';
+                            nextCommand = 'dev-story';
                             nextIcon = '💻';
-                            agentCommand = `@bmad/bmm/agents/dev *dev-story ${story.id}`;
+                            agentCommand = `/bmad:bmm:workflows:dev-story ${story.id}`;
                             break;
                         case 'in-progress':
-                            nextCommand = 'dev:continue';
+                            nextCommand = 'dev-story (continue)';
                             nextIcon = '🔄';
-                            agentCommand = `@bmad/bmm/agents/dev *continue ${story.id}`;
+                            agentCommand = `/bmad:bmm:workflows:dev-story ${story.id}`;
                             break;
                         case 'review':
-                            nextCommand = 'dev:code-review';
+                            nextCommand = 'code-review';
                             nextIcon = '👀';
-                            agentCommand = `@bmad/bmm/agents/dev *code-review ${story.id}`;
+                            agentCommand = `/bmad:bmm:workflows:code-review ${story.id}`;
                             break;
                         case 'done':
                             nextCommand = 'completed';

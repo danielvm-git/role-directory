@@ -41,7 +41,7 @@ gcloud iam service-accounts list
 
 ### Step 2: Grant Required IAM Roles
 
-Grant the service account permissions to deploy to Cloud Run:
+Grant the service account permissions to deploy to Cloud Run and push Docker images:
 
 ```bash
 # Get service account email
@@ -57,25 +57,47 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
   --role="roles/iam.serviceAccountUser"
 
-# Role 3: Artifact Registry Writer (for Cloud Build to push images)
+# Role 3: Storage Admin (CRITICAL for GCR push - added 2025-11-08)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
+  --role="roles/storage.admin"
+
+# Role 4: Artifact Registry Writer (create repos on push - added 2025-11-08)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
   --role="roles/artifactregistry.writer"
 
-# Role 4: Cloud Build Editor (for Cloud Build to run)
+# Role 5: Artifact Registry Admin (full access - optional but recommended)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
+  --role="roles/artifactregistry.admin"
+
+# Role 6: Cloud Build Editor (for build management)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
   --role="roles/cloudbuild.builds.editor"
 
-# Role 5: Storage Admin (for Cloud Build artifacts)
+# Role 7: Service Usage Consumer (use GCP APIs)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-  --role="roles/storage.admin"
+  --role="roles/serviceusage.serviceUsageConsumer"
 
 # Verify roles
 gcloud projects get-iam-policy $PROJECT_ID \
   --flatten="bindings[].members" \
   --filter="bindings.members:serviceAccount:${SERVICE_ACCOUNT_EMAIL}"
+```
+
+**Key Updates (2025-11-08):**
+- ✅ **Storage Admin**: Required to push Docker images to Google Container Registry (GCR)
+- ✅ **Artifact Registry Writer**: Required to create repositories automatically on push
+- ✅ **Artifact Registry Admin**: Provides full access for repository management
+
+**Why These Roles Are Critical:**
+Without `storage.admin`, the CI/CD workflow will fail with:
+```
+ERROR: denied: gcr.io repo does not exist. Creating on push requires 
+the artifactregistry.repositories.createOnPush permission
 ```
 
 ### Step 3: Generate Service Account Key
@@ -117,7 +139,7 @@ cat github-actions-key.json
 
 **Important:** Copy the entire JSON including curly braces `{ ... }`
 
-#### Secret 2: GCP_PROJECT_ID
+#### Secret 2: GCP_PROJECT_ID (CRITICAL - Added 2025-11-08)
 
 ```
 Name: GCP_PROJECT_ID
@@ -125,6 +147,17 @@ Value: your-project-id
 ```
 
 Use the same project ID from Story 1.4.
+
+**⚠️ CRITICAL:** This secret is REQUIRED for CI/CD to work. Without it, Docker image builds will fail with:
+```
+ERROR: failed to build: invalid tag "gcr.io//role-directory:dev-..." 
+invalid reference format
+```
+
+The workflow uses this to construct Docker image tags:
+```yaml
+IMAGE_NAME="gcr.io/${GCP_PROJECT_ID}/role-directory"
+```
 
 #### Optional Secrets (for Epic 3)
 
