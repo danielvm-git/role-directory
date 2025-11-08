@@ -213,24 +213,41 @@ jobs:
         run: |
           SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
           
-          # Work around GitHub secret masking by encoding and decoding
-          # This breaks the pattern matching GitHub uses
-          URL_ENCODED=$(echo -n "$SERVICE_URL" | base64)
-          URL_DISPLAY=$(echo "$URL_ENCODED" | base64 -d)
-          
-          # Also extract just the domain for display
-          URL_DOMAIN=$(echo "$SERVICE_URL" | sed 's|https://||' | sed 's|http://||')
+          # Generate unique token for stop-commands
+          STOP_TOKEN=$(date +%s%N)
           
           echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** Dev" >> $GITHUB_STEP_SUMMARY
-          echo "**Service:** role-directory-dev" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** southamerica-east1" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** \`${{ steps.version.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Image Tag:** \`${{ steps.build.outputs.DEV_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://${URL_DOMAIN}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Environment** | Dev |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Service** | role-directory-dev |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Region** | southamerica-east1 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`${{ steps.version.outputs.VERSION }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Image Tag** | \`${{ steps.build.outputs.DEV_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Use stop-commands to prevent URL masking
+          echo "**🌐 Service URL:**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "::stop-commands::${STOP_TOKEN}"
+          echo "${SERVICE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "::${STOP_TOKEN}::"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Backup: Code block with URL (in case stop-commands doesn't work)
+          echo "<details>" >> $GITHUB_STEP_SUMMARY
+          echo "<summary>📋 Copy URL (if masked above)</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "::stop-commands::${STOP_TOKEN}"
+          echo "${SERVICE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "::${STOP_TOKEN}::"
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
           if [ "${{ job.status }}" == "success" ]; then
             echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Post-Deployment Tests:** Passed" >> $GITHUB_STEP_SUMMARY
