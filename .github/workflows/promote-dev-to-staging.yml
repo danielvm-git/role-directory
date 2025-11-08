@@ -90,6 +90,10 @@ jobs:
           TOKEN=$(gcloud auth print-identity-token)
           STAGING_URL="${{ steps.deploy.outputs.url }}"
           
+          # Debug URL
+          echo "Debug - Raw staging URL: $STAGING_URL"
+          echo "Debug - URL length: ${#STAGING_URL}"
+          
           echo "🏥 Running health check against: $STAGING_URL/api/health"
           
           # Retry logic: Poll every 5 seconds for up to 60 seconds
