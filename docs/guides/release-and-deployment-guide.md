@@ -109,6 +109,48 @@ Create a release when:
 - ❌ Failed deployments
 - ❌ Minor bug fixes (use patch versions)
 
+### How Version Display Works
+
+The application displays version information in the bottom-right corner:
+- **Version:** From `package.json` → injected at build time → displayed as `v1.0.0`
+- **Build Time:** Timestamp when Docker image was built
+- **Commit SHA:** Git commit hash (first 7 characters)
+
+**Flow:**
+```
+package.json version → CI/CD extracts → Docker build arg → Next.js env var → App displays
+```
+
+**Example:**
+```json
+// package.json
+{
+  "version": "1.0.0"
+}
+```
+
+↓ CI/CD workflow extracts ↓
+
+```yaml
+# .github/workflows/ci-cd.yml
+VERSION=$(node -p "require('./package.json').version")
+docker build --build-arg NEXT_PUBLIC_APP_VERSION=$VERSION
+```
+
+↓ Dockerfile sets env var ↓
+
+```dockerfile
+ARG NEXT_PUBLIC_APP_VERSION=1.0.0
+ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
+```
+
+↓ App reads at runtime ↓
+
+```tsx
+// src/app/page.tsx
+const version = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';
+```
+
 ### Release Process
 
 #### Step 1: Determine Version Number
@@ -125,10 +167,37 @@ v1.0.1 - Hotfix on v1.0.0 (patch version bump)
 v2.0.0 - Breaking changes (major version bump)
 ```
 
-#### Step 2: Create Git Tag
+#### Step 2: Use the Release Script (Recommended)
+
+We provide a helper script that automates the version bump, commit, and tag creation:
 
 ```bash
-# Create annotated tag with detailed message
+# Run the release script with the version number (without 'v' prefix)
+./scripts/create-release.sh 1.0.0
+```
+
+This script will:
+1. ✅ Validate version format (semantic versioning)
+2. ✅ Update `package.json` version to `1.0.0`
+3. ✅ Update `package-lock.json` automatically
+4. ✅ Commit the version bump with message `chore: bump version to 1.0.0`
+5. ✅ Create annotated git tag `v1.0.0`
+6. ✅ Push both the commit and tag to GitHub
+7. ✅ Display next steps for creating the GitHub Release
+
+**OR Manual Process:**
+
+If you prefer to do it manually:
+
+```bash
+# Step 1: Update package.json version
+npm version 1.0.0 --no-git-tag-version
+
+# Step 2: Commit version bump
+git add package.json package-lock.json
+git commit -m "chore: bump version to 1.0.0"
+
+# Step 3: Create annotated tag with detailed message
 git tag -a v1.0.0 -m "Release v1.0.0 - Infrastructure & CI/CD Complete
 
 Epic 1 Complete: DevOps & CI/CD Foundation
@@ -169,9 +238,12 @@ Epic 1 Complete: DevOps & CI/CD Foundation
 - Registry: Artifact Registry
 - Container Size: ~150-200MB (Alpine-based)"
 
-# Push tag to GitHub
+# Step 4: Push commit and tag to GitHub
+git push origin main
 git push origin v1.0.0
 ```
+
+**Important:** The version in `package.json` MUST match the git tag version for the app to display correctly.
 
 #### Step 3: Create GitHub Release
 
