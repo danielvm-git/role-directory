@@ -3,8 +3,8 @@
 **Project:** role-directory  
 **Author:** danielvm (with Winston, Architect)  
 **Date:** 2025-11-06  
-**Last Updated:** 2025-11-08 (Regional migration: us-central1 → southamerica-east1)  
-**Version:** 1.2
+**Last Updated:** 2025-11-08 (CI/CD fixes: Dockerfile, IAM permissions, GitHub secrets)  
+**Version:** 1.3
 
 ---
 
@@ -72,7 +72,7 @@ git commit -m "Initial commit: Next.js 15 with TypeScript and Tailwind"
 
 ## Decision Summary
 
-**Versions Verified:** 2025-11-06 (Initial architecture) | 2025-11-07 (Post Epic 1 validation) | 2025-11-08 (Regional migration)  
+**Versions Verified:** 2025-11-06 (Initial architecture) | 2025-11-07 (Post Epic 1 validation) | 2025-11-08 (Regional migration + CI/CD fixes)  
 **Next Review:** Before Epic 3 implementation (auth dependencies)
 
 | Category | Decision | Version | Verified | Affects Epics | Rationale |
@@ -1484,6 +1484,89 @@ ALLOWED_EMAILS_PRD          - Email whitelist for production
 
 ---
 
+### Docker Configuration
+
+**Multi-Stage Build (Dockerfile):**
+
+```dockerfile
+# Stage 1: Build (builder)
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN mkdir -p public  # Ensure public directory exists (Next.js doesn't always create it)
+RUN npm run build
+
+# Stage 2: Production Runtime (runner)
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+USER nextjs
+EXPOSE 8080
+ENV PORT=8080
+CMD ["node", "server.js"]
+```
+
+**Key Features:**
+- ✅ Multi-stage build (smaller production image)
+- ✅ Non-root user (security best practice)
+- ✅ Handles missing `public` directory (Next.js 15 behavior)
+- ✅ Standalone output mode (optimized for containers)
+- ✅ Cloud Run standard port (8080)
+
+**Image Size:** ~150-200MB (Alpine-based)
+
+---
+
+### IAM Configuration
+
+**Service Account:** `github-actions-deployer@role-directory.iam.gserviceaccount.com`
+
+**Required IAM Roles:**
+
+| Role | Purpose | Verified |
+|------|---------|----------|
+| `roles/storage.admin` | Push Docker images to GCR | ✅ 2025-11-08 |
+| `roles/artifactregistry.writer` | Create repositories in Artifact Registry | ✅ 2025-11-08 |
+| `roles/artifactregistry.admin` | Full Artifact Registry access | ✅ 2025-11-08 |
+| `roles/run.developer` | Deploy to Cloud Run | ✅ 2025-11-06 |
+| `roles/iam.serviceAccountUser` | Act as Cloud Run service account | ✅ 2025-11-06 |
+| `roles/cloudbuild.builds.editor` | Manage Cloud Build | ✅ 2025-11-06 |
+| `roles/serviceusage.serviceUsageConsumer` | Use GCP APIs | ✅ 2025-11-06 |
+
+**Grant Commands:**
+```bash
+# Storage Admin (for GCR push)
+gcloud projects add-iam-policy-binding role-directory \
+  --member="serviceAccount:github-actions-deployer@role-directory.iam.gserviceaccount.com" \
+  --role="roles/storage.admin"
+
+# Artifact Registry Writer (for creating repos)
+gcloud projects add-iam-policy-binding role-directory \
+  --member="serviceAccount:github-actions-deployer@role-directory.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+
+# Cloud Run Developer (for deployments)
+gcloud projects add-iam-policy-binding role-directory \
+  --member="serviceAccount:github-actions-deployer@role-directory.iam.gserviceaccount.com" \
+  --role="roles/run.developer"
+```
+
+**GitHub Secrets Required:**
+
+| Secret Name | Value | Purpose |
+|-------------|-------|---------|
+| `GCP_PROJECT_ID` | `role-directory` | GCP project identifier |
+| `GCP_SERVICE_ACCOUNT_KEY` | (JSON key) | Service account credentials |
+
+---
+
 ### Deployment Flow
 
 ```
@@ -1494,14 +1577,24 @@ GitHub Actions CI/CD triggered
 1. Lint (ESLint)
 2. Type Check (TypeScript)
 3. Build (next build)
+4. Unit Tests (Vitest)
+5. E2E Tests (Playwright)
   ↓
-4. Deploy to Cloud Run (dev)
-   - gcloud run deploy --source .
-   - Cloud Build creates Docker image
+6. Build Docker Image
+   - docker build -t gcr.io/role-directory/role-directory:dev-YYYYMMDD-HHMMSS .
+   - Multi-stage build with Alpine Linux
+   - Creates optimized production image
+  ↓
+7. Push to Google Container Registry
+   - docker push gcr.io/role-directory/role-directory:dev-YYYYMMDD-HHMMSS
+   - Requires Storage Admin IAM role
+  ↓
+8. Deploy to Cloud Run (dev)
+   - gcloud run deploy --image gcr.io/.../... --region southamerica-east1
    - Image deployed to role-directory-dev
    - Secrets injected from Secret Manager
   ↓
-5. Health Check
+9. Health Check
    - GET /api/health
    - Verify 200 OK response
   ↓

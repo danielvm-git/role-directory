@@ -1,9 +1,10 @@
 # Epic Technical Specification: Foundation & Deployment Pipeline
 
-Date: 2025-11-06
-Author: danielvm
-Epic ID: 1
-Status: Draft
+Date: 2025-11-06  
+Last Updated: 2025-11-08 (CI/CD fixes: Docker, IAM, GitHub secrets)  
+Author: danielvm  
+Epic ID: 1  
+Status: Complete
 
 ---
 
@@ -471,8 +472,11 @@ Verify rollback successful:
 
 **NFR-2.2: Service Account Permissions**
 - **Requirement:** Least-privilege IAM roles for CI/CD service account
-- **Permissions Required:**
+- **Permissions Required (Updated 2025-11-08):**
   - `roles/run.developer` - Deploy to Cloud Run
+  - `roles/storage.admin` - Push Docker images to GCR (CRITICAL)
+  - `roles/artifactregistry.writer` - Create repositories on push (CRITICAL)
+  - `roles/artifactregistry.admin` - Full Artifact Registry access
   - `roles/secretmanager.secretAccessor` - Read secrets from Secret Manager
   - `roles/artifactregistry.writer` - Push Docker images to Artifact Registry
 - **Validation:** Service account cannot access unrelated GCP resources
@@ -623,8 +627,10 @@ These acceptance criteria are derived from the PRD and Epic 1 stories. All crite
 
 **AC-2: Docker Containerization (Story 1.2)**
 - ✅ `Dockerfile` with multi-stage build (build stage + production stage)
-- ✅ Node.js 22.x base image used
-- ✅ Production image size <500MB (or documented reason if larger)
+- ✅ Node.js 22-alpine base image used
+- ✅ Production image size ~150-200MB (Alpine-based optimization)
+- ✅ Handles missing `public` directory (Next.js 15 fix - 2025-11-08)
+- ✅ Creates `public` directory before build: `RUN mkdir -p public`
 - ✅ Environment variables accepted at runtime (not baked into image)
 - ✅ Container runs locally: `docker run -p 8080:8080 -e NODE_ENV=production`
 - ✅ `.dockerignore` excludes unnecessary files

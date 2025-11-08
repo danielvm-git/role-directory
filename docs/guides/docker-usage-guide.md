@@ -102,14 +102,18 @@ The Dockerfile uses a multi-stage build for optimization:
 ### Stage 1: Builder
 - Base: `node:22-alpine`
 - Installs all dependencies (including dev dependencies)
+- **Creates `public` directory** (Next.js 15 doesn't always create it if empty)
 - Builds Next.js application with standalone output
 - Generates optimized production assets
 
 ### Stage 2: Runner
 - Base: `node:22-alpine`
 - Copies only production artifacts from builder
+- Copies `public` directory (static assets, even if empty)
 - Runs as non-root user (`nextjs:nodejs`)
 - Minimal attack surface and image size
+
+**Key Fix (2025-11-08):** Added `RUN mkdir -p public` before build to handle Next.js 15 behavior where the `public` directory may not exist if there are no static assets.
 
 ## Image Optimization
 
@@ -141,6 +145,24 @@ If the image exceeds 500MB:
 1. Verify `.dockerignore` excludes `node_modules`, `.next`, `docs`
 2. Check `next.config.ts` has `output: 'standalone'`
 3. Ensure multi-stage build copies only necessary files
+
+### Build Fails: "/app/public": not found
+
+**Error:**
+```
+ERROR: failed to calculate checksum of ref: "/app/public": not found
+```
+
+**Fix:**
+This was fixed in the Dockerfile on 2025-11-08. The Dockerfile now includes:
+```dockerfile
+RUN mkdir -p public  # Before npm run build
+```
+
+If you encounter this error:
+1. Pull the latest Dockerfile from the repository
+2. Ensure you have the `public/.gitkeep` file committed
+3. Rebuild the image: `docker build -t role-directory:local .`
 
 ### Container Won't Start
 
