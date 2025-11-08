@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 PROJECT_ID="${GCP_PROJECT_ID:-}"
-REGION="${GCP_REGION:-us-central1}"
+REGION="${GCP_REGION:-southamerica-east1}"
 SERVICE_NAME="role-directory-dev"
 SECRET_NAME="role-directory-dev-db-url"
 

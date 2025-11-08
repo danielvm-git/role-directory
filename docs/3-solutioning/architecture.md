@@ -1405,6 +1405,49 @@ ALLOWED_EMAILS_PRD          - Email whitelist for production
 
 ---
 
+### Cloud Run Access Control
+
+**Access Strategy:**
+All three environments (dev, staging, production) require IAM authentication (no `--allow-unauthenticated` flag):
+
+1. **Development Environment:**
+   - ⚠️ Requires authentication for access
+   - ✅ Health checks work with Bearer token
+   - ✅ E2E tests authenticate via `gcloud auth print-identity-token`
+   - ✅ Protects development infrastructure
+
+2. **Staging Environment:**
+   - ⚠️ Requires authentication for access
+   - ✅ Pre-production validation with controlled access
+   - ✅ Stakeholder access via IAM permissions
+   - ✅ Prevents unauthorized staging access
+
+3. **Production Environment:**
+   - ⚠️ Requires authentication for access (current state)
+   - 🔮 **Future (Epic 3):** Will be made public with `--allow-unauthenticated`
+   - 🔮 **Future:** Neon Auth will handle application-level authentication
+   - 🔮 **Future:** Email whitelist will control feature access
+
+**Current Security Model:**
+- **Layer 1 (Cloud Run):** IAM-based authentication (requires Bearer token)
+- **Layer 2 (Application):** Not yet implemented (Epic 3 - Neon Auth)
+- **Layer 3 (Authorization):** Not yet implemented (Epic 3 - Email whitelist)
+- **Layer 4 (Data):** Not yet implemented (Epic 2+ - Row-level security)
+
+**Future State (Epic 3+):**
+Production will be made public (`--allow-unauthenticated`) when application-level authentication (Neon Auth) is implemented. This will allow public landing page access while protecting authenticated routes.
+
+**Accessing Services:**
+```bash
+# Get authentication token
+TOKEN=$(gcloud auth print-identity-token)
+
+# Access service with authentication
+curl -H "Authorization: Bearer $TOKEN" https://role-directory-dev-xxx.run.app/api/health
+```
+
+---
+
 ## Performance Considerations
 
 ### Cold Start Optimization

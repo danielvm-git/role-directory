@@ -43,7 +43,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SERVICE_NAME="role-directory-production"
-REGION="us-central1"
+REGION="southamerica-east1"
 MIN_INSTANCES=2
 MAX_INSTANCES=10
 CPU=2

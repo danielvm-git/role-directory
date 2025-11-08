@@ -39,7 +39,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SERVICE_NAME="role-directory-staging"
-REGION="us-central1"
+REGION="southamerica-east1"
 MIN_INSTANCES=1
 MAX_INSTANCES=3
 CPU=1
