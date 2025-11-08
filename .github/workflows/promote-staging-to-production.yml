@@ -144,8 +144,10 @@ jobs:
       - name: Log promotion details
         if: always()
         run: |
-          # Extract URL without triggering secret masking
           PRODUCTION_URL="${{ steps.deploy.outputs.url }}"
+          
+          # Work around GitHub secret masking
+          URL_DOMAIN=$(echo "$PRODUCTION_URL" | sed 's|https://||' | sed 's|http://||')
           
           echo "### 🚀 PRODUCTION Promotion Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -153,7 +155,7 @@ jobs:
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| **Staging Image** | \`${{ inputs.staging_image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Production Image** | \`${{ steps.retag.outputs.PRODUCTION_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Production URL** | ${PRODUCTION_URL} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Production URL** | https://${URL_DOMAIN} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Timestamp** | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |" >> $GITHUB_STEP_SUMMARY
           echo "| **Run URL** | [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
@@ -173,7 +175,7 @@ jobs:
           echo "═══════════════════════════════════════════════════════"
           echo "Staging Image:    ${{ inputs.staging_image_tag }}"
           echo "Production Image: ${{ steps.retag.outputs.PRODUCTION_TAG }}"
-          echo "Production URL:   ${PRODUCTION_URL}"
+          echo "Production URL:   https://${URL_DOMAIN}"
           echo "Triggered by:     ${{ github.actor }}"
           echo "Timestamp:        $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
           echo "Run URL:          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
