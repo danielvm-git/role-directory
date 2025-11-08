@@ -69,4 +69,5 @@ temp/
 #/.cursor/local/
 !.cursor/rules/
 /.cursor/
-/bmad/periodic_table.sql
+/bmad/
+periodic_table.sql
