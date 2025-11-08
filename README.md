@@ -5,8 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15.0.3-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue)](https://www.typescriptlang.org/)
-[![PRD Validation](https://img.shields.io/badge/PRD%20Validation-99.6%25-brightgreen)](docs/2-planning/validation-report-2025-11-06.md)
-[![Architecture Score](https://img.shields.io/badge/Architecture-100%2F100-success)](docs/3-solutioning/architecture-validation-report-2025-11-06.md)
+[![PRD Validation](https://img.shields.io/badge/PRD%20Validation-99.6%25-brightgreen)](docs/reports/prd-validation-2025-11-06.md)
+[![Architecture Score](https://img.shields.io/badge/Architecture-100%2F100-success)](docs/reports/architecture-validation-report-2025-11-06.md)
 
 ---
 
@@ -323,8 +323,10 @@ Start here:
 **2. Set Up Infrastructure**
 
 Follow these guides in order:
-1. [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - Database & Cloud Run
-2. [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
+1. [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL databases
+2. [Cloud Run Setup](docs/guides/cloud-run-setup.md) - Cloud Run services
+3. [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline
+4. [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth authentication
 
 **3. Implement Stories**
 
@@ -382,9 +384,9 @@ After authentication, you'll see:
 ### Operational Documentation
 
 **Deployment Workflows:**
-- [Promotion Workflow Guide](docs/guides/promotion-workflow-guide.md) - Manual promotion procedures (dev → staging → production)
-- [Cloud Run Setup](docs/CLOUD_RUN_SETUP.md) - Initial Cloud Run service configuration
-- [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md) - CI/CD pipeline configuration
+- [Release and Deployment Guide](docs/guides/release-and-deployment-guide.md) - Complete deployment procedures
+- [Cloud Run Setup](docs/guides/cloud-run-setup.md) - Cloud Run service configuration (all environments)
+- [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
 
 **Recovery Procedures:**
 - **[Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy)** - How to rollback deployments in any environment
@@ -393,9 +395,10 @@ After authentication, you'll see:
   - Tested procedures for dev, staging, and production
 
 **Infrastructure Guides:**
-- [Docker Setup](docs/DOCKER.md) - Containerization and local development
-- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (dev, staging, production)
+- [Docker Usage Guide](docs/guides/docker-usage-guide.md) - Containerization and local development
+- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (all environments)
 - [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
+- [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - Container image storage
 
 ### Quick Operational Reference
 
@@ -408,7 +411,7 @@ git push origin main
 **Promote Staging to Production:**
 ```bash
 # Manually triggered via GitHub Actions
-# See: docs/guides/promotion-workflow-guide.md
+# See: docs/guides/release-and-deployment-guide.md
 ```
 
 **Rollback Production:**
@@ -438,22 +441,28 @@ See [Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy) 
 - [Product Brief](docs/1-discovery/product-brief-role-directory-2025-11-06.md) - Vision & goals
 - [PRD](docs/2-planning/PRD.md) - Product requirements (1,225 lines)
 - [Epics & Stories](docs/2-planning/epics.md) - Implementation breakdown (32 stories)
-- [PRD Validation Report](docs/2-planning/validation-report-2025-11-06.md) - 99.6% pass rate
+- [PRD Validation Report](docs/reports/prd-validation-2025-11-06.md) - 99.6% pass rate
 
 **Architecture & Design:**
 - [Architecture Document](docs/3-solutioning/architecture.md) - Technical design (1,913 lines)
-- [Architecture Validation](docs/3-solutioning/architecture-validation-report-2025-11-06.md) - 100/100 score
-- [Implementation Readiness](docs/3-solutioning/implementation-readiness-report-2025-11-06.md) - 98/100 confidence
-- [Zod Implementation Summary](docs/3-solutioning/ZODS-IMPLEMENTATION-SUMMARY.md) - Config management
+- [Architecture Validation](docs/reports/architecture-validation-report-2025-11-06.md) - 100/100 score
+- [Implementation Readiness](docs/reports/implementation-readiness-report-2025-11-06.md) - 98/100 confidence
+- [Tech Spec Epic 1](docs/3-solutioning/tech-spec-epic-1.md) - Foundation & deployment
+- [Tech Spec Epic 2](docs/3-solutioning/tech-spec-epic-2.md) - Database infrastructure
 
-**Setup Guides:**
-- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - Step-by-step PostgreSQL & Cloud Run
-- [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration guide
-- [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - Migration from GCR to Artifact Registry
+**Setup & Operations:**
+- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (all environments)
+- [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
+- [Cloud Run Setup](docs/guides/cloud-run-setup.md) - Cloud Run services (all environments)
+- [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
+- [Docker Usage Guide](docs/guides/docker-usage-guide.md) - Local development and containerization
+- [Release and Deployment Guide](docs/guides/release-and-deployment-guide.md) - Deployment procedures and promotions
+- [Version Management](docs/guides/version-management.md) - Version control and release process
+- [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - GCR to Artifact Registry migration
 
 **Project Status:**
 - [Workflow Status](docs/bmm-workflow-status.yaml) - Current phase tracking
-- [Documentation Audit](docs/DOCUMENTATION-AUDIT-REPORT-2025-11-06.md) - Quality assessment (94.2/100)
+- [Documentation Audit](docs/reports/documentation-audit-2025-11-06.md) - Quality assessment (94.2/100)
 
 ---
 

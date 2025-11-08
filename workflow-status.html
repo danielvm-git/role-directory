@@ -413,48 +413,6 @@
             gap: 0.25rem;
         }
 
-        .workflow-model {
-            font-size: 0.7rem;
-            margin-top: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .model-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 0.65rem;
-            white-space: nowrap;
-        }
-
-        .model-sonnet {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: 1px solid #5a67d8;
-        }
-
-        .model-haiku {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: 1px solid #059669;
-        }
-
-        .model-variable {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            border: 1px solid #d97706;
-        }
-
-        .model-reason {
-            font-size: 0.65rem;
-            color: #57606a;
-            font-style: italic;
-        }
 
         .workflow-command {
             font-size: 0.7rem;
@@ -660,29 +618,6 @@
             gap: 0.5rem;
         }
 
-        .model-legend {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            font-size: 0.7rem;
-            align-items: center;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .legend-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.2rem 0.4rem;
-            border-radius: 3px;
-            font-weight: 600;
-            font-size: 0.65rem;
-        }
 
         .refreshing {
             animation: pulse 1s ease-in-out;
@@ -734,21 +669,6 @@
 
         <footer>
             <div class="footer-content">
-                <div class="model-legend">
-                    <span style="font-weight: 600;">🤖 Model Recommendations:</span>
-                    <div class="legend-item">
-                        <span class="legend-badge model-sonnet">🧠 Sonnet 4.5</span>
-                        <span>Complex tasks, planning, architecture</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-badge model-haiku">⚡ Haiku 4.5</span>
-                        <span>Simple tasks, reviews, validations (90% cheaper!)</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-badge model-variable">🎯 Variable</span>
-                        <span>Try Haiku first, upgrade to Sonnet if needed</span>
-                    </div>
-                </div>
                 <p>Auto-refresh: Every 10 minutes | 📄 Sources: docs/bmm-workflow-status.yaml & docs/sprint-status.yaml</p>
             </div>
         </footer>
@@ -815,26 +735,6 @@
             { key: 'phase-3', title: 'Phase 3: Implementation', icon: '⚡', badge: null }
         ];
 
-        // Model recommendations for each workflow
-        const MODEL_RECOMMENDATIONS = {
-            'product-brief': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Complex planning' },
-            'prd': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Complex planning' },
-            'validate-prd': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Quality critical' },
-            'create-epics-and-stories': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Complex planning' },
-            'create-design': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Design decisions' },
-            'create-architecture': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Architecture critical' },
-            'validate-architecture': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Quality critical' },
-            'solutioning-gate-check': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Quality gate' },
-            'sprint-planning': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Strategic planning' },
-            'create-story': { model: 'Haiku 4.5', icon: '⚡', reason: 'Simple task' },
-            'story-context': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Context analysis' },
-            'story-ready': { model: 'Haiku 4.5', icon: '⚡', reason: 'Validation check' },
-            'dev-story': { model: 'Variable', icon: '🎯', reason: 'Depends on complexity' },
-            'test-story': { model: 'Haiku 4.5', icon: '⚡', reason: 'Test execution' },
-            'code-review': { model: 'Haiku 4.5', icon: '⚡', reason: 'Review existing code' },
-            'story-done': { model: 'Haiku 4.5', icon: '⚡', reason: 'Simple validation' },
-            'document-project': { model: 'Sonnet 4.5', icon: '🧠', reason: 'Documentation quality' }
-        };
 
         const WORKFLOW_MAPPING = {
             'product-brief': { 
@@ -1020,27 +920,6 @@
                             ? `<div class="workflow-agent">👤 Agent: ${workflow.agent}</div>`
                             : '';
                         
-                        // Get model recommendation
-                        const workflowKey = Object.keys(WORKFLOW_MAPPING).find(key => 
-                            WORKFLOW_MAPPING[key].name === workflow.name
-                        );
-                        const modelRec = workflowKey ? MODEL_RECOMMENDATIONS[workflowKey] : null;
-                        
-                        let modelHtml = '';
-                        if (modelRec) {
-                            const modelClass = modelRec.model.toLowerCase().includes('sonnet') ? 'model-sonnet' 
-                                             : modelRec.model.toLowerCase().includes('haiku') ? 'model-haiku'
-                                             : 'model-variable';
-                            modelHtml = `
-                                <div class="workflow-model">
-                                    <span class="model-badge ${modelClass}">
-                                        ${modelRec.icon} ${modelRec.model}
-                                    </span>
-                                    <span class="model-reason">${modelRec.reason}</span>
-                                </div>
-                            `;
-                        }
-                        
                         const commandHtml = workflow.command
                             ? `<div class="workflow-command" onclick="copyToClipboard('${workflow.command}', event)" title="Click to copy">
                                 <span class="command-text">${workflow.command}</span>
@@ -1055,7 +934,6 @@
                                     <div class="workflow-name">${workflow.name}</div>
                                     ${pathHtml}
                                     ${agentHtml}
-                                    ${modelHtml}
                                     ${commandHtml}
                                 </div>
                                 <span class="status-badge status-${workflow.status.type}">${workflow.status.badge}</span>
@@ -1188,61 +1066,38 @@
                     let nextCommand = '';
                     let nextIcon = '';
                     let agentCommand = '';
-                    let modelRec = null;
                     
                     switch(story.status) {
                         case 'backlog':
                             nextCommand = 'create-story';
                             nextIcon = '📋';
                             agentCommand = `/bmad:bmm:workflows:create-story ${story.id}`;
-                            modelRec = { model: 'Haiku 4.5', icon: '⚡', reason: 'Simple task' };
                             break;
                         case 'drafted':
                             nextCommand = 'story-context';
                             nextIcon = '🏗️';
                             agentCommand = `/bmad:bmm:workflows:story-context ${story.id}`;
-                            modelRec = { model: 'Sonnet 4.5', icon: '🧠', reason: 'Context analysis' };
                             break;
                         case 'ready-for-dev':
                             nextCommand = 'dev-story';
                             nextIcon = '💻';
                             agentCommand = `/bmad:bmm:workflows:dev-story ${story.id}`;
-                            modelRec = { model: 'Try Haiku first', icon: '🎯', reason: 'Simple→Haiku, Complex→Sonnet' };
                             break;
                         case 'in-progress':
                             nextCommand = 'dev-story (continue)';
                             nextIcon = '🔄';
                             agentCommand = `/bmad:bmm:workflows:dev-story ${story.id}`;
-                            modelRec = { model: 'Keep same model', icon: '🎯', reason: 'Continue with current' };
                             break;
                         case 'review':
                             nextCommand = 'code-review';
                             nextIcon = '👀';
                             agentCommand = `/bmad:bmm:workflows:code-review ${story.id}`;
-                            modelRec = { model: 'Haiku 4.5', icon: '⚡', reason: 'Review existing code' };
                             break;
                         case 'done':
                             nextCommand = 'completed';
                             nextIcon = '✅';
                             agentCommand = `✅ Story completed`;
-                            modelRec = null;
                             break;
-                    }
-                    
-                    // Model recommendation HTML
-                    let modelHtml = '';
-                    if (modelRec) {
-                        const modelClass = modelRec.model.toLowerCase().includes('sonnet') ? 'model-sonnet' 
-                                         : modelRec.model.toLowerCase().includes('haiku') ? 'model-haiku'
-                                         : 'model-variable';
-                        modelHtml = `
-                            <div class="workflow-model">
-                                <span class="model-badge ${modelClass}">
-                                    ${modelRec.icon} ${modelRec.model}
-                                </span>
-                                <span class="model-reason">${modelRec.reason}</span>
-                            </div>
-                        `;
                     }
                     
                     storiesHtml += `
@@ -1259,7 +1114,6 @@
                                 <div class="workflow-content">
                                     <div class="workflow-name">Next Action</div>
                                     <div class="workflow-path">${nextCommand}</div>
-                                    ${modelHtml}
                                 </div>
                             </div>
                             <button class="copy-btn" onclick="copyToClipboard('${agentCommand.replace(/'/g, "\\'")}', event)" title="${agentCommand}">
