@@ -3,6 +3,16 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Accept build arguments for version info
+ARG NEXT_PUBLIC_APP_VERSION=1.0.0
+ARG NEXT_PUBLIC_BUILD_TIME=unknown
+ARG NEXT_PUBLIC_COMMIT_SHA=local
+
+# Set environment variables for build
+ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
+ENV NEXT_PUBLIC_BUILD_TIME=$NEXT_PUBLIC_BUILD_TIME
+ENV NEXT_PUBLIC_COMMIT_SHA=$NEXT_PUBLIC_COMMIT_SHA
+
 # Copy package files
 COPY package*.json ./
 

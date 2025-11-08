@@ -80,6 +80,13 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev
 
+      - name: Extract version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Package version: $VERSION"
+
       - name: Build and tag Docker image
         id: build
         run: |
@@ -90,8 +97,20 @@ jobs:
           DEV_IMAGE="$IMAGE_NAME:$DEV_TAG"
           DEV_LATEST="$IMAGE_NAME:dev-latest"
           
-          echo "🐳 Building Docker image..."
-          docker build -t $DEV_IMAGE -t $DEV_LATEST .
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          echo "🐳 Building Docker image with version info..."
+          echo "  Version: ${{ steps.version.outputs.VERSION }}"
+          echo "  Build Time: $BUILD_TIME"
+          echo "  Commit SHA: ${{ github.sha }}"
+          
+          docker build \
+            --build-arg NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.VERSION }} \
+            --build-arg NEXT_PUBLIC_BUILD_TIME="$BUILD_TIME" \
+            --build-arg NEXT_PUBLIC_COMMIT_SHA=${{ github.sha }} \
+            -t $DEV_IMAGE \
+            -t $DEV_LATEST \
+            .
           
           echo "✅ Built and tagged as: $DEV_TAG"
           echo "✅ Built and tagged as: dev-latest"
@@ -207,6 +226,7 @@ jobs:
           echo "**Environment:** Dev" >> $GITHUB_STEP_SUMMARY
           echo "**Service:** role-directory-dev" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** southamerica-east1" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.version.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Image Tag:** \`${{ steps.build.outputs.DEV_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://${URL_DOMAIN}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
