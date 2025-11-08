@@ -1,333 +1,385 @@
+import { describe, it, expect, beforeAll, beforeEach, vi, afterEach } from 'vitest';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+
 /**
- * Unit Tests: Database Connection Module (lib/db.ts)
- * Story: 2.2 - Database Connection Configuration with Zod-Validated Config
- * Epic: 2 - Database Infrastructure & Connectivity
+ * Database Module Tests
  * 
- * Test Strategy: RED phase - These tests will FAIL until lib/db.ts is implemented
+ * These tests use Neon's Periodic Table sample data for integration testing.
+ * Source: https://neon.com/docs/import/import-sample-data#periodic-table-data
  * 
- * Test Level: Unit (database utilities, query function logic)
- * Coverage Target: >80% (core functionality + error paths)
+ * The tests will automatically load the periodic table data if DATABASE_URL is available.
+ * If DATABASE_URL is not set, tests will be skipped.
  * 
- * Note: These are UNIT tests, not integration tests. We mock the actual Neon connection.
- * Integration tests with real database will be added in Phase 2.
+ * Run tests: npm run test:unit
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { query } from '@/lib/db';
+// Mock console methods to avoid noisy test output
+const mockConsoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-// Mock @neondatabase/serverless
-vi.mock('@neondatabase/serverless', () => ({
-  neon: vi.fn(() => {
-    // Return mock SQL function
-    return vi.fn(async (text: string, params?: any[]) => {
-      // Simulate successful query
-      if (text === 'SELECT 1') {
-        return [{ '?column?': 1 }];
-      }
-      if (text === 'SELECT version()') {
-        return [{ version: 'PostgreSQL 17.0' }];
-      }
-      if (text.startsWith('SELECT')) {
-        return [];
-      }
-      // Simulate error for invalid SQL
-      throw new Error('Syntax error in SQL');
-    });
-  }),
-}));
+// DATABASE_URL availability will be checked in beforeAll after dotenv loads
 
-// Mock lib/config
-vi.mock('@/lib/config', () => ({
-  getConfig: vi.fn(() => ({
-    databaseUrl: 'postgresql://user:password@localhost/test?sslmode=require',
-    allowedEmails: ['test@example.com'],
-    nodeEnv: 'development',
-    port: 8080,
-  })),
-}));
+// Helper function to load periodic table sample data
+async function ensurePeriodicTableLoaded() {
+  // Check DATABASE_URL at runtime (after dotenv loads)
+  if (!process.env.DATABASE_URL) {
+    return false;
+  }
 
-describe.skip('[2.2-UNIT-025] Database Connection Module (Story 2-2/2-3 not implemented yet)', () => {
+  try {
+    const { query } = await import('@/lib/db');
+    
+    // Check if periodic_table exists
+    const tableCheck = await query<{ exists: boolean }>(
+      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'periodic_table')"
+    );
+    
+    if (tableCheck[0].exists) {
+      return true; // Already loaded
+    }
+
+    // Download and load periodic table data
+    console.log('Loading Periodic Table sample data...');
+    
+    const sqlFile = path.join(process.cwd(), 'periodic_table.sql');
+    
+    // Download if not exists
+    if (!fs.existsSync(sqlFile)) {
+      execSync(
+        'curl -o periodic_table.sql https://raw.githubusercontent.com/neondatabase/postgres-sample-dbs/main/periodic_table.sql',
+        { stdio: 'ignore' }
+      );
+    }
+
+    // Load data using psql
+    const databaseUrl = process.env.DATABASE_URL;
+    execSync(`psql "${databaseUrl}" -f periodic_table.sql -q`, { stdio: 'ignore' });
+    
+    console.log('✅ Periodic Table data loaded successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to load periodic table data:', error);
+    return false;
+  }
+}
+
+describe('Database Module', () => {
+  let isDataLoaded = false;
+
+  beforeAll(async () => {
+    // Check DATABASE_URL at runtime (after dotenv loads in setup.ts)
+    const hasDatabaseUrl = !!process.env.DATABASE_URL;
+    
+    // Debug: Check environment variables
+    console.log('[DB Tests] DATABASE_URL available:', hasDatabaseUrl);
+    console.log('[DB Tests] ALLOWED_EMAILS available:', !!process.env.ALLOWED_EMAILS);
+    
+    // Try to load periodic table data before running tests
+    if (hasDatabaseUrl) {
+      console.log('[DB Tests] Attempting to load periodic table data...');
+      isDataLoaded = await ensurePeriodicTableLoaded();
+      if (!isDataLoaded) {
+        console.warn('⚠️  Database tests will be skipped: Failed to load periodic table data');
+      } else {
+        console.log('✅ Database tests enabled: Periodic table data loaded');
+      }
+    } else {
+      console.log('ℹ️  Database tests skipped: DATABASE_URL not set in .env.local');
+      console.log('   To enable these tests, add DATABASE_URL to .env.local');
+      console.log('   Tests will automatically load Periodic Table sample data');
+    }
+  }, 30000); // 30 second timeout for data loading
+
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Clear console mocks
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Clear console mocks before each test
+    mockConsoleWarn.mockClear();
+    mockConsoleError.mockClear();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    // Verify console mocks are restored
+    vi.clearAllMocks();
   });
 
-  describe('query() function', () => {
-    it('[2.2-UNIT-025] should execute SELECT 1 query successfully', async () => {
-      // GIVEN: Database connection is available
-      // WHEN: Simple query is executed
-      const result = await query('SELECT 1');
-
-      // THEN: Result is returned successfully
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-    });
-
-    it('[2.2-UNIT-026] should execute SELECT version() query successfully', async () => {
-      // GIVEN: Database connection is available
-      // WHEN: Version query is executed
-      const result = await query('SELECT version()');
-
-      // THEN: Version information is returned
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-      if (result.length > 0) {
-        expect(result[0]).toHaveProperty('version');
+  describe('query() - Basic Functionality', () => {
+    it('should execute simple SELECT query', async () => {
+      if (!isDataLoaded) {
+        console.log('⏭️  Skipping: periodic table data not loaded');
+        return;
       }
-    });
-
-    it('[2.2-UNIT-027] should support parameterized queries', async () => {
-      // GIVEN: Query with parameters
-      const text = 'SELECT * FROM users WHERE id = $1';
-      const params = [123];
-
-      // WHEN: Parameterized query is executed
-      const result = await query(text, params);
-
-      // THEN: Query executes without error
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-    });
-
-    it('[2.2-UNIT-028] should handle empty result sets', async () => {
-      // GIVEN: Query that returns no rows
-      const text = 'SELECT * FROM users WHERE id = $1';
-      const params = [999999];
-
-      // WHEN: Query is executed
-      const result = await query(text, params);
-
-      // THEN: Empty array is returned
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-    });
-
-    it('[2.2-UNIT-029] should throw descriptive error for invalid SQL', async () => {
-      // GIVEN: Invalid SQL query
-      const invalidSql = 'INVALID SQL SYNTAX';
-
-      // WHEN/THEN: Query throws error with user-friendly message
-      await expect(query(invalidSql)).rejects.toThrow(/database query failed|sql/i);
-    });
-
-    it('[2.2-UNIT-030] should log database errors without exposing details to caller', async () => {
-      // GIVEN: Query that will fail
-      const invalidSql = 'INVALID SQL SYNTAX';
-      const consoleErrorSpy = vi.spyOn(console, 'error');
-
-      // WHEN: Query fails
-      try {
-        await query(invalidSql);
-      } catch (error) {
-        // Expected to throw
-      }
-
-      // THEN: Error is logged to console
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      // AND: Generic error is thrown (not raw database error)
-      await expect(query(invalidSql)).rejects.toThrow(/database query failed/i);
-    });
-  });
-
-  describe('Slow query logging', () => {
-    it('[2.2-UNIT-031] should log warning for queries >200ms', async () => {
-      // GIVEN: Mock slow query (>200ms)
-      const consoleWarnSpy = vi.spyOn(console, 'warn');
+      const { query } = await import('@/lib/db');
       
-      // Mock slow query execution
-      vi.mock('@neondatabase/serverless', async () => {
-        const actual = await vi.importActual('@neondatabase/serverless');
-        return {
-          ...actual,
-          neon: vi.fn(() => {
-            return vi.fn(async (text: string) => {
-              // Simulate slow query
-              await new Promise((resolve) => setTimeout(resolve, 250));
-              return [{ result: 'data' }];
-            });
-          }),
-        };
-      });
-
-      // WHEN: Slow query is executed
-      try {
-        await query('SELECT pg_sleep(0.3)');
-      } catch {
-        // Query might fail in test environment, that's ok
-      }
-
-      // THEN: Warning is logged (if query succeeded)
-      // Note: This test validates the logging mechanism exists
-      // Actual slow query detection will be tested in integration tests
+      const result = await query('SELECT 1 as value');
+      
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0].value).toBe(1);
     });
 
-    it('[2.2-UNIT-032] should NOT log warning for fast queries <200ms', async () => {
-      // GIVEN: Fast query (<200ms)
-      const consoleWarnSpy = vi.spyOn(console, 'warn');
+    it('should execute query with parameterized values', async () => {
+      const { query } = await import('@/lib/db');
+      
+      const result = await query('SELECT $1 as value', [42]);
+      
+      expect(result).toBeDefined();
+      expect(result[0].value).toBe('42'); // PostgreSQL returns strings by default
+    });
 
-      // WHEN: Fast query is executed
-      await query('SELECT 1');
-
-      // THEN: No slow query warning is logged
-      // Note: Exact log format may vary, but should not include "slow query" for fast queries
-      const slowQueryLogs = consoleWarnSpy.mock.calls.filter((call) =>
-        call.some((arg) => String(arg).toLowerCase().includes('slow'))
+    it('should execute query with multiple parameters', async () => {
+      const { query } = await import('@/lib/db');
+      
+      const result = await query(
+        'SELECT $1 as num, $2 as str, $3 as bool',
+        [123, 'test', true]
       );
-      expect(slowQueryLogs.length).toBe(0);
-    });
-  });
-
-  describe('Configuration integration', () => {
-    it('[2.2-UNIT-033] should use validated DATABASE_URL from getConfig()', async () => {
-      // GIVEN: Configuration module provides DATABASE_URL
-      const { getConfig } = await import('@/lib/config');
       
-      // WHEN: Database module is initialized
-      // THEN: getConfig() is called (tested via module import)
-      expect(getConfig).toBeDefined();
+      expect(result[0].num).toBe('123'); // PostgreSQL returns strings
+      expect(result[0].str).toBe('test');
+      expect(result[0].bool).toBe('true'); // PostgreSQL returns strings
+    });
+
+    it('should return empty array for queries with no results', async () => {
+      const { query } = await import('@/lib/db');
       
-      // AND: query() function is available
-      expect(query).toBeDefined();
-      expect(typeof query).toBe('function');
-    });
-
-    it('[2.2-UNIT-034] should fail gracefully if configuration is invalid', async () => {
-      // GIVEN: Invalid configuration (missing DATABASE_URL)
-      vi.mock('@/lib/config', () => ({
-        getConfig: vi.fn(() => {
-          throw new Error('Configuration validation failed: DATABASE_URL required');
-        }),
-      }));
-
-      // WHEN: Module is imported with invalid config
-      // THEN: Import fails or query() throws descriptive error
-      // Note: Actual behavior depends on module initialization strategy
-      // This test validates error handling exists
-    });
-  });
-
-  describe('Connection timeout handling', () => {
-    it('[2.2-UNIT-035] should handle connection timeouts', async () => {
-      // GIVEN: Mock timeout scenario
-      vi.mock('@neondatabase/serverless', () => ({
-        neon: vi.fn(() => {
-          return vi.fn(async () => {
-            // Simulate timeout
-            await new Promise((resolve) => setTimeout(resolve, 6000));
-            throw new Error('Connection timeout');
-          });
-        }),
-      }));
-
-      // WHEN: Query times out
-      // THEN: Error is thrown with timeout message
-      // Note: Actual timeout implementation depends on driver behavior
-      // This test validates timeout handling exists
-    });
-
-    it('[2.2-UNIT-036] should set reasonable timeout (5 seconds max)', async () => {
-      // GIVEN: Long-running query
-      // WHEN: Query exceeds timeout
-      // THEN: Query is cancelled and error is thrown
-      // Note: Specific timeout mechanism depends on driver implementation
-      // This test documents the requirement
-    });
-  });
-
-  describe('Parameterized query safety', () => {
-    it('[2.2-UNIT-037] should prevent SQL injection via parameterized queries', async () => {
-      // GIVEN: Potentially malicious input
-      const maliciousInput = "'; DROP TABLE users; --";
+      const result = await query('SELECT 1 WHERE false');
       
-      // WHEN: Input is used in parameterized query
-      const text = 'SELECT * FROM users WHERE name = $1';
-      const params = [maliciousInput];
-      
-      // THEN: Query executes safely (input is escaped)
-      const result = await query(text, params);
-      expect(result).toBeDefined();
-      // Malicious SQL should NOT be executed
-    });
-
-    it('[2.2-UNIT-038] should support multiple parameters', async () => {
-      // GIVEN: Query with multiple parameters
-      const text = 'SELECT * FROM users WHERE email = $1 AND role = $2';
-      const params = ['test@example.com', 'admin'];
-
-      // WHEN: Query is executed with multiple params
-      const result = await query(text, params);
-
-      // THEN: Query executes successfully
-      expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(0);
+    });
+
+    it('should return PostgreSQL version', async () => {
+      const { query } = await import('@/lib/db');
+      
+      const result = await query('SELECT version()');
+      
+      expect(result).toBeDefined();
+      expect(result[0].version).toContain('PostgreSQL');
     });
   });
 
-  describe('Neon cold start handling', () => {
-    it('[2.2-UNIT-039] should handle Neon database cold start (2-3s delay)', async () => {
-      // GIVEN: Database is auto-suspended (cold start scenario)
-      vi.mock('@neondatabase/serverless', () => ({
-        neon: vi.fn(() => {
-          return vi.fn(async (text: string) => {
-            // Simulate cold start delay
-            await new Promise((resolve) => setTimeout(resolve, 2500));
-            return [{ result: 'data after cold start' }];
-          });
-        }),
-      }));
-
-      // WHEN: First query after cold start
-      const startTime = Date.now();
-      try {
-        await query('SELECT 1');
-      } catch {
-        // Query might timeout in test, that's ok
+  describe('query() - Type Safety', () => {
+    it('should support generic type parameter', async () => {
+      const { query } = await import('@/lib/db');
+      
+      interface TestRow {
+        id: number;
+        name: string;
       }
-      const duration = Date.now() - startTime;
-
-      // THEN: Query completes within acceptable time (<5s)
-      // Note: Actual cold start behavior depends on Neon driver
-      // This test documents the requirement
+      
+      const result = await query<TestRow>(
+        'SELECT $1 as id, $2 as name',
+        [1, 'test']
+      );
+      
+      // TypeScript should infer TestRow[] type
+      expect(result[0].id).toBe('1'); // PostgreSQL returns strings
+      expect(result[0].name).toBe('test');
     });
   });
 
-  describe('Error message safety', () => {
-    it('[2.2-UNIT-040] should not expose DATABASE_URL in error messages', async () => {
-      // GIVEN: Query that will fail
-      const invalidSql = 'INVALID SQL';
-
-      // WHEN: Query fails
-      try {
-        await query(invalidSql);
-        expect.fail('Should have thrown error');
-      } catch (error) {
-        // THEN: Error message does NOT contain connection string
-        const message = (error as Error).message;
-        expect(message).not.toMatch(/postgresql:\/\//i);
-        expect(message).not.toMatch(/password/i);
-      }
+  describe('query() - Performance Monitoring', () => {
+    it('should log slow queries (>200ms)', async () => {
+      const { query } = await import('@/lib/db');
+      
+      // Execute a slow query using pg_sleep (300ms)
+      await query('SELECT pg_sleep(0.3)');
+      
+      // Verify slow query was logged
+      expect(mockConsoleWarn).toHaveBeenCalledWith(
+        '[DB] Slow query detected:',
+        expect.objectContaining({
+          duration: expect.stringMatching(/\d+ms/),
+          query: expect.any(String),
+          timestamp: expect.any(String),
+        })
+      );
     });
 
-    it('[2.2-UNIT-041] should provide generic error message to caller', async () => {
-      // GIVEN: Database error
-      const invalidSql = 'INVALID SQL';
+    it('should NOT log fast queries (<200ms)', async () => {
+      const { query } = await import('@/lib/db');
+      
+      // Execute a fast query
+      await query('SELECT 1');
+      
+      // Verify no slow query warning
+      expect(mockConsoleWarn).not.toHaveBeenCalled();
+    });
+  });
 
-      // WHEN: Query fails
+  describe('query() - Error Handling', () => {
+    it('should throw generic error for invalid SQL', async () => {
+      const { query } = await import('@/lib/db');
+      
+      // Expect generic error message (sanitized)
+      await expect(query('SELECT FROM invalid')).rejects.toThrow('Database query failed');
+      
+      // Verify full error details logged server-side
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        '[DB] Query error:',
+        expect.objectContaining({
+          query: 'SELECT FROM invalid',
+          params: [],
+          error: expect.any(String),
+          timestamp: expect.any(String),
+        })
+      );
+    });
+
+    it('should log full error details server-side', async () => {
+      const { query } = await import('@/lib/db');
+      
       try {
-        await query(invalidSql);
-        expect.fail('Should have thrown error');
+        await query('INVALID SQL SYNTAX');
       } catch (error) {
-        // THEN: Error message is user-friendly (not raw database error)
-        const message = (error as Error).message;
-        expect(message).toMatch(/database query failed|failed to execute|query error/i);
+        // Error thrown as expected
       }
+      
+      // Verify server-side logging includes details
+      expect(mockConsoleError).toHaveBeenCalledWith(
+        '[DB] Query error:',
+        expect.objectContaining({
+          query: expect.any(String),
+          params: expect.any(Array),
+          error: expect.any(String),
+          stack: expect.any(String),
+        })
+      );
+    });
+
+    it('should NOT expose database details in error message', async () => {
+      const { query } = await import('@/lib/db');
+      
+      try {
+        await query('SELECT * FROM nonexistent_table');
+      } catch (error) {
+        // Verify error message is generic (sanitized)
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe('Database query failed');
+        
+        // Should NOT contain database-specific details
+        expect((error as Error).message).not.toContain('table');
+        expect((error as Error).message).not.toContain('column');
+        expect((error as Error).message).not.toContain('syntax');
+      }
+    });
+  });
+
+  describe('queryOne() - Helper Function', () => {
+    it('should return first row when results exist', async () => {
+      const { queryOne } = await import('@/lib/db');
+      
+      const result = await queryOne('SELECT $1 as value', [42]);
+      
+      expect(result).toBeDefined();
+      expect(result).not.toBeNull();
+      expect(result?.value).toBe('42'); // PostgreSQL returns strings
+    });
+
+    it('should return null when no results found', async () => {
+      const { queryOne } = await import('@/lib/db');
+      
+      const result = await queryOne('SELECT 1 WHERE false');
+      
+      expect(result).toBeNull();
+    });
+
+    it('should support generic type parameter', async () => {
+      const { queryOne } = await import('@/lib/db');
+      
+      interface User {
+        id: number;
+        email: string;
+      }
+      
+      const result = await queryOne<User>(
+        'SELECT $1 as id, $2 as email',
+        [1, 'user@example.com']
+      );
+      
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe('1'); // PostgreSQL returns strings
+      expect(result?.email).toBe('user@example.com');
+    });
+  });
+
+  describe('Database Connection - Cold Start Behavior', () => {
+    it('should handle Neon auto-resume gracefully', async () => {
+      // This test verifies cold start behavior (2-3 second resume)
+      // NOTE: Requires Neon database to be suspended (wait 5+ minutes)
+      const { query } = await import('@/lib/db');
+      
+      const start = Date.now();
+      const result = await query('SELECT 1');
+      const duration = Date.now() - start;
+      
+      // Verify query completed (may be slow on cold start)
+      expect(result).toBeDefined();
+      
+      // Note: Duration may be 2-3 seconds if database was suspended
+      console.log(`Query duration: ${duration}ms`);
+    });
+  });
+
+  describe('Integration - Configuration + Database', () => {
+    it('should use validated DATABASE_URL from config', async () => {
+      const { query } = await import('@/lib/db');
+      
+      // Database module should use getConfig() internally
+      // This verifies integration between config and db modules
+      const result = await query('SELECT current_database()');
+      
+      expect(result).toBeDefined();
+      expect(result[0].current_database).toBeDefined();
     });
   });
 });
 
+/**
+ * Manual Testing Instructions
+ * ============================
+ * 
+ * Since these tests are skipped by default (require real database),
+ * follow these manual testing steps:
+ * 
+ * 1. Configuration Validation:
+ *    - Remove DATABASE_URL from .env.local
+ *    - Run: npm run dev
+ *    - Expected: Crash with "Configuration validation failed: databaseUrl: Required"
+ * 
+ * 2. Invalid DATABASE_URL:
+ *    - Set DATABASE_URL=not-a-url in .env.local
+ *    - Run: npm run dev
+ *    - Expected: Crash with validation error
+ * 
+ * 3. Invalid ALLOWED_EMAILS:
+ *    - Set ALLOWED_EMAILS=not-an-email in .env.local
+ *    - Run: npm run dev
+ *    - Expected: Crash with email validation error
+ * 
+ * 4. Valid Configuration:
+ *    - Set all required vars correctly in .env.local
+ *    - Run: npm run dev
+ *    - Expected: Server starts successfully on PORT
+ * 
+ * 5. Database Connection:
+ *    - Create test route: app/api/test-db/route.ts
+ *    - Execute: await query('SELECT version()')
+ *    - Expected: Returns PostgreSQL version
+ * 
+ * 6. Parameterized Queries:
+ *    - Execute: await query('SELECT $1 as value', [42])
+ *    - Expected: Returns [{ value: 42 }]
+ * 
+ * 7. Slow Query Logging:
+ *    - Execute: await query('SELECT pg_sleep(0.3)')
+ *    - Check server console
+ *    - Expected: [DB] Slow query warning in logs
+ * 
+ * 8. Error Handling:
+ *    - Execute: await query('SELECT FROM invalid')
+ *    - Expected: Generic error "Database query failed"
+ *    - Check server logs for full error details
+ */

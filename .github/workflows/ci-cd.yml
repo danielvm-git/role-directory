@@ -34,6 +34,12 @@ jobs:
 
       - name: Run Unit Tests
         run: npm run test:unit
+        env:
+          # Database configuration for integration tests (from GitHub Secrets)
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          ALLOWED_EMAILS: test@example.com,ci@example.com
+          NODE_ENV: test
+          PORT: 3000
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
