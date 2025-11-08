@@ -12,6 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Ensure public directory exists (Next.js may not create it if empty)
+RUN mkdir -p public
+
 # Build Next.js application
 RUN npm run build
 
@@ -28,7 +31,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # Copy built application from builder
-# Copy public folder for static assets
+# Copy public folder for static assets (if exists)
 COPY --from=builder /app/public ./public
 
 # Copy standalone server and dependencies
