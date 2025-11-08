@@ -579,7 +579,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-2.3] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-2.md#Migration-System] - Technical specification
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Migration-System] - Technical specification
 - [Source: docs/3-solutioning/architecture.md#Database] - Database decisions
 - [Source: node-pg-migrate] - https://github.com/salsita/node-pg-migrate (alternative option)
 

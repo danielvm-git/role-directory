@@ -211,7 +211,7 @@
   <artifacts>
     <docs>
       <doc id="DOC-1">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
         <section>Initial Schema Migration (Story 2.4)</section>
         <snippet>Story 2.4 creates initial database schema migration with existing role/pricing tables. 10 tables total: regions, currencies, price_types, seniority_levels, career_levels, job_families, career_tracks, locations, role_profiles, profile_pricing. Tables have proper foreign keys, indexes, triggers. Migration applied to all three environments (dev, staging, production).</snippet>
@@ -367,7 +367,7 @@ CREATE TABLE profile_pricing (
     <constraint id="CONS-4" type="reliability">
       <title>Idempotent Table Creation</title>
       <description>Use CREATE TABLE IF NOT EXISTS for idempotency. Use DROP TABLE IF EXISTS CASCADE in rollback migration. Ensure migration can be run multiple times safely (Story 2.3 requirement).</description>
-      <source>docs/tech-spec-epic-2.md - Idempotent Migrations</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Idempotent Migrations</source>
     </constraint>
     <constraint id="CONS-5" type="reliability">
       <title>Schema Consistency Across Environments</title>
@@ -387,7 +387,7 @@ CREATE TABLE profile_pricing (
     <constraint id="CONS-8" type="documentation">
       <title>Schema Documentation Required</title>
       <description>Document all 10 tables in docs/DATABASE.md with descriptions, relationships, and example queries. Update README with schema summary and link to DATABASE.md. Document migration history in completion notes.</description>
-      <source>docs/tech-spec-epic-2.md - Documentation Requirements</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Documentation Requirements</source>
     </constraint>
   </constraints>
 

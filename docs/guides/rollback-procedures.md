@@ -985,9 +985,9 @@ If issues persist:
 - [Promotion Workflow Guide](guides/promotion-workflow-guide.md) - Manual promotion procedures (dev→staging→production)
 - [Cloud Run Setup Guide](CLOUD_RUN_SETUP.md) - Initial Cloud Run service configuration
 - [GitHub Actions CI/CD](GITHUB_ACTIONS_SETUP.md) - Automated deployment workflows
-- [Architecture Document](3-solutioning/architecture.md) - System architecture and Cloud Run revision management
-- [PRD - Rollback Procedures](2-planning/PRD.md#FR-6.8) - Product requirements for rollback
-- [Tech Spec Epic 1 - AC-11](tech-spec-epic-1.md#AC-11) - Technical specification for rollback
+- [Architecture Document](../3-solutioning/architecture.md) - System architecture and Cloud Run revision management
+- [PRD - Rollback Procedures](../2-planning/PRD.md#FR-6.8) - Product requirements for rollback
+- [Tech Spec Epic 1 - AC-11](../3-solutioning/tech-spec-epic-1.md#AC-11) - Technical specification for rollback
 
 ### Story References
 

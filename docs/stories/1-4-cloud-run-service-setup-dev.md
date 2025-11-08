@@ -229,7 +229,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.4] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-4] - Cloud Run Dev Service acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-4] - Cloud Run Dev Service acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-4.1] - Development Environment requirements
 - [Source: docs/3-solutioning/architecture.md#Deployment-Architecture] - Cloud Run configuration
 - [Source: docs/2-planning/PRD.md#NFR-5.3] - Cost Optimization requirements

@@ -91,11 +91,11 @@ https://role-directory-production-q5xt7ys22a-rj.a.run.app
   - Updated metadata to reflect migration
   - Updated all inline region references
 
-- ✅ `docs/tech-spec-epic-1.md`
+- ✅ `docs/3-solutioning/tech-spec-epic-1.md`
   - Updated all Cloud Run deployment commands
   - Updated region references in configurations
 
-- ✅ `docs/tech-spec-epic-2.md`
+- ✅ `docs/3-solutioning/tech-spec-epic-2.md`
   - Updated region references
 
 ### Operational Guides (6 files)
@@ -133,7 +133,7 @@ https://role-directory-production-q5xt7ys22a-rj.a.run.app
 ### Planning Documents (2 files)
 
 - ✅ `docs/2-planning/epics.md`
-- ✅ `docs/test-design-epic-1.md`
+- ✅ `docs/stories/test-design-epic-1.md`
 
 ### GitHub Actions Workflows (3 files)
 

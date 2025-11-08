@@ -318,7 +318,7 @@ throw new Error('Syntax error in SQL');
 
 **Estimated Effort:** 1 hour
 
-**Reference:** `docs/tech-spec-epic-2.md` (Configuration Module section, lines 150-195)
+**Reference:** `docs/3-solutioning/tech-spec-epic-2.md` (Configuration Module section, lines 150-195)
 
 ---
 
@@ -349,7 +349,7 @@ throw new Error('Syntax error in SQL');
 
 **Estimated Effort:** 1 hour
 
-**Reference:** `docs/tech-spec-epic-2.md` (Database Module section, lines 98-114)
+**Reference:** `docs/3-solutioning/tech-spec-epic-2.md` (Database Module section, lines 98-114)
 
 ---
 

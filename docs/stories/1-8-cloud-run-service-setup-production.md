@@ -368,7 +368,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.8] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-8] - Cloud Run Service Setup (Production) acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-8] - Cloud Run Service Setup (Production) acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.5] - Production environment requirements
 - [Source: docs/3-solutioning/architecture.md#Cloud-Run-Configuration] - Cloud Run configuration pattern
 - [Source: docs/3-solutioning/architecture.md#Environment-Variables] - Environment variable management

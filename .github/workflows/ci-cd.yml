@@ -77,8 +77,8 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev
 
       - name: Build and tag Docker image
         id: build
@@ -86,7 +86,7 @@ jobs:
           DEV_TAG="dev-$(date +%Y%m%d-%H%M%S)"
           echo "DEV_TAG=$DEV_TAG" >> $GITHUB_OUTPUT
           
-          IMAGE_NAME="gcr.io/${GCP_PROJECT_ID}/role-directory"
+          IMAGE_NAME="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/role-directory/app"
           DEV_IMAGE="$IMAGE_NAME:$DEV_TAG"
           DEV_LATEST="$IMAGE_NAME:dev-latest"
           
@@ -96,7 +96,7 @@ jobs:
           echo "✅ Built and tagged as: $DEV_TAG"
           echo "✅ Built and tagged as: dev-latest"
           
-          echo "📤 Pushing to GCR..."
+          echo "📤 Pushing to Artifact Registry..."
           docker push $DEV_IMAGE
           docker push $DEV_LATEST
           echo "✅ Images pushed to registry"
@@ -107,7 +107,7 @@ jobs:
         with:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.GCP_REGION }}
-          image: gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.build.outputs.DEV_TAG }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.build.outputs.DEV_TAG }}
           flags: |
             --allow-unauthenticated
             --set-env-vars=NODE_ENV=development

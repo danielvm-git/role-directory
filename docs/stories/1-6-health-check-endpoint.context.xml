@@ -45,7 +45,7 @@
         <snippet>Health check endpoint at /api/health. Returns 200 OK with status and timestamp. Optional database status after Epic 2. No authentication required. Used by CI/CD for deployment validation. Response time under 100ms warm.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-6: Health Check Endpoint</section>
         <snippet>GET /api/health endpoint returns 200 OK when healthy. Response body: { "status": "ok", "timestamp": "ISO 8601" }. Optional database status: { "database": "connected" }. If database fails: 500 status with { "status": "error", "database": "disconnected" }. No authentication required. Response time: under 100ms warm, under 3s cold start.</snippet>
@@ -69,7 +69,7 @@
         <snippet>Standard health check response: { "status": "ok", "timestamp": "ISO 8601" }. Optional fields: database status, service version. Error response: { "status": "error", "timestamp": "ISO 8601", "error": "message" }. HTTP status codes: 200 (healthy), 500 (unhealthy). No authentication required.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-5: Automated Dev Deployment - Health Check</section>
         <snippet>Health check runs after deployment. Request: GET $SERVICE_URL/api/health. Expected: 200 OK response. Timeout: 30 seconds (allows cold start). Retry: Poll every 2 seconds up to 30 attempts. On success: Deployment marked successful. On failure: Deployment marked failed. Health check endpoint must exist before deployment workflow runs.</snippet>

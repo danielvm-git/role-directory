@@ -291,7 +291,7 @@ All relevant documentation has been updated to reflect these fixes:
 
 ### **4. Tech Spec Epic 1**
 
-**File:** `docs/tech-spec-epic-1.md`
+**File:** `docs/3-solutioning/tech-spec-epic-1.md`
 
 **Updates:**
 - Status: Draft → Complete
@@ -506,7 +506,7 @@ All four CI/CD issues have been successfully resolved:
 - **Architecture Document:** `docs/3-solutioning/architecture.md` (v1.3)
 - **Docker Guide:** `docs/guides/docker-usage-guide.md`
 - **GitHub Actions Guide:** `docs/guides/github-actions-setup-guide.md`
-- **Tech Spec:** `docs/tech-spec-epic-1.md`
+- **Tech Spec:** `docs/3-solutioning/tech-spec-epic-1.md`
 - **Regional Migration Report:** `docs/reports/regional-migration-2025-11-08.md`
 
 **Report Generated:** 2025-11-08  

@@ -55,7 +55,7 @@
         <snippet>Production Cloud Run service configuration. IAM protected (not public). Min 2 instances for high availability (no cold starts), max 10 for traffic spikes. 2 CPUs, 1 GB memory for performance. Gen2 execution environment. CPU boost enabled. Environment: NODE_ENV=production, DATABASE_URL from Secret Manager. Labels: environment=production, app=role-directory. Manual gcloud CLI setup, documented for IaC.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-8: Cloud Run Service Setup (Production)</section>
         <snippet>Production service: role-directory-production. Region: southamerica-east1. Min 2 instances (high availability, no cold starts), max 10 instances. 2 CPUs, 1 GB memory (better than staging). IAM authentication required. Gen2 execution environment. CPU boost enabled. Timeout: 300s. Environment: NODE_ENV=production. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
@@ -79,7 +79,7 @@
         <snippet>Production: role-directory-production. Min 2 instances (high availability). Max 10 instances (traffic spikes). 2 CPUs, 1 GB memory. Gen2 execution environment. CPU boost enabled. IAM authentication required. DATABASE_URL from Secret Manager. Port 8080. Labels: environment=production, app=role-directory. Cost: ~$50-100/month typical usage.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-3: High Availability</section>
         <snippet>Min 2 instances ensures at least one instance during deployments. No cold starts for users. Load balancing across instances. Graceful shutdown during deployments. Zero-downtime deployments (new revision alongside old). Health checks verify readiness. Gen2 execution for reliability.</snippet>
@@ -91,7 +91,7 @@
         <snippet>Gen2 recommended for production. Benefits: Up to 32 GiB memory support (vs 4 GiB gen1). Better performance and faster cold starts. Network file system support. More powerful infrastructure. CPU boost: Allocates full CPU during startup (vs throttled). Reduces cold start by 30-50%. Small additional cost during startup only.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Cost Optimization - Production</section>
         <snippet>Production cost: Min 2 instances = ~$35/month base. 2 CPUs + 1 GB = 2x staging cost per instance. Typical usage: $50-100/month. Max 10 instances: Could spike to ~$240/month (unlikely). Justification: High availability and performance for production users worth the cost. Free tier does not apply (min 2 instances).</snippet>

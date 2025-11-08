@@ -47,13 +47,13 @@
         <snippet>Automated deployment to dev on commit to main. CI passes → deployment triggers. Authenticate with GCP, deploy to Cloud Run using gcloud CLI, run health check. Deployment completes in under 10 minutes. Failed deployments don't affect running service. Service URL visible in logs.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-5: Automated Dev Deployment</section>
         <snippet>CI pipeline extended with deployment stage after build passes. Authenticate with GCP using service account key. Deploy to Cloud Run dev service. Health check runs after deployment (GET /api/health). Deployment completes in under 10 minutes total. Failed quality check stops deployment. Failed deployments leave previous version running.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Workflows and Sequencing - Automated Dev Deployment</section>
         <snippet>Push to main → CI runs (lint, type, build). CI passes → Deployment triggers. Authenticate with GCP → Deploy via gcloud run deploy --source. Cloud Build builds Docker image. Cloud Run deploys new revision. Health check verifies deployment. Previous revision remains if deployment fails. Timing: under 10 minutes total (target 5-7 minutes).</snippet>
@@ -71,19 +71,19 @@
         <snippet>Automated build and deployment pipeline. Trigger: Push to main branch. Stages: Code checkout, dependency install, linting, type checking, build verification, deployment to dev. Failed quality check stops deployment. Clear error reporting. Pipeline execution: under 10 minutes.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-2.4: Service Account Permissions</section>
         <snippet>Least-privilege IAM roles for CI/CD service account. Permissions required: roles/run.developer (Deploy to Cloud Run), roles/secretmanager.secretAccessor (Read secrets), roles/artifactregistry.writer (Push Docker images). Service account cannot access unrelated GCP resources.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-3.1: Deployment Error Handling</section>
         <snippet>Failed deployments do not affect running service. Cloud Run atomic deployments: new revision only receives traffic after passing health check. Previous revision continues serving traffic until new revision healthy. CI/CD pipeline fails fast: lint/type/build errors stop deployment before Cloud Run.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-3.2: Zero-Downtime Deployments</section>
         <snippet>No service interruption during deployments. Cloud Run gradual traffic migration: new revision receives traffic incrementally. HTTP connections gracefully drained from old revision. Cold start handled by Cloud Run: new containers pre-warmed before receiving traffic.</snippet>

@@ -253,7 +253,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.6] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-6] - Health Check Endpoint acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-6] - Health Check Endpoint acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.3] - Health check endpoint requirements
 - [Source: docs/3-solutioning/architecture.md#API-Route-Pattern] - API route implementation pattern
 - [Source: docs/3-solutioning/architecture.md#Health-Check-Response] - Response format specification

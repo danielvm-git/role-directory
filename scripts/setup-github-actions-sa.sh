@@ -62,7 +62,6 @@ ROLES=(
     "roles/iam.serviceAccountUser"
     "roles/artifactregistry.writer"
     "roles/cloudbuild.builds.editor"
-    "roles/storage.admin"
 )
 
 for ROLE in "${ROLES[@]}"; do

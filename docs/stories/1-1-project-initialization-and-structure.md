@@ -212,7 +212,7 @@ role-directory/
 - [Source: docs/3-solutioning/architecture.md#Decision-Summary] - Technology versions
 - [Source: docs/3-solutioning/architecture.md#ADR-001] - Next.js 15 App Router decision
 - [Source: docs/3-solutioning/architecture.md#Consistency-Rules] - Naming conventions
-- [Source: docs/tech-spec-epic-1.md#AC-1] - Acceptance criteria details
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-1] - Acceptance criteria details
 
 ### Learnings from Previous Story
 

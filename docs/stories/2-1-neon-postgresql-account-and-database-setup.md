@@ -354,7 +354,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-2.1] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-2.md#Neon-Setup] - Technical specification for Neon setup
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Neon-Setup] - Technical specification for Neon setup
 - [Source: docs/2-planning/PRD.md#NFR-3] - Security requirements for credential management
 - [Source: docs/3-solutioning/architecture.md#Database] - Database technology decision
 - [Source: Neon Documentation] - https://neon.tech/docs/

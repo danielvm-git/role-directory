@@ -704,7 +704,7 @@ After Epic 1 completes, Phase 2 will introduce automated testing:
 - **PRD**: `docs/2-planning/PRD.md` - Product requirements and infrastructure validation goals
 - **Epic**: `docs/2-planning/epics.md#Epic-1` - Epic 1 story breakdown and acceptance criteria
 - **Architecture**: `docs/3-solutioning/architecture.md` - System architecture, technology stack, ADRs
-- **Tech Spec**: `docs/tech-spec-epic-1.md` - Epic 1 technical specification, API contracts, deployment architecture
+- **Tech Spec**: `docs/3-solutioning/tech-spec-epic-1.md` - Epic 1 technical specification, API contracts, deployment architecture
 
 ### Test Execution Tracking
 

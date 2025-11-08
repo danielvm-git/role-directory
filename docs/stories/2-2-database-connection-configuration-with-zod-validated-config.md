@@ -527,8 +527,8 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-2.2] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-2.md#Configuration-Module] - Configuration pattern specification
-- [Source: docs/tech-spec-epic-2.md#Database-Connection] - Database connection pattern specification
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Configuration-Module] - Configuration pattern specification
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Database-Connection] - Database connection pattern specification
 - [Source: docs/3-solutioning/architecture.md#Configuration-Management-Pattern] - Architecture pattern
 - [Source: docs/3-solutioning/architecture.md#Database-Connection-Pattern] - Architecture pattern
 - [Source: Zod Documentation] - https://zod.dev/

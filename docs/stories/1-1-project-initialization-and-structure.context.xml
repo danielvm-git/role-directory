@@ -76,7 +76,7 @@
         <snippet>Components: PascalCase (UserButton.tsx), Routes: kebab-case, Utilities: camelCase (logger.ts), Types: camelCase (api.ts), Tests: *.test.ts(x), Config files: kebab-case.config.*</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-1: Project Initialization</section>
         <snippet>Acceptance criteria details: Next.js 15.0.3 project initialized with TypeScript, Tailwind CSS, and App Router. ESLint and Prettier configured. Basic folder structure. Development server runs. Linting and type checking work. .gitignore properly configured.</snippet>

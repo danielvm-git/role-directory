@@ -224,7 +224,7 @@ role-directory/
 - [Source: docs/2-planning/epics.md#Story-1.2] - Story definition and acceptance criteria
 - [Source: docs/3-solutioning/architecture.md#ADR-004] - Deploy from source decision
 - [Source: docs/3-solutioning/architecture.md#Containerization] - Docker configuration
-- [Source: docs/tech-spec-epic-1.md#AC-2] - Docker containerization acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-2] - Docker containerization acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.1] - Dockerfile requirements
 - [Source: docs/2-planning/PRD.md#NFR-2.3] - Container security requirements
 

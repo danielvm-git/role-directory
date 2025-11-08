@@ -48,13 +48,13 @@
         <snippet>GitHub Actions workflow runs on every commit to main. Sequential stages: lint, type check, build. Failed stage stops pipeline. Completes in under 5 minutes. Workflow status visible in GitHub UI. No deployment yet (Story 1.5).</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-3: CI Pipeline</section>
         <snippet>GitHub Actions workflow (.github/workflows/ci-cd-dev.yml) triggers on push to main. Stages: Lint → Type Check → Build. Failed stage stops pipeline and reports error. Pipeline completes in less than 5 minutes (build only, no deploy). Workflow status visible in GitHub pull requests and commits.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Workflows and Sequencing - Automated Dev Deployment</section>
         <snippet>CI/CD workflow stages: Checkout code, Setup Node.js 22.x, Install dependencies (npm ci), Run ESLint, Run TypeScript type check, Build Next.js. Each stage failure stops pipeline with clear error message. Timing: under 10 minutes total (target 5-7 minutes).</snippet>
@@ -72,13 +72,13 @@
         <snippet>Automated build and quality check pipeline. Trigger: Push to main branch. Stages: Code checkout, dependency install, linting, type checking, build verification. Failed quality check stops deployment. Clear error reporting. Pipeline execution: under 10 minutes.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Dependencies - GitHub Actions</section>
         <snippet>GitHub Actions dependencies: actions/checkout@v4 (checkout source), actions/setup-node@v4 (setup Node.js environment), actions/cache@v4 (cache node_modules for faster builds), google-github-actions/auth@v2 (authenticate with GCP), google-github-actions/setup-gcloud@v2 (setup gcloud CLI).</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-1.2: CI/CD Pipeline Performance</section>
         <snippet>Target: under 10 minutes total pipeline time (lint → build → deploy → health check). Expected breakdown: Lint + Type Check ~1 minute, Build ~2-3 minutes, Deploy (Cloud Build) ~4-5 minutes, Health Check ~30 seconds. Optimization: Cache node_modules in GitHub Actions using actions/cache.</snippet>

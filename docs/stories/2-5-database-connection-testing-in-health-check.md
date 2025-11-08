@@ -490,7 +490,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-2.5] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-2.md#Health-Check-Integration] - Technical specification
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Health-Check-Integration] - Technical specification
 - [Source: docs/3-solutioning/architecture.md#Health-Check-Pattern] - Health check architecture
 - [Source: docs/stories/1-6-health-check-endpoint.md] - Original health check endpoint (Story 1.6)
 - [Source: docs/stories/2-2-database-connection-configuration-with-zod-validated-config.md] - Database connection module (Story 2.2)

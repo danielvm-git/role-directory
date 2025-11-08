@@ -48,12 +48,12 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
       - name: Pull staging image
         run: |
-          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.staging_image_tag }}"
+          STAGING_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ inputs.staging_image_tag }}"
           echo "📦 Pulling staging image: $STAGING_IMAGE"
           docker pull $STAGING_IMAGE
           echo "✅ Staging image pulled successfully"
@@ -65,9 +65,9 @@ jobs:
           PRODUCTION_TAG="production-$(date +%Y%m%d-%H%M%S)"
           echo "PRODUCTION_TAG=$PRODUCTION_TAG" >> $GITHUB_OUTPUT
           
-          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.staging_image_tag }}"
-          PRODUCTION_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:$PRODUCTION_TAG"
-          PRODUCTION_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:production-latest"
+          STAGING_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ inputs.staging_image_tag }}"
+          PRODUCTION_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:$PRODUCTION_TAG"
+          PRODUCTION_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:production-latest"
           
           echo "🏷️  Re-tagging image for production..."
           docker tag $STAGING_IMAGE $PRODUCTION_IMAGE
@@ -78,8 +78,8 @@ jobs:
 
       - name: Push production images
         run: |
-          PRODUCTION_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.PRODUCTION_TAG }}"
-          PRODUCTION_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:production-latest"
+          PRODUCTION_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.retag.outputs.PRODUCTION_TAG }}"
+          PRODUCTION_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:production-latest"
           
           echo "📤 Pushing production images to registry..."
           docker push $PRODUCTION_IMAGE
@@ -92,7 +92,7 @@ jobs:
         with:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.GCP_REGION }}
-          image: gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.PRODUCTION_TAG }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.retag.outputs.PRODUCTION_TAG }}
 
       - name: Wait for deployment
         run: |

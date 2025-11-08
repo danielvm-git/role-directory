@@ -557,7 +557,7 @@ gcloud run services update role-directory-production --min-instances=2
 - **Verification Tests:** `tests/e2e/cloud-run-production-verification.spec.ts`
 - **ATDD Checklist:** `docs/stories/1-8-atdd-checklist.md`
 - **Test Framework:** `tests/README.md`
-- **Test Design:** `docs/test-design-epic-1.md`
+- **Test Design:** `docs/stories/test-design-epic-1.md`
 
 ---
 

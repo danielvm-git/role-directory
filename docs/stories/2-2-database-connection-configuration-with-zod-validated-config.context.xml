@@ -207,7 +207,7 @@
   <artifacts>
     <docs>
       <doc id="DOC-1">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
         <section>Configuration Management Pattern &amp; Database Connection Pattern</section>
         <snippet>Configuration module uses Zod for runtime validation, fails fast on invalid config, provides type-safe getConfig() function. Database module uses @neondatabase/serverless driver (HTTP-based, stateless), provides query() function with parameterized query support, logs slow queries (greater than 200ms), sanitizes error messages.</snippet>
@@ -231,7 +231,7 @@
         <snippet>Performance: Query latency less than 200ms (P95) warm, less than 3s (P99) cold start with Neon auto-resume. Security: Never commit DATABASE_URL to git, use parameterized queries (prevent SQL injection), sanitize error messages (don't expose database schema), validate all configuration inputs.</snippet>
       </doc>
       <doc id="DOC-5">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification</title>
         <section>Configuration Schema (Zod) Example</section>
         <snippet>Complete Zod schema example with databaseUrl (URL validation, startsWith postgresql://), allowedEmails (transform split/trim/lowercase, validate email array), nodeEnv (enum development/staging/production), port (string to number transform, positive int max 65535), optional neonAuthProjectId and neonAuthSecretKey fields.</snippet>
@@ -376,7 +376,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
     <constraint id="CONS-4" type="security">
       <title>Parameterized Queries Only</title>
       <description>Always use parameterized queries ($1, $2) to prevent SQL injection. Never string interpolation or concatenation for SQL queries. query() function must accept params array.</description>
-      <source>docs/tech-spec-epic-2.md - Security Best Practices</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Security Best Practices</source>
     </constraint>
     <constraint id="CONS-5" type="security">
       <title>Error Message Sanitization</title>
@@ -391,12 +391,12 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
     <constraint id="CONS-7" type="architecture">
       <title>No Traditional Connection Pooling</title>
       <description>@neondatabase/serverless driver is HTTP-based (stateless), no persistent connections. Do not use pg-pool or other connection pooling libraries. Neon driver handles connection management automatically via HTTP protocol.</description>
-      <source>docs/tech-spec-epic-2.md - Neon Serverless Driver Features</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Neon Serverless Driver Features</source>
     </constraint>
     <constraint id="CONS-8" type="architecture">
       <title>Configuration Caching</title>
       <description>Cache validated configuration on first call to getConfig(). Return cached instance on subsequent calls. Avoid re-parsing environment variables on every request. Use module-level variable for cache.</description>
-      <source>docs/tech-spec-epic-2.md - Configuration Module Structure</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Configuration Module Structure</source>
     </constraint>
   </constraints>
 

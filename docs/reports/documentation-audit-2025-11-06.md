@@ -37,10 +37,10 @@ Your documentation suite is comprehensive, well-organized, and production-ready 
 | 1 | Product Brief | `docs/1-discovery/product-brief-role-directory-2025-11-06.md` | 187 lines | ✅ Complete | A+ |
 | 2 | PRD | `docs/2-planning/PRD.md` | 1,225 lines | ✅ Complete | A+ (99.6%) |
 | 3 | Epics & Stories | `docs/2-planning/epics.md` | 1,306 lines | ✅ Complete | A+ (100%) |
-| 4 | PRD Validation | `docs/2-planning/validation-report-2025-11-06.md` | 612 lines | ✅ Complete | A+ |
+| 4 | PRD Validation | `docs/reports/prd-validation-2025-11-06.md` | 612 lines | ✅ Complete | A+ |
 | 5 | Architecture | `docs/3-solutioning/architecture.md` | 1,913 lines | ✅ Complete | A+ (100%) |
-| 6 | Architecture Validation | `docs/3-solutioning/architecture-validation-report-2025-11-06.md` | 1,140 lines | ✅ Complete | A+ |
-| 7 | Implementation Readiness | `docs/3-solutioning/implementation-readiness-report-2025-11-06.md` | 631 lines | ✅ Complete | A+ |
+| 6 | Architecture Validation | `docs/reports/architecture-validation-report-2025-11-06.md` | 1,140 lines | ✅ Complete | A+ |
+| 7 | Implementation Readiness | `docs/reports/implementation-readiness-report-2025-11-06.md` | 631 lines | ✅ Complete | A+ |
 | 8 | Zod Implementation Summary | `docs/3-solutioning/ZODS-IMPLEMENTATION-SUMMARY.md` | 400 lines | ✅ Complete | A+ |
 | 9 | Neon Infrastructure Guide | `docs/guides/neon-infrastructure-setup-guide.md` | 445 lines | ✅ Complete | A |
 | 10 | Neon Auth Setup Guide | `docs/guides/neon-auth-setup-guide.md` | 504 lines | ✅ Complete | A |

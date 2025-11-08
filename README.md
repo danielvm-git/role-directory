@@ -70,6 +70,7 @@ When building applications in the cloud, there's a tension between rapid iterati
 
 ### Infrastructure
 - [Google Cloud Run](https://cloud.google.com/run) (3 environments: dev, stg, prd)
+- [Artifact Registry](https://cloud.google.com/artifact-registry) (Docker image storage)
 - [GitHub Actions](https://github.com/features/actions) (CI/CD)
 - [Google Secret Manager](https://cloud.google.com/secret-manager) (Runtime secrets)
 - [Docker](https://www.docker.com/) 27.3.1
@@ -338,19 +339,24 @@ Start with [Story 1.1: Project Initialization](docs/2-planning/epics.md#story-11
 **4. Deploy to Cloud Run**
 
 ```bash
-# Build Docker image
-docker build -t gcr.io/$PROJECT_ID/role-directory:latest .
+# Set variables
+export PROJECT_ID=$(gcloud config get-value project)
+export REGION="southamerica-east1"
+export IMAGE_NAME="${REGION}-docker.pkg.dev/${PROJECT_ID}/role-directory/app"
 
-# Push to Google Container Registry
-docker push gcr.io/$PROJECT_ID/role-directory:latest
+# Build Docker image
+docker build -t ${IMAGE_NAME}:latest .
+
+# Push to Artifact Registry
+docker push ${IMAGE_NAME}:latest
 
 # Deploy to dev
 gcloud run deploy role-directory-dev \
-  --image=gcr.io/$PROJECT_ID/role-directory:latest \
-  --region=southamerica-east1
+  --image=${IMAGE_NAME}:latest \
+  --region=${REGION}
 ```
 
-See [Architecture: Deployment Flow](docs/3-solutioning/architecture.md#deployment-flow)
+See [Architecture: Deployment Flow](docs/3-solutioning/architecture.md#deployment-flow) and [Artifact Registry Migration Guide](docs/guides/artifact-registry-migration.md)
 
 ### For Collaborators
 
@@ -443,6 +449,7 @@ See [Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy) 
 **Setup Guides:**
 - [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - Step-by-step PostgreSQL & Cloud Run
 - [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration guide
+- [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - Migration from GCR to Artifact Registry
 
 **Project Status:**
 - [Workflow Status](docs/bmm-workflow-status.yaml) - Current phase tracking

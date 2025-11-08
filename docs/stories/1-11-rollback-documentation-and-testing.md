@@ -442,7 +442,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.11] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-11] - Rollback Documentation and Testing acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-11] - Rollback Documentation and Testing acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.8] - Rollback procedures requirements
 - [Source: docs/3-solutioning/architecture.md#Cloud-Run-Revision-Management] - Cloud Run revision management
 - [Source: Cloud Run Documentation: Rollback] - https://cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration

@@ -651,7 +651,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-2.6] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-2.md#Documentation] - Technical specification
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Documentation] - Technical specification
 - [Source: docs/3-solutioning/architecture.md#Security] - Security patterns
 - [Source: docs/stories/2-1-neon-postgresql-account-and-database-setup.md] - Neon setup (Story 2.1)
 - [Source: docs/stories/2-5-database-connection-testing-in-health-check.md] - Health check verification (Story 2.5)

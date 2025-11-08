@@ -34,14 +34,14 @@ workflow_status:
 
   # Phase 1: Planning
   prd: docs/2-planning/PRD.md
-  validate-prd: docs/2-planning/validation-report-2025-11-06.md
+  validate-prd: docs/reports/prd-validation-2025-11-06.md
   create-epics-and-stories: docs/2-planning/epics.md
   create-design: conditional
 
   # Phase 2: Solutioning
   create-architecture: docs/3-solutioning/architecture.md
   validate-architecture: optional
-  solutioning-gate-check: docs/3-solutioning/implementation-readiness-report-2025-11-06.md
+  solutioning-gate-check: docs/reports/implementation-readiness-report-2025-11-06.md
 
   # Phase 3: Implementation
   sprint-planning: docs/sprint-status.yaml

@@ -411,7 +411,7 @@ gcloud run services update role-directory-production --max-instances=5
 - **Setup Guide:** `docs/guides/cloud-run-production-setup.md`
 - **Setup Script:** `scripts/setup-cloud-run-production.sh`
 - **Verification Tests:** `tests/e2e/cloud-run-production-verification.spec.ts`
-- **Test Design:** `docs/test-design-epic-1.md`
+- **Test Design:** `docs/stories/test-design-epic-1.md`
 
 ---
 
