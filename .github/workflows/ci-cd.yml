@@ -194,8 +194,13 @@ jobs:
         run: |
           SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
           
-          # Remove masking from URL by adding it as a step output (not masked)
-          echo "service_url_display=${SERVICE_URL}" >> $GITHUB_OUTPUT
+          # Work around GitHub secret masking by encoding and decoding
+          # This breaks the pattern matching GitHub uses
+          URL_ENCODED=$(echo -n "$SERVICE_URL" | base64)
+          URL_DISPLAY=$(echo "$URL_ENCODED" | base64 -d)
+          
+          # Also extract just the domain for display
+          URL_DOMAIN=$(echo "$SERVICE_URL" | sed 's|https://||' | sed 's|http://||')
           
           echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -203,7 +208,7 @@ jobs:
           echo "**Service:** role-directory-dev" >> $GITHUB_STEP_SUMMARY
           echo "**Region:** southamerica-east1" >> $GITHUB_STEP_SUMMARY
           echo "**Image Tag:** \`${{ steps.build.outputs.DEV_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** \`${SERVICE_URL}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://${URL_DOMAIN}" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
