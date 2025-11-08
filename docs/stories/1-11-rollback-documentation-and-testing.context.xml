@@ -208,7 +208,7 @@
   <artifacts>
     <docs>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification: Foundation &amp; Deployment Pipeline</title>
         <section>AC-11: Rollback Documentation and Testing</section>
         <snippet>Comprehensive rollback documentation with CLI and Console procedures, verification steps, testing results, and database migration considerations. Expected rollback time &lt;2 minutes for Cloud Run traffic shift.</snippet>

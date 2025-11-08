@@ -760,7 +760,7 @@ This configuration is production-ready. When adding environment-specific configs
 
 ### Related Artifacts
 
-**Test Design**: [test-design-epic-1.md](../test-design-epic-1.md)
+**Test Design**: [test-design-epic-1.md](../stories/test-design-epic-1.md)
 - 58 verification scenarios defined (P0/P1/P2)
 - Risk assessment with 14 identified risks
 - 4 high-priority risks (score ≥6) mapped to test coverage

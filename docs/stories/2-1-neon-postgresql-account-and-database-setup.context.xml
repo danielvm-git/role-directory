@@ -170,7 +170,7 @@
   <artifacts>
     <docs>
       <doc id="DOC-1">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
         <section>Neon PostgreSQL Setup (Story 2.1)</section>
         <snippet>Epic 2 establishes reliable PostgreSQL database connectivity from serverless Cloud Run environment, handling Neon PostgreSQL's auto-suspend behavior and serverless constraints. Uses @neondatabase/serverless driver (v0.10.1) with built-in HTTP-based pooling. Free tier: 1 project, unlimited databases, 0.5 GB storage, auto-suspend after 5 minutes.</snippet>
@@ -314,7 +314,7 @@
     <constraint id="CONS-6" type="infrastructure">
       <title>Neon Free Tier Limitations</title>
       <description>Free tier includes: 1 project, unlimited databases, 0.5 GB storage, ~100 compute hours/month, auto-suspend after 5 minutes. Cold start on first query after suspend: 2-3 seconds. This is acceptable for MVP.</description>
-      <source>docs/tech-spec-epic-2.md - Neon Configuration</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Neon Configuration</source>
     </constraint>
   </constraints>
 

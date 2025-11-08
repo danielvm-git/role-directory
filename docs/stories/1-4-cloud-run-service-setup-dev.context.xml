@@ -47,13 +47,13 @@
         <snippet>Create Cloud Run service for dev environment. Service name: role-directory-dev. Region selection. Public access (unauthenticated). Environment variables: NODE_ENV, PORT, DATABASE_URL. Min instances: 0 (scale to zero). Max instances: 10. CPU: 1, Memory: 512Mi. Public URL documented.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-4: Cloud Run Dev Service</section>
         <snippet>Service name: role-directory-dev. Region: southamerica-east1. Allow unauthenticated access (public URL). Environment variables: NODE_ENV=development, PORT=8080. Min instances: 0, Max instances: 10. CPU: 1, Memory: 512Mi. Service accessible at public URL: https://role-directory-dev-xxx.run.app.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Services and Modules - Cloud Run Services</section>
         <snippet>Cloud Run Services: Serverless container hosting (3 services: dev, stg, prd). Inputs: Docker images, environment variables, secrets. Outputs: Running HTTP services with auto-scaling. Configuration: Min instances 0, Max instances 10, CPU 1, Memory 512Mi, Concurrency 80, Timeout 300s. Public access enabled for MVP.</snippet>
@@ -77,7 +77,7 @@
         <snippet>Cloud Run scale to zero when idle (no requests = $0 cost). Target monthly cost: $0-3 total. Free tiers: Cloud Run (2M requests), Neon PostgreSQL (3GB storage, 100 compute hours). Max instances capped at 10 to prevent runaway costs.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Data Models and Contracts - Cloud Run Service Configuration</section>
         <snippet>Service configuration YAML: Service Name role-directory-{env}, Region southamerica-east1, Container Port 8080, CPU 1, Memory 512Mi, Min Instances 0 (scale to zero), Max Instances 10 (cost control), Concurrency 80 (requests per container), Timeout 300s (5 minutes).</snippet>

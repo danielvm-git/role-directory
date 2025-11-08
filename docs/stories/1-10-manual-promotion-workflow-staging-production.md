@@ -510,7 +510,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.10] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-10] - Manual Promotion Workflow (Staging to Production) acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-10] - Manual Promotion Workflow (Staging to Production) acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.7] - Production promotion workflow requirements
 - [Source: docs/3-solutioning/architecture.md#Promotion-Workflow-Pattern] - Promotion workflow pattern
 - [Source: .github/workflows/promote-dev-to-staging.yml] - Similar workflow (Story 1.9)

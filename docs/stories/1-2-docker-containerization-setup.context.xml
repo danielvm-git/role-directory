@@ -57,7 +57,7 @@
         <snippet>Docker 27.3.1 for container runtime. Multi-stage builds for optimized images. Google Cloud Run for serverless container platform with auto-scale and pay-per-use.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-2: Docker Containerization</section>
         <snippet>Dockerfile with multi-stage build (build + production stages). Node.js 22.x base image. Production image size &lt;500MB target. Environment variables at runtime (not baked in). Container runs locally. .dockerignore excludes unnecessary files.</snippet>
@@ -81,7 +81,7 @@
         <snippet>Production Docker image must not expose sensitive data. Multi-stage build excludes build artifacts. .dockerignore excludes .env, .git, node_modules, docs. No hardcoded credentials. Base image: Official Node.js 22 image with security updates.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Services and Modules - Cloud Build</section>
         <snippet>Cloud Build handles containerization, building Docker images from source. Inputs: Source code, Dockerfile. Outputs: Docker images in Artifact Registry. Automated by Cloud Run deployment.</snippet>

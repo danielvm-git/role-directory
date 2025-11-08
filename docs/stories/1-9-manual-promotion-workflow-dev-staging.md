@@ -416,7 +416,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.9] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-9] - Manual Promotion Workflow (Dev to Staging) acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-9] - Manual Promotion Workflow (Dev to Staging) acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.6] - Promotion workflow requirements
 - [Source: docs/3-solutioning/architecture.md#Promotion-Workflow-Pattern] - Promotion workflow pattern
 - [Source: .github/workflows/ci-cd-dev.yml] - Similar CI/CD workflow (Story 1.5)

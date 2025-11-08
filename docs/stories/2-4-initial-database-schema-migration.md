@@ -684,7 +684,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-2.4] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-2.md#Initial-Schema] - Technical specification
+- [Source: docs/3-solutioning/tech-spec-epic-2.md#Initial-Schema] - Technical specification
 - [Source: docs/3-solutioning/architecture.md#Database] - Database decisions
 - [Source: old_docs/sql/schema/*.sql] - Existing table definitions (10 files)
 - [Source: old_docs/sql/run_all_schema.sql] - Migration order reference

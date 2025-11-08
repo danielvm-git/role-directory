@@ -828,7 +828,7 @@ gcloud run services describe role-directory-dev \
 
 - [Architecture Document](../3-solutioning/architecture.md#database) - Database technology decision
 - [PRD NFR-3](../2-planning/PRD.md#nfr-3-security) - Security requirements for credentials
-- [Tech Spec Epic 2](../tech-spec-epic-2.md) - Epic 2 technical specification
+- [Tech Spec Epic 2](../3-solutioning/tech-spec-epic-2.md) - Epic 2 technical specification
 - [Story 2-1](../stories/2-1-neon-postgresql-account-and-database-setup.md) - This story's requirements
 
 ### Related Guides

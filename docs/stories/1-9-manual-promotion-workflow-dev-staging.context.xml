@@ -53,13 +53,13 @@
         <snippet>GitHub Actions workflow for manual dev to staging promotion. Manually triggered via workflow_dispatch. Pulls dev image, re-tags for staging, deploys to staging Cloud Run. Health check with IAM auth. Audit logging. Completes in under 5 minutes. No rebuild (uses existing dev image).</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-9: Manual Staging Promotion</section>
         <snippet>promote-to-staging.yml workflow. Manually triggerable from GitHub Actions UI. Accepts image tag (commit SHA) as input. Deploys SAME Docker image to staging (no rebuild). Staging environment variables injected. Health check runs against staging URL. Workflow summary displays staging URL. Complete in under 5 minutes.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Workflows and Sequencing - Manual Staging Promotion</section>
         <snippet>Developer validates feature in dev → triggers Promote to Staging workflow → Enter commit SHA → Workflow authenticates with GCP → Deploys SAME image to staging (no rebuild) → Different env vars (NODE_ENV=staging) → Different secrets (staging database) → Health check against staging URL → Report promotion status. Timing: under 3 minutes (faster than dev, no rebuild).</snippet>
@@ -77,7 +77,7 @@
         <snippet>Promotion workflow promotes exact same Docker image across environments. No rebuild ensures consistency. Image re-tagged for target environment. Different environment variables per environment. Manual trigger prevents accidental promotions. Health check validates deployment before marking success. Audit log tracks promotions.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-3.1: Deployment Error Handling</section>
         <snippet>Failed deployments do not affect running service. Cloud Run atomic deployments: new revision only receives traffic after passing health check. Previous revision continues serving until new revision healthy. Promotion workflow fails if health check fails.</snippet>

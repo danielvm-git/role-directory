@@ -57,13 +57,13 @@
         <snippet>GitHub Actions workflow for manual staging to production promotion. Manually triggered with approval gate. Requires confirmation string. GitHub Environment protection with reviewers. Pulls staging image, re-tags for production, deploys to production Cloud Run. Health check with IAM auth. Comprehensive audit logging including approver. Completes in under 5 minutes (after approval). No rebuild.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-10: Manual Production Promotion</section>
         <snippet>promote-to-production.yml workflow. Manually triggerable with approval requirement. Accepts staging image tag (commit SHA) as input. Deploys SAME Docker image to production (no rebuild). Production environment variables injected. GitHub Environment protection with required reviewers. Health check runs against production URL. Workflow summary displays production URL. Optional: Additional confirmation step. Complete in under 5 minutes after approval.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>Workflows and Sequencing - Manual Production Promotion</section>
         <snippet>Developer validates feature in staging → triggers Promote to Production workflow → Enter staging SHA + confirmation string → Approval request sent to reviewers → Reviewer approves → Workflow authenticates with GCP → Deploys SAME image to production (no rebuild) → Different env vars (NODE_ENV=production) → Different secrets (production database) → Health check against production URL → Report promotion status. Timing: under 3 minutes (after approval, faster than dev/staging, no rebuild).</snippet>
@@ -81,7 +81,7 @@
         <snippet>Production promotion requires multiple safety gates: Manual trigger (workflow_dispatch), Confirmation string (PROMOTE_TO_PRODUCTION), GitHub Environment approval (designated reviewers), No automatic deployments. Health check validation. Audit trail with approver. Rollback procedures documented. Higher scrutiny than staging promotion.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-1: Production Safety</section>
         <snippet>Production deployments require explicit approval. No automatic production deployments. Multiple confirmation steps (trigger + confirmation string + approval). Only designated reviewers can approve. Audit trail for compliance. Failed deployments leave previous version running. Rollback procedures documented and tested. Zero-downtime deployments.</snippet>

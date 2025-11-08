@@ -174,7 +174,7 @@
   <artifacts>
     <docs>
       <doc id="DOC-1">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification: Database Infrastructure &amp; Connectivity</title>
         <section>Migration System Requirements</section>
         <snippet>Migration system can apply and rollback schema changes. Manual CLI-based migrations acceptable for MVP. Migrations tracked in schema_migrations table. Idempotent migrations (can be run multiple times safely). Backward-compatible schema changes (additive migrations, no breaking changes). Migration workflow: create in dev, test thoroughly, apply to staging, validate, apply to production.</snippet>
@@ -192,13 +192,13 @@
         <snippet>Database schema must be consistent across dev, staging, and production environments. Migrations applied in same order in all environments. Zero downtime migrations preferred (additive changes). Rollback procedures documented and tested.</snippet>
       </doc>
       <doc id="DOC-4">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification</title>
         <section>Migration CLI API</section>
         <snippet>Migration CLI commands: npm run migrate:up (apply next pending migration), npm run migrate:down (rollback last migration), npm run migrate:status (show migration status), npm run migrate:create -- migration_name (create new migration file). Migrations stored in migrations/ directory with timestamp_name.up.sql and timestamp_name.down.sql files.</snippet>
       </doc>
       <doc id="DOC-5">
-        <path>docs/tech-spec-epic-2.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-2.md</path>
         <title>Epic Technical Specification</title>
         <section>Migration Flow</section>
         <snippet>Migration application flow: Developer creates migration file with timestamp. Developer sets DATABASE_URL env var for target environment. Developer runs npm run migrate:up. Migration script connects to database, reads schema_migrations table, identifies pending migrations, applies pending migrations in timestamp order, records applied migrations in schema_migrations table, reports success/failure.</snippet>
@@ -312,7 +312,7 @@ VALUES ('20231106120000_create_users_table', 'Initial user tables');
     <constraint id="CONS-2" type="architecture">
       <title>Migration Tracking via schema_migrations Table</title>
       <description>Use schema_migrations table to track migration state. Never run same migration twice. Apply migrations in timestamp order. Store version (filename), applied_at timestamp, and optional description.</description>
-      <source>docs/tech-spec-epic-2.md - Migration System</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Migration System</source>
     </constraint>
     <constraint id="CONS-3" type="security">
       <title>DATABASE_URL Required for Migrations</title>
@@ -322,22 +322,22 @@ VALUES ('20231106120000_create_users_table', 'Initial user tables');
     <constraint id="CONS-4" type="reliability">
       <title>Rollback Support Required</title>
       <description>Every migration must have corresponding rollback (.down.sql file). Test rollback in dev before production. Only rollback one migration at a time for safety. Rollback should reverse all changes made by forward migration.</description>
-      <source>docs/tech-spec-epic-2.md - Reliability Requirements</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Reliability Requirements</source>
     </constraint>
     <constraint id="CONS-5" type="reliability">
       <title>Idempotent Migrations</title>
       <description>Migrations should be idempotent (can be run multiple times safely). Use CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS, etc. Check for existence before modifying schema. Handle case where migration already partially applied.</description>
-      <source>docs/tech-spec-epic-2.md - Zero Downtime Migrations</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Zero Downtime Migrations</source>
     </constraint>
     <constraint id="CONS-6" type="architecture">
       <title>Manual Migrations for MVP</title>
       <description>Migrations run manually via CLI for MVP (not automated in CI/CD). Developer sets DATABASE_URL for target environment and runs migrate:up. Automated migrations can be added post-MVP if needed.</description>
-      <source>docs/tech-spec-epic-2.md - Migration Workflow</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Migration Workflow</source>
     </constraint>
     <constraint id="CONS-7" type="reliability">
       <title>Fail-Fast on Migration Errors</title>
       <description>If migration fails, stop immediately (don't continue with remaining migrations). Log full error details. Exit with non-zero code. Do not insert failed migration into schema_migrations table.</description>
-      <source>docs/tech-spec-epic-2.md - Error Handling</source>
+      <source>docs/3-solutioning/tech-spec-epic-2.md - Error Handling</source>
     </constraint>
     <constraint id="CONS-8" type="documentation">
       <title>Migration Documentation Required</title>

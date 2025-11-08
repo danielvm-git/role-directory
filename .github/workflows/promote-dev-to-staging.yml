@@ -33,12 +33,12 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
       - name: Pull dev image
         run: |
-          DEV_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.dev_image_tag }}"
+          DEV_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ inputs.dev_image_tag }}"
           echo "📦 Pulling dev image: $DEV_IMAGE"
           docker pull $DEV_IMAGE
           echo "✅ Dev image pulled successfully"
@@ -50,9 +50,9 @@ jobs:
           STAGING_TAG="staging-$(date +%Y%m%d-%H%M%S)"
           echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_OUTPUT
           
-          DEV_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ inputs.dev_image_tag }}"
-          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:$STAGING_TAG"
-          STAGING_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:staging-latest"
+          DEV_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ inputs.dev_image_tag }}"
+          STAGING_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:$STAGING_TAG"
+          STAGING_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:staging-latest"
           
           echo "🏷️  Re-tagging image for staging..."
           docker tag $DEV_IMAGE $STAGING_IMAGE
@@ -63,8 +63,8 @@ jobs:
 
       - name: Push staging images
         run: |
-          STAGING_IMAGE="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.STAGING_TAG }}"
-          STAGING_LATEST="gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:staging-latest"
+          STAGING_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.retag.outputs.STAGING_TAG }}"
+          STAGING_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:staging-latest"
           
           echo "📤 Pushing staging images to registry..."
           docker push $STAGING_IMAGE
@@ -77,7 +77,7 @@ jobs:
         with:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.GCP_REGION }}
-          image: gcr.io/${{ env.GCP_PROJECT_ID }}/role-directory:${{ steps.retag.outputs.STAGING_TAG }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.retag.outputs.STAGING_TAG }}
 
       - name: Wait for deployment
         run: |

@@ -285,7 +285,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.5] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-5] - Automated Dev Deployment acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-5] - Automated Dev Deployment acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-4.1, FR-4.4] - Development Environment and CI/CD Pipeline
 - [Source: docs/3-solutioning/architecture.md#ADR-004] - Deploy from source decision
 - [Source: docs/3-solutioning/architecture.md#Deployment-Flow] - Deployment workflow details

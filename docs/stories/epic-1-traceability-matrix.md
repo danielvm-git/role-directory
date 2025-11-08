@@ -681,9 +681,9 @@ epic_1_traceability_and_gate:
       automated_tests: "21 tests (4 unit + 17 E2E)"
       manual_verification: "127 criteria verified across 11 stories"
       test_review: "docs/reports/test-review-2025-11-07.md"
-      traceability: "docs/epic-1-traceability-matrix.md"
+      traceability: "docs/stories/epic-1-traceability-matrix.md"
       epic_breakdown: "docs/2-planning/epics.md"
-      tech_spec: "docs/tech-spec-epic-1.md"
+      tech_spec: "docs/3-solutioning/tech-spec-epic-1.md"
       architecture: "docs/3-solutioning/architecture.md"
       
     next_steps: "Proceed to Epic 2 (Database Infrastructure & Connectivity). No blockers. Epic 1 COMPLETE."
@@ -701,7 +701,7 @@ epic_1_traceability_and_gate:
 
 **Epic Planning:**
 - Epic Breakdown: `docs/2-planning/epics.md`
-- Tech Spec: `docs/tech-spec-epic-1.md`
+- Tech Spec: `docs/3-solutioning/tech-spec-epic-1.md`
 - PRD: `docs/2-planning/PRD.md`
 - Architecture: `docs/3-solutioning/architecture.md`
 
@@ -712,7 +712,7 @@ epic_1_traceability_and_gate:
 - (... 8 more story files)
 
 **Test Artifacts:**
-- Test Design: `docs/test-design-epic-1.md`
+- Test Design: `docs/stories/test-design-epic-1.md`
 - Test Review: `docs/reports/test-review-2025-11-07.md`
 - Test Suite: `tests/` (21 tests)
 - Sprint Status: `docs/sprint-status.yaml`

@@ -712,7 +712,7 @@ After Epic 2 completes, Phase 2 will integrate automated tests:
 - **PRD**: `docs/2-planning/PRD.md` - Product requirements and database infrastructure goals
 - **Epic**: `docs/2-planning/epics.md#Epic-2` - Epic 2 story breakdown and acceptance criteria
 - **Architecture**: `docs/3-solutioning/architecture.md` - Database architecture, Neon PostgreSQL, configuration patterns
-- **Tech Spec**: `docs/tech-spec-epic-2.md` - Epic 2 technical specification, API contracts, Zod schemas
+- **Tech Spec**: `docs/3-solutioning/tech-spec-epic-2.md` - Epic 2 technical specification, API contracts, Zod schemas
 
 ### Test Execution Tracking
 

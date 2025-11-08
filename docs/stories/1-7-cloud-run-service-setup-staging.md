@@ -305,7 +305,7 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.7] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-7] - Cloud Run Service Setup (Staging) acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-7] - Cloud Run Service Setup (Staging) acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-6.4] - Staging environment requirements
 - [Source: docs/3-solutioning/architecture.md#Cloud-Run-Configuration] - Cloud Run configuration pattern
 - [Source: docs/3-solutioning/architecture.md#Environment-Variables] - Environment variable management

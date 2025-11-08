@@ -596,7 +596,7 @@ traceability_and_gate:
 - **Story File:** `docs/stories/1-1-project-initialization-and-structure.md`
 - **Story Context:** `docs/stories/1-1-project-initialization-and-structure.context.xml`
 - **Architecture Doc:** `docs/3-solutioning/architecture.md`
-- **Tech Spec:** `docs/tech-spec-epic-1.md`
+- **Tech Spec:** `docs/3-solutioning/tech-spec-epic-1.md`
 - **Epic Breakdown:** `docs/2-planning/epics.md`
 - **PRD:** `docs/2-planning/PRD.md`
 - **Project Structure:** Root directory (package.json, tsconfig.json, app/, lib/, types/, components/)

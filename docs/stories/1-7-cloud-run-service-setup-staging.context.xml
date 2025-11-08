@@ -51,7 +51,7 @@
         <snippet>Staging Cloud Run service configuration. IAM protected (not public). Min 1 instance for warm standby, max 3 for cost control. 1 CPU, 512 MB memory. Environment: NODE_ENV=staging, DATABASE_URL from Secret Manager, NEXT_PUBLIC_API_URL. Labels: environment=staging, app=role-directory. Manual gcloud CLI setup, documented for IaC.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>AC-7: Cloud Run Service Setup (Staging)</section>
         <snippet>Staging service: role-directory-staging. Region: southamerica-east1. Min 1 instance (warm), max 3 instances. 1 CPU, 512 MB memory. IAM authentication required (not public). Environment: NODE_ENV=staging. Secrets: DATABASE_URL from Secret Manager. Ingress: all. Port: 8080. Labels for cost tracking. GitHub Actions service account granted roles/run.invoker.</snippet>
@@ -75,13 +75,13 @@
         <snippet>Environment-specific configuration. Dev: NODE_ENV=development. Staging: NODE_ENV=staging. Production: NODE_ENV=production. NEXT_PUBLIC_API_URL: Set to actual service URL. DATABASE_URL: From Secret Manager (encrypted). Secrets referenced by name, not embedded in config.</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-2.3: Secret Management</section>
         <snippet>Database credentials stored in Google Secret Manager. Encrypted at rest and in transit. Service account permissions for secret access. Secrets referenced by name in Cloud Run. No secrets in environment variables or code. Separate secrets per environment (dev, staging, production).</snippet>
       </doc>
       <doc>
-        <path>docs/tech-spec-epic-1.md</path>
+        <path>docs/3-solutioning/tech-spec-epic-1.md</path>
         <title>Epic 1 Technical Specification</title>
         <section>NFR-1.2: IAM Authentication</section>
         <snippet>Staging and production require IAM authentication. Not publicly accessible without Bearer token. GitHub Actions service account granted roles/run.invoker. Manual testing requires: gcloud auth print-identity-token. Health check endpoint works with auth header.</snippet>

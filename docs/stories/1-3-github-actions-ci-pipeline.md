@@ -225,10 +225,10 @@ role-directory/
 ### References
 
 - [Source: docs/2-planning/epics.md#Story-1.3] - Story definition and acceptance criteria
-- [Source: docs/tech-spec-epic-1.md#AC-3] - CI Pipeline acceptance criteria
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#AC-3] - CI Pipeline acceptance criteria
 - [Source: docs/2-planning/PRD.md#FR-4.4] - CI/CD Pipeline requirements
 - [Source: docs/3-solutioning/architecture.md#Deployment-Flow] - Deployment architecture
-- [Source: docs/tech-spec-epic-1.md#Dependencies-GitHub-Actions] - GitHub Actions dependencies
+- [Source: docs/3-solutioning/tech-spec-epic-1.md#Dependencies-GitHub-Actions] - GitHub Actions dependencies
 
 ### Learnings from Previous Story
 
