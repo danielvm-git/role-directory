@@ -22,26 +22,42 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./tests/support/setup.ts'],
       // Make environment variables available in tests
       env,
-    // Only run unit tests (exclude E2E tests which use Playwright)
-    include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
-    exclude: [
-      'node_modules/',
-      'tests/e2e/**',
-      'tests/support/**',
-      '.next/',
-      'out/',
-      '*.config.*',
-    ],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      // Run unit and integration tests (exclude E2E tests which use Playwright)
+      include: [
+        'tests/unit/**/*.test.ts',
+        'tests/unit/**/*.test.tsx',
+        'tests/integration/**/*.test.ts',
+        'tests/integration/**/*.test.tsx',
+      ],
       exclude: [
         'node_modules/',
-        'tests/',
+        'tests/e2e/**',
+        'tests/support/**',
         '.next/',
         'out/',
         '*.config.*',
       ],
+      // Control test execution order to prevent interference
+      // Tests run sequentially to avoid database state conflicts
+      // z-migrate.integration.test.ts is named with 'z-' prefix to run last
+      sequence: {
+        hooks: 'list',
+        setupFiles: 'list',
+        shuffle: false,
+        concurrent: false, // Run test files sequentially, not in parallel
+      },
+      // Disable file-level parallelism for integration tests
+      fileParallelism: false,
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/',
+          'tests/',
+          '.next/',
+          'out/',
+          '*.config.*',
+        ],
       },
     },
     resolve: {
