@@ -36,7 +36,9 @@ jobs:
         run: |
           echo "Downloading periodic table sample data..."
           wget -q https://raw.githubusercontent.com/neondatabase/postgres-sample-dbs/main/periodic_table.sql
-          echo "Loading data into database..."
+          echo "Dropping existing table if it exists..."
+          psql "${{ secrets.DEV_DATABASE_URL }}" -c "DROP TABLE IF EXISTS periodic_table CASCADE;"
+          echo "Loading fresh data into database..."
           psql "${{ secrets.DEV_DATABASE_URL }}" -f periodic_table.sql
           echo "✅ Periodic table data loaded successfully"
 
