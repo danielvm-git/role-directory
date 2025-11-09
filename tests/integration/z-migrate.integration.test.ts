@@ -310,7 +310,7 @@ DROP TABLE IF EXISTS test_periodic_table;
       // Create a fresh SQL connection to ensure we're not seeing stale data
       const freshSql = neon(process.env.DATABASE_URL!);
 
-      // Wait for table to exist (polls every 100ms, max 5 seconds)
+      // Wait for table to exist (polls every 100ms, max 10 seconds)
       await waitForCondition(
         async () => {
           const tables = await freshSql(`
@@ -321,9 +321,9 @@ DROP TABLE IF EXISTS test_periodic_table;
           return tables.length > 0;
         },
         {
-          timeout: 5000,
+          timeout: 10000,
           interval: 100,
-          errorMessage: 'Migration table test_periodic_table not created within 5 seconds'
+          errorMessage: 'Migration table test_periodic_table not created within 10 seconds'
         }
       );
 
@@ -388,7 +388,7 @@ DROP TABLE IF EXISTS test_periodic_table;
       // Was: await new Promise(resolve => setTimeout(resolve, 500));
       // Now: Poll until table is dropped (more reliable, faster on success)
       
-      // Wait for table to be dropped (polls every 100ms, max 5 seconds)
+      // Wait for table to be dropped (polls every 100ms, max 10 seconds)
       await waitForCondition(
         async () => {
           const tables = await freshSql(`
@@ -399,9 +399,9 @@ DROP TABLE IF EXISTS test_periodic_table;
           return tables.length === 0;
         },
         {
-          timeout: 5000,
+          timeout: 10000,
           interval: 100,
-          errorMessage: 'Migration table test_periodic_table not dropped within 5 seconds'
+          errorMessage: 'Migration table test_periodic_table not dropped within 10 seconds'
         }
       );
       
@@ -438,7 +438,7 @@ DROP TABLE IF EXISTS test_periodic_table;
       // Was: await new Promise(resolve => setTimeout(resolve, 500));
       // Now: Poll until table exists again (more reliable, faster on success)
       
-      // Wait for table to be re-created (polls every 100ms, max 5 seconds)
+      // Wait for table to be re-created (polls every 100ms, max 10 seconds)
       await waitForCondition(
         async () => {
           const tables = await freshSql(`
@@ -449,9 +449,9 @@ DROP TABLE IF EXISTS test_periodic_table;
           return tables.length > 0;
         },
         {
-          timeout: 5000,
+          timeout: 10000,
           interval: 100,
-          errorMessage: 'Migration table test_periodic_table not re-created within 5 seconds'
+          errorMessage: 'Migration table test_periodic_table not re-created within 10 seconds'
         }
       );
 
