@@ -15,8 +15,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { neon } from '@neondatabase/serverless';
+import type { NeonQueryFunction } from '@neondatabase/serverless';
 import * as fs from 'fs';
 import * as path from 'path';
+import { waitForCondition } from '../support/helpers/wait-for';
 
 const execAsync = promisify(exec);
 
@@ -25,7 +27,7 @@ const execAsync = promisify(exec);
 const shouldSkip = !process.env.DATABASE_URL;
 
 describe.skipIf(shouldSkip)('Migration CLI - End-to-End Integration', () => {
-  let sql: ReturnType<typeof neon>;
+  let sql: NeonQueryFunction<false, false>;
   const testMigrationName = `test_migration_${Date.now()}`;
   let testMigrationVersion: string;
 
@@ -300,10 +302,30 @@ DROP TABLE IF EXISTS test_periodic_table;
       // The migrate:up command runs in a separate Node process with its own
       // database connection. We need to ensure the transaction has committed
       // before we query for the table.
-      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Also, create a fresh SQL connection to ensure we're not seeing stale data
+      // ✅ FIXED: Replaced hard wait with deterministic condition polling
+      // Was: await new Promise(resolve => setTimeout(resolve, 500));
+      // Now: Poll until table exists (more reliable, faster on success)
+      
+      // Create a fresh SQL connection to ensure we're not seeing stale data
       const freshSql = neon(process.env.DATABASE_URL!);
+
+      // Wait for table to exist (polls every 100ms, max 5 seconds)
+      await waitForCondition(
+        async () => {
+          const tables = await freshSql(`
+            SELECT tablename FROM pg_tables 
+            WHERE schemaname = 'public' 
+            AND tablename = 'test_periodic_table'
+          `) as Array<{ tablename: string }>;
+          return tables.length > 0;
+        },
+        {
+          timeout: 5000,
+          interval: 100,
+          errorMessage: 'Migration table test_periodic_table not created within 5 seconds'
+        }
+      );
 
       // ============================================
       // STEP 5: Verify table exists in database
@@ -362,8 +384,26 @@ DROP TABLE IF EXISTS test_periodic_table;
       // STEP 10: Verify table dropped
       // ============================================
       
-      // Wait for rollback to commit
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // ✅ FIXED: Replaced hard wait with deterministic condition polling
+      // Was: await new Promise(resolve => setTimeout(resolve, 500));
+      // Now: Poll until table is dropped (more reliable, faster on success)
+      
+      // Wait for table to be dropped (polls every 100ms, max 5 seconds)
+      await waitForCondition(
+        async () => {
+          const tables = await freshSql(`
+            SELECT tablename FROM pg_tables 
+            WHERE schemaname = 'public' 
+            AND tablename = 'test_periodic_table'
+          `) as Array<{ tablename: string }>;
+          return tables.length === 0;
+        },
+        {
+          timeout: 5000,
+          interval: 100,
+          errorMessage: 'Migration table test_periodic_table not dropped within 5 seconds'
+        }
+      );
       
       const tablesAfterRollback = await freshSql(`
         SELECT tablename FROM pg_tables 
@@ -394,8 +434,26 @@ DROP TABLE IF EXISTS test_periodic_table;
       // Should apply successfully again
       expect(upAgainOutput).toMatch(/applied|✅/i);
 
-      // Wait for migration to commit
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // ✅ FIXED: Replaced hard wait with deterministic condition polling
+      // Was: await new Promise(resolve => setTimeout(resolve, 500));
+      // Now: Poll until table exists again (more reliable, faster on success)
+      
+      // Wait for table to be re-created (polls every 100ms, max 5 seconds)
+      await waitForCondition(
+        async () => {
+          const tables = await freshSql(`
+            SELECT tablename FROM pg_tables 
+            WHERE schemaname = 'public' 
+            AND tablename = 'test_periodic_table'
+          `) as Array<{ tablename: string }>;
+          return tables.length > 0;
+        },
+        {
+          timeout: 5000,
+          interval: 100,
+          errorMessage: 'Migration table test_periodic_table not re-created within 5 seconds'
+        }
+      );
 
       // Verify table exists again
       const tablesReapplied = await freshSql(`
