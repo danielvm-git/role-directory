@@ -1,6 +1,6 @@
 {
   "name": "role-directory",
-  "version": "1.0.4",
+  "version": "1.0.3",
   "description": "<!-- STATUS_START --> ## Project Status & Roadmap",
   "main": "index.js",
   "directories": {
