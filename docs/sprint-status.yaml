@@ -56,8 +56,8 @@ development_status:
   # Epic 2: Database Infrastructure & Connectivity
   epic-2: contexted
   2-1-neon-postgresql-account-and-database-setup: done
-  2-2-database-connection-configuration-with-zod-validated-config: review
-  2-3-database-schema-migration-setup: ready-for-dev
+  2-2-database-connection-configuration-with-zod-validated-config: done
+  2-3-database-schema-migration-setup: done
   2-4-initial-database-schema-migration: ready-for-dev
   2-5-database-connection-testing-in-health-check: drafted
   2-6-environment-specific-database-configuration-documentation: drafted
