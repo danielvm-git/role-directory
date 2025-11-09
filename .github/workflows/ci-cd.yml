@@ -32,6 +32,13 @@ jobs:
       - name: Build Next.js application
         run: npm run build
 
+      - name: Load Periodic Table Sample Data
+        run: |
+          echo "Loading periodic table sample data for integration tests..."
+          psql "${{ secrets.DEV_DATABASE_URL }}" -f periodic_table.sql
+        env:
+          PGPASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
+
       - name: Run Unit Tests
         run: npm run test:unit
         env:
