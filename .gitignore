@@ -71,4 +71,4 @@ temp/
 /.cursor/
 /bmad/
 periodic_table.sql
-# /docs/*  # Commented out - we want to track documentation
+# /docs/reports/*
