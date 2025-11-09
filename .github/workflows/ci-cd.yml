@@ -34,10 +34,11 @@ jobs:
 
       - name: Load Periodic Table Sample Data
         run: |
-          echo "Loading periodic table sample data for integration tests..."
+          echo "Downloading periodic table sample data..."
+          wget -q https://raw.githubusercontent.com/neondatabase/postgres-sample-dbs/main/periodic_table.sql
+          echo "Loading data into database..."
           psql "${{ secrets.DEV_DATABASE_URL }}" -f periodic_table.sql
-        env:
-          PGPASSWORD: ${{ secrets.DEV_DATABASE_PASSWORD }}
+          echo "✅ Periodic table data loaded successfully"
 
       - name: Run Unit Tests
         run: npm run test:unit
