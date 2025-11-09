@@ -341,6 +341,8 @@ git push origin :refs/tags/v1.0.4
 ## Related Documentation
 
 - [Release and Deployment Guide](./release-and-deployment-guide.md) - Complete deployment procedures
+- [Cloud Run Setup Guide](./cloud-run-setup-guide.md) - Cloud Run service configuration
+- [GitHub Actions Setup Guide](./github-actions-setup-guide.md) - CI/CD pipeline setup
 - [Epic Breakdown](../2-planning/epics.md) - All stories and epics
 - [Sprint Status](../sprint-status.yaml) - Current implementation status
 - [Semantic Versioning](https://semver.org) - Official specification

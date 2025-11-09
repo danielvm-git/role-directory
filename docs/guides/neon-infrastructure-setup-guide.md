@@ -834,7 +834,7 @@ gcloud run services describe role-directory-dev \
 ### Related Guides
 
 - [Neon Auth Setup Guide](neon-auth-setup-guide.md) - OAuth setup (Epic 3)
-- [Cloud Run Setup Guide](cloud-run-setup.md) - Cloud Run services for all environments
+- [Cloud Run Setup Guide](cloud-run-setup-guide.md) - Cloud Run services for all environments
 - [GitHub Actions Setup Guide](github-actions-setup-guide.md) - CI/CD pipeline configuration
 
 ---
