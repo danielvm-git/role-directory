@@ -8,11 +8,12 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { getTestConfig } from '../support/factories/config-factory';
 
 test.describe('[1.6] Health Check API (P0)', () => {
   test('[1.6-E2E-001] should return 200 OK with valid response', async ({ request }) => {
     // GIVEN: Health check endpoint exists
-    const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+    const { baseURL } = getTestConfig();
 
     // WHEN: Health check is requested
     const response = await request.get(`${baseURL}/api/health`);
@@ -31,7 +32,7 @@ test.describe('[1.6] Health Check API (P0)', () => {
 
   test('[1.6-E2E-002] should respond quickly (warm)', async ({ request }) => {
     // GIVEN: Health check endpoint exists
-    const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+    const { baseURL } = getTestConfig();
 
     // WHEN: Health check is requested
     const startTime = Date.now();
