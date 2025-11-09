@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['./tests/support/setup.ts'],
       // Make environment variables available in tests
       env,
+      // Test timeout: 30s for integration tests (longer than unit tests)
+      // Integration tests may interact with real database and need more time
+      testTimeout: 30000, // 30 seconds
       // Run unit and integration tests (exclude E2E tests which use Playwright)
       include: [
         'tests/unit/**/*.test.ts',
