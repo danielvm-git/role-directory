@@ -305,7 +305,7 @@ export default async function DashboardPage() {
 
   // Query database
   const start = Date.now();
-  const result = await pool.query("SELECT * FROM role_profiles LIMIT 10");
+  const result = await pool.query("SELECT * FROM periodic_table ORDER BY atomic_number LIMIT 10");
   const queryTime = Date.now() - start;
 
   return (
