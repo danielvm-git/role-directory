@@ -19,7 +19,7 @@ describe('Configuration Module', () => {
       // Arrange
       process.env.DATABASE_URL = 'postgresql://user:pass@host.neon.tech/dbname?sslmode=require';
       process.env.ALLOWED_EMAILS = 'user1@example.com,user2@example.com';
-      process.env.NODE_ENV = 'development';
+      (process.env as any).NODE_ENV = 'development';
       process.env.PORT = '3000';
 
       // Act
@@ -144,7 +144,7 @@ describe('Configuration Module', () => {
       // Arrange
       process.env.DATABASE_URL = 'postgresql://user:pass@host.neon.tech/dbname';
       process.env.ALLOWED_EMAILS = 'user@example.com';
-      process.env.NODE_ENV = 'invalid-env';
+      (process.env as any).NODE_ENV = 'invalid-env';
 
       // Act & Assert
       expect(() => getConfig()).toThrow('Configuration validation failed');
