@@ -18,10 +18,12 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { getTestConfig } from '../support/factories/config-factory';
 
-// Configuration
-const PRODUCTION_URL = process.env.PRODUCTION_URL || 'https://role-directory-production-test.run.app';
-const GCP_AUTH_TOKEN = process.env.GCP_AUTH_TOKEN || '';
+// Get configuration (use getTestConfig for optional production values)
+const config = getTestConfig();
+const PRODUCTION_URL = config.productionURL || 'https://role-directory-production-test.run.app';
+const GCP_AUTH_TOKEN = config.gcpAuthToken || '';
 
 test.describe('[1.8] Cloud Run Production Service - Configuration Verification (P0)', () => {
   test.skip(!PRODUCTION_URL || !GCP_AUTH_TOKEN, 'Skipping: PRODUCTION_URL or GCP_AUTH_TOKEN not set');
