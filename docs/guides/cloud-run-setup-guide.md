@@ -317,7 +317,7 @@ All environments use identical configuration:
 - [Cloud Run Documentation](https://cloud.google.com/run/docs)
 - [Secret Manager Documentation](https://cloud.google.com/secret-manager/docs)
 - [GitHub Actions Setup Guide](./github-actions-setup-guide.md)
-- [Neon Infrastructure Setup](./neon-infrastructure-setup-guide.md)
+- [Neon Infrastructure Setup Guide](./neon-infrastructure-setup-guide.md)
 - [Release and Deployment Guide](./release-and-deployment-guide.md)
 
 ---

@@ -919,9 +919,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 - **Architecture:** `docs/3-solutioning/architecture.md`
 - **PRD:** `docs/2-planning/PRD.md`
 - **Tech Specs:** `docs/3-solutioning/tech-spec-epic-1.md`
-- **GitHub Actions Setup:** `docs/guides/github-actions-setup-guide.md`
-- **Docker Guide:** `docs/guides/docker-usage-guide.md`
-- **Neon Setup:** `docs/guides/neon-infrastructure-setup-guide.md`
+- **Cloud Run Setup Guide:** `docs/guides/cloud-run-setup-guide.md`
+- **GitHub Actions Setup Guide:** `docs/guides/github-actions-setup-guide.md`
+- **Docker Usage Guide:** `docs/guides/docker-usage-guide.md`
+- **Neon Infrastructure Setup Guide:** `docs/guides/neon-infrastructure-setup-guide.md`
+- **Versioning Guide:** `docs/guides/versioning-guide.md`
 
 ---
 

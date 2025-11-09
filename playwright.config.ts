@@ -33,8 +33,13 @@ export default defineConfig({
     // Base URL from environment or default to local dev server
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
 
-    // Failure artifacts (only on failure to reduce storage)
-    trace: 'retain-on-failure',
+    // Trace recording for debugging
+    // 'on-first-retry' = Record trace on first retry (best for CI debugging)
+    // Download HTML report from GitHub Actions artifacts to view trace
+    // See: https://playwright.dev/docs/trace-viewer
+    trace: 'on-first-retry',
+    
+    // Screenshots and videos for debugging failures
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
 

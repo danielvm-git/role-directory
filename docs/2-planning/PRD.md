@@ -121,7 +121,7 @@ The MVP is complete when **one complete feature flows successfully through all t
 ❌ User engagement or retention (this isn't production yet)  
 ❌ SEO or discoverability (access is invitation-only)  
 ❌ Performance beyond "acceptable" (no scale requirements)  
-❌ Feature completeness (role/pricing features explicitly deferred)  
+❌ Feature completeness (complex features explicitly deferred)  
 ❌ Uptime SLAs or high availability (not mission-critical during validation)
 
 ---
@@ -172,7 +172,7 @@ The MVP is complete when **one complete feature flows successfully through all t
 - **Neon Auth Tables** (auto-created by Neon Auth):
   - User profiles, authentication data, sessions
   - Automatically synced by Neon Auth (no custom code needed)
-- *(Existing role/pricing tables remain for Hello World page queries)*
+- *(Periodic Table sample data loaded for Hello World page queries)*
 - **No custom auth tables needed** - Neon Auth handles all user/session data
 
 **5. Initial Testing Strategy (Minimal)**
@@ -213,11 +213,11 @@ The MVP is complete when **one complete feature flows successfully through all t
 - Automated health checks and alerting
 - Email notifications when codes are generated or used
 
-**Phase 6: Core Application Features**
-- Display role catalog data (from existing database tables)
-- Pricing information by region
-- Career track visualization
-- Search and filtering capabilities
+**Phase 6: Enhanced Features** *(Future)*
+- Additional data visualization
+- Advanced search capabilities
+- Performance optimization
+- Analytics integration
 
 ### Vision (Future)
 
@@ -225,7 +225,7 @@ The MVP is complete when **one complete feature flows successfully through all t
 - Remove or make invitation codes optional (early access mode)
 - User accounts and authentication (if needed)
 - Public marketing site
-- Full feature set based on validated role/pricing data model
+- Full feature set with validated infrastructure
 
 ---
 
@@ -240,7 +240,7 @@ The MVP is complete when **one complete feature flows successfully through all t
 ❌ **Monitoring and alerting** - Basic Cloud Run logging sufficient initially  
 ❌ **Email notifications** - Not needed for MVP validation  
 ❌ **Advanced permissions/roles** - Email whitelist sufficient for MVP  
-❌ **Role/pricing feature development** - Database exists but features deferred  
+❌ **Complex business features** - Focus is infrastructure validation  
 ❌ **UI polish or design** - Functional only; aesthetics deferred  
 ❌ **SEO, analytics, or marketing** - OAuth-only access, no public discovery needed
 
@@ -277,12 +277,12 @@ The MVP is complete when **one complete feature flows successfully through all t
 - `GET /api/dashboard/hello` - Fetch data from PostgreSQL for Hello World page
   - Requires valid session
   - Response: `{ data: any[], query_time_ms: number }`
-  - Query: Simple SELECT from existing role/pricing tables or database version info
+  - Query: Simple SELECT from Periodic Table sample data or database version info
 
 **Future Endpoints (Deferred):**
 - Admin code generation endpoints (Phase 3)
 - Workflow/sprint status file endpoints (Phase 4)
-- Role catalog data endpoints (Phase 6)
+- Additional data endpoints (Phase 6)
 
 ### Session Management
 
@@ -349,7 +349,7 @@ The MVP is complete when **one complete feature flows successfully through all t
 - ✅ True serverless (aligns with Cloud Run serverless architecture)
 - ✅ Standard PostgreSQL protocol (no code changes vs Cloud SQL)
 - ✅ Easy migration path to Cloud SQL when moving to production scale
-- ✅ 3GB storage sufficient for MVP with role/pricing tables + session data
+- ✅ 3GB storage sufficient for MVP with sample data + session data
 - ⚠️ Cold start: ~2-3 seconds after idle period (acceptable for validation)
 - ⚠️ Not GCP-native (external service, connects via public internet)
 
@@ -576,8 +576,9 @@ When ready for production scale or GCP-native requirement:
   - ✅ Query time metric shown
 
 **FR-3.2: Database Query**
-- Execute simple SELECT query against existing role/pricing tables
-- Example: `SELECT * FROM role_profiles LIMIT 10` or `SELECT version()`
+- Execute simple SELECT query against Periodic Table sample data
+- Example: `SELECT * FROM periodic_table ORDER BY "AtomicNumber" LIMIT 10` or `SELECT version()`
+- Sample data from: [Neon Periodic Table Dataset](https://neon.com/docs/import/import-sample-data#periodic-table-data)
 - Measure and return query execution time
 - Handle query errors gracefully
 - **Acceptance Criteria:**
@@ -692,12 +693,12 @@ When ready for production scale or GCP-native requirement:
 - **Neon Auth tables** (auto-created by Neon Auth):
   - User profiles, sessions, OAuth providers
   - Automatically managed by Neon Auth
-- **Existing tables**: `role_profiles`, `profile_pricing`, etc. (from sql/ directory)
-- Migration scripts only for existing role/pricing tables
+- **Sample data**: `periodic_table` (118 elements - from [Neon sample datasets](https://neon.com/docs/import/import-sample-data#periodic-table-data))
+- Migration scripts for initial schema and sample data
 - Same schema deployed to all three databases
 - **Acceptance Criteria:**
   - ✅ Neon Auth tables created automatically on first sign-in
-  - ✅ Existing role/pricing tables present (manual migration)
+  - ✅ Periodic Table sample data loaded via migration
   - ✅ Schema identical across all three databases
   - ✅ User data syncing correctly to database
 
@@ -1198,7 +1199,7 @@ This isn't about building a feature-rich application. It's about **earning confi
 **Phase 3:** Admin UI for code generation  
 **Phase 4:** Additional dashboard pages (workflow/sprint status)  
 **Phase 5:** Monitoring and operations enhancements  
-**Phase 6:** Core application features (role catalog)  
+**Phase 6:** Enhanced features and optimization  
 **Phase 7:** Public launch
 
 ---

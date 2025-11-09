@@ -283,7 +283,7 @@ console.log(config.port);          // number
 
 **4. Set up Neon PostgreSQL**
 
-See detailed guide: [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md)
+See detailed guide: [Neon Infrastructure Setup Guide](docs/guides/neon-infrastructure-setup-guide.md)
 
 **5. Run database migrations**
 
@@ -297,32 +297,28 @@ DATABASE_URL="postgresql://..." npm run migrate:status
 DATABASE_URL="postgresql://..." npm run migrate:up
 ```
 
-See detailed guide: [Database Migrations](docs/guides/database-migrations.md)
+See detailed guide: [Database Migrations Guide](docs/guides/database-migrations-guide.md)
 
 **6. Set up Neon Auth (OAuth)**
 
-See detailed guide: [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md)
+See detailed guide: [Neon Auth Setup Guide](docs/guides/neon-auth-setup-guide.md)
 
-**7. Test database connection (optional)**
+**7. Load sample data (optional)**
 
-Verify your database connection works using the [Periodic Table sample data](https://neon.com/docs/import/import-sample-data):
+The application uses the [Neon Periodic Table sample dataset](https://neon.com/docs/import/import-sample-data#periodic-table-data) for demonstration. This data is automatically loaded during database migrations (Story 2.4).
 
-```bash
-# Load sample data and run SQL queries
-./scripts/test-db-connection.sh
+**Sample data details:**
+- **Table:** `periodic_table`
+- **Records:** 118 elements
+- **Source:** [Neon sample datasets](https://neon.com/docs/import/import-sample-data#periodic-table-data)
+- **Size:** ~7.2 MB installed
+- **License:** ISC License (Copyright © 2017, Chris Andrejewski)
 
-# OR test using the query() function
-npm run test:db
-```
-
-Expected output:
-```
-✅ Config loaded: development environment
-✅ Query executed in 45ms
-✅ Total elements: 118
-✅ Element: Neon (Ne)
-✅ All tests passed!
-```
+The periodic table data is perfect for MVP validation because it:
+- ✅ Small dataset (118 rows) - fast queries
+- ✅ Rich schema (28 columns) - demonstrates data display
+- ✅ No sensitive data - safe for public deployment
+- ✅ Well-known domain - easy to verify correctness
 
 **8. Run development server**
 
@@ -360,21 +356,27 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 #### `GET /api/dashboard/hello`
 **Dashboard data query** (requires authentication)
 
+Fetches data from the [Periodic Table sample dataset](https://neon.com/docs/import/import-sample-data#periodic-table-data).
+
 **Response (200 OK):**
 ```json
 {
   "data": [
     {
-      "atomic_number": 1,
-      "symbol": "H",
-      "element": "Hydrogen",
-      "atomic_mass": 1.008
+      "AtomicNumber": 1,
+      "Element": "Hydrogen",
+      "Symbol": "H",
+      "AtomicMass": 1.007,
+      "Phase": "gas",
+      "Type": "Nonmetal"
     },
     {
-      "atomic_number": 2,
-      "symbol": "He",
-      "element": "Helium",
-      "atomic_mass": 4.0026
+      "AtomicNumber": 2,
+      "Element": "Helium",
+      "Symbol": "He",
+      "AtomicMass": 4.002,
+      "Phase": "gas",
+      "Type": "Noble Gas"
     }
   ],
   "query_time_ms": 45,
@@ -446,7 +448,7 @@ npm test
 
 **Database Integration Tests:**
 
-All database tests run automatically using a real Neon database with [Periodic Table sample data](https://neon.com/docs/import/import-sample-data):
+All database tests run automatically using a real Neon database with [Periodic Table sample data](https://neon.com/docs/import/import-sample-data#periodic-table-data):
 
 ```bash
 # Run database integration tests (included in test:unit)
@@ -459,7 +461,7 @@ npm run test:unit tests/unit/db.test.ts
 - ✅ `query()` and `queryOne()` helper functions
 - ✅ Error handling and sanitization
 - ✅ Query performance monitoring (slow query logging)
-- ✅ Sample data auto-loading on first run
+- ✅ Periodic Table sample data (118 elements)
 - ✅ Cold start handling (Neon auto-suspend/resume)
 
 **CI/CD Integration:**
@@ -467,7 +469,7 @@ npm run test:unit tests/unit/db.test.ts
 All 38 tests run automatically in GitHub Actions:
 - ✅ Tests use real Neon database (not mocked)
 - ✅ GitHub Secret `DEV_DATABASE_URL` provides database connection
-- ✅ Periodic Table sample data is loaded automatically
+- ✅ [Periodic Table sample data](https://neon.com/docs/import/import-sample-data#periodic-table-data) loaded via migration
 - ✅ Tests must pass before deployment to dev environment
 - ✅ Zero additional cost (GitHub Secrets are free)
 
@@ -490,10 +492,10 @@ Start here:
 **2. Set Up Infrastructure**
 
 Follow these guides in order:
-1. [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL databases
-2. [Cloud Run Setup](docs/guides/cloud-run-setup.md) - Cloud Run services
-3. [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline
-4. [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth authentication
+1. [Neon Infrastructure Setup Guide](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL databases
+2. [Cloud Run Setup Guide](docs/guides/cloud-run-setup-guide.md) - Cloud Run services
+3. [GitHub Actions Setup Guide](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline
+4. [Neon Auth Setup Guide](docs/guides/neon-auth-setup-guide.md) - OAuth authentication
 
 **3. Implement Stories**
 
@@ -525,7 +527,7 @@ gcloud run deploy role-directory-dev \
   --region=${REGION}
 ```
 
-See [Architecture: Deployment Flow](docs/3-solutioning/architecture.md#deployment-flow) and [Artifact Registry Migration Guide](docs/guides/artifact-registry-migration.md)
+See [Architecture: Deployment Flow](docs/3-solutioning/architecture.md#deployment-flow) and [Artifact Registry Migration Guide](docs/guides/artifact-registry-migration-guide.md)
 
 ### For Collaborators
 
@@ -552,8 +554,8 @@ After authentication, you'll see:
 
 **Deployment Workflows:**
 - [Release and Deployment Guide](docs/guides/release-and-deployment-guide.md) - Complete deployment procedures
-- [Cloud Run Setup](docs/guides/cloud-run-setup.md) - Cloud Run service configuration (all environments)
-- [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
+- [Cloud Run Setup Guide](docs/guides/cloud-run-setup-guide.md) - Cloud Run service configuration (all environments)
+- [GitHub Actions Setup Guide](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
 
 **Recovery Procedures:**
 - **[Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy)** - How to rollback deployments in any environment
@@ -563,9 +565,9 @@ After authentication, you'll see:
 
 **Infrastructure Guides:**
 - [Docker Usage Guide](docs/guides/docker-usage-guide.md) - Containerization and local development
-- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (all environments)
-- [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
-- [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - Container image storage
+- [Neon Infrastructure Setup Guide](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (all environments)
+- [Neon Auth Setup Guide](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
+- [Artifact Registry Migration Guide](docs/guides/artifact-registry-migration-guide.md) - Container image storage
 
 ### Quick Operational Reference
 
@@ -618,16 +620,15 @@ See [Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy) 
 - [Tech Spec Epic 2](docs/3-solutioning/tech-spec-epic-2.md) - Database infrastructure
 
 **Setup & Operations:**
-- [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (all environments)
-- [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
-- [Cloud Run Setup](docs/guides/cloud-run-setup.md) - Cloud Run services (all environments)
-- [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
+- [Neon Infrastructure Setup Guide](docs/guides/neon-infrastructure-setup-guide.md) - PostgreSQL database setup (all environments)
+- [Neon Auth Setup Guide](docs/guides/neon-auth-setup-guide.md) - OAuth configuration
+- [Cloud Run Setup Guide](docs/guides/cloud-run-setup-guide.md) - Cloud Run services (all environments)
+- [GitHub Actions Setup Guide](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
 - [Docker Usage Guide](docs/guides/docker-usage-guide.md) - Local development and containerization
+- [Database Migrations Guide](docs/guides/database-migrations-guide.md) - Schema migration management
 - [Release and Deployment Guide](docs/guides/release-and-deployment-guide.md) - Deployment procedures and promotions
-- [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - GCR to Artifact Registry migration
-
-**Version Management:**
-- [Versioning Guide](docs/guides/versioning.md) - Semantic versioning, release process, and epic/story mapping
+- [Artifact Registry Migration Guide](docs/guides/artifact-registry-migration-guide.md) - GCR to Artifact Registry migration
+- [Playwright CI Debugging Guide](docs/guides/playwright-ci-debugging-guide.md) - CI test debugging procedures
 
 **Project Status:**
 - [Workflow Status](docs/bmm-workflow-status.yaml) - Current phase tracking
