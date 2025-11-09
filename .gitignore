@@ -71,3 +71,4 @@ temp/
 /.cursor/
 /bmad/
 periodic_table.sql
+/docs/*

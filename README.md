@@ -131,6 +131,34 @@ const configSchema = z.object({
 export const getConfig = () => configSchema.parse(process.env);
 ```
 
+**Database Query Pattern:**
+
+```typescript
+// lib/db.ts - Database module
+import { query, queryOne } from '@/lib/db';
+
+// Simple query
+const version = await query('SELECT version()');
+
+// Parameterized query (prevents SQL injection)
+const users = await query<User>(
+  'SELECT * FROM users WHERE email = $1',
+  ['user@example.com']
+);
+
+// Multiple parameters
+const profiles = await query<Profile>(
+  'SELECT * FROM role_profiles WHERE career_path_id = $1 AND role_name ILIKE $2',
+  [5, '%engineer%']
+);
+
+// Single row query
+const user = await queryOne<User>(
+  'SELECT * FROM users WHERE id = $1',
+  [userId]
+);
+```
+
 **API Route Pattern:**
 
 ```typescript
@@ -155,6 +183,15 @@ export async function GET() {
   }
 }
 ```
+
+**Database Features:**
+
+- ✅ **HTTP-based connection** - Neon serverless driver (no connection pooling needed)
+- ✅ **Parameterized queries** - Prevents SQL injection ($1, $2 placeholders)
+- ✅ **Slow query logging** - Automatically logs queries >200ms
+- ✅ **Error sanitization** - Generic error messages to client, full details server-side
+- ✅ **Cold start handling** - Transparently handles Neon auto-suspend/resume (2-3s)
+- ✅ **Type safety** - Generic type parameter for result rows
 
 ---
 
@@ -192,19 +229,56 @@ cp .env.example .env.local
 Edit `.env.local` with your credentials:
 
 ```bash
-# Database (Neon PostgreSQL)
+# Database (Neon PostgreSQL) - REQUIRED
 DATABASE_URL="postgresql://user:pass@ep-xxx.region.neon.tech/role_directory_dev?sslmode=require"
 
-# Authentication (Neon Auth)
+# Access Control - REQUIRED
+ALLOWED_EMAILS="your-email@example.com,collaborator@example.com"
+
+# Authentication (Neon Auth) - REQUIRED for Epic 3
 NEON_AUTH_PROJECT_ID="your-project-id"
 NEON_AUTH_SECRET_KEY="your-secret-key"
 
-# Access Control
-ALLOWED_EMAILS="your-email@example.com,collaborator@example.com"
+# Environment - OPTIONAL (defaults shown)
+NODE_ENV="development"  # development | staging | production
+PORT="3000"            # 1-65535
+```
 
-# Environment
-NODE_ENV="development"
-PORT="3000"
+**Environment Variable Details:**
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | ✅ Yes | None | PostgreSQL connection string from Neon (must start with `postgresql://`) |
+| `ALLOWED_EMAILS` | ✅ Yes | None | Comma-separated list of allowed email addresses |
+| `NODE_ENV` | ⚠️ Optional | `development` | Application environment: `development`, `staging`, `production` |
+| `PORT` | ⚠️ Optional | `8080` | Server port number (1-65535) |
+| `NEON_AUTH_PROJECT_ID` | 🔮 Epic 3 | None | Neon Auth project ID (for OAuth) |
+| `NEON_AUTH_SECRET_KEY` | 🔮 Epic 3 | None | Neon Auth secret key (for OAuth) |
+| `NEXT_PUBLIC_API_URL` | ⚠️ Optional | None | Public API URL for client-side requests |
+
+**Configuration Validation:**
+
+The application uses [Zod](https://zod.dev/) for runtime validation. If configuration is invalid, the app **fails fast** with detailed error messages:
+
+```bash
+# Example: Missing DATABASE_URL
+Configuration validation failed:
+  databaseUrl: Required
+
+Please check your environment variables in .env.local (local) or Cloud Run configuration (production).
+```
+
+**Using Configuration in Code:**
+
+```typescript
+import { getConfig } from '@/lib/config';
+
+// Type-safe configuration access
+const config = getConfig();
+console.log(config.databaseUrl);  // string
+console.log(config.allowedEmails); // string[]
+console.log(config.nodeEnv);      // 'development' | 'staging' | 'production'
+console.log(config.port);          // number
 ```
 
 **4. Set up Neon PostgreSQL**
@@ -215,7 +289,28 @@ See detailed guide: [Neon Infrastructure Setup](docs/guides/neon-infrastructure-
 
 See detailed guide: [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md)
 
-**6. Run development server**
+**6. Test database connection (optional)**
+
+Verify your database connection works using the [Periodic Table sample data](https://neon.com/docs/import/import-sample-data):
+
+```bash
+# Load sample data and run SQL queries
+./scripts/test-db-connection.sh
+
+# OR test using the query() function
+npm run test:db
+```
+
+Expected output:
+```
+✅ Config loaded: development environment
+✅ Query executed in 45ms
+✅ Total elements: 118
+✅ Element: Neon (Ne)
+✅ All tests passed!
+```
+
+**7. Run development server**
 
 ```bash
 npm run dev
@@ -286,12 +381,16 @@ Full API documentation: [Architecture Document](docs/3-solutioning/architecture.
 - ✅ Lint: `npm run lint` (ESLint)
 - ✅ Type Check: `npm run type-check` (TypeScript)
 - ✅ Build: `npm run build` (Next.js)
+- ✅ Unit Tests: 38 tests (Vitest) - Configuration, Database, API Routes
+- ✅ E2E Tests: Playwright (Health checks, Landing page, Cloud Run verification)
+- ✅ Database Integration: Real Neon database with Periodic Table sample data
+- ✅ CI/CD: All tests run automatically on every commit
 - ✅ Manual E2E: See [Story 4.5 Checklist](docs/2-planning/epics.md#story-45-end-to-end-testing-manual-mvp-validation)
 
 **Growth Features (Phase 2):**
-- 🔄 Unit Tests: Vitest + React Testing Library (70%+ coverage target)
 - 🔄 API Tests: Vitest (100% API route coverage)
-- 🔄 E2E Tests: Playwright (5-10 critical scenarios)
+- 🔄 Component Tests: React Testing Library (70%+ coverage target)
+- 🔄 Performance Tests: Load testing and benchmarking
 
 **Run current tests:**
 
@@ -304,7 +403,54 @@ npm run type-check
 
 # Build (validates entire app)
 npm run build
+
+# Unit tests - 38 tests (includes database integration)
+npm run test:unit
+
+# E2E tests (Playwright)
+npm run test:e2e
+
+# All tests together
+npm test
 ```
+
+**Test Coverage:**
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Configuration** | 18 tests | Zod schema validation, environment variables |
+| **Database** | 16 tests | Connection, queries, error handling, performance |
+| **API Routes** | 4 tests | Health check endpoint, error responses |
+| **Total** | **38 tests** | All tests run in CI/CD with real database |
+
+**Database Integration Tests:**
+
+All database tests run automatically using a real Neon database with [Periodic Table sample data](https://neon.com/docs/import/import-sample-data):
+
+```bash
+# Run database integration tests (included in test:unit)
+npm run test:unit tests/unit/db.test.ts
+```
+
+**What's tested:**
+- ✅ Database connection and configuration
+- ✅ SQL query execution with parameterized queries
+- ✅ `query()` and `queryOne()` helper functions
+- ✅ Error handling and sanitization
+- ✅ Query performance monitoring (slow query logging)
+- ✅ Sample data auto-loading on first run
+- ✅ Cold start handling (Neon auto-suspend/resume)
+
+**CI/CD Integration:**
+
+All 38 tests run automatically in GitHub Actions:
+- ✅ Tests use real Neon database (not mocked)
+- ✅ GitHub Secret `DEV_DATABASE_URL` provides database connection
+- ✅ Periodic Table sample data is loaded automatically
+- ✅ Tests must pass before deployment to dev environment
+- ✅ Zero additional cost (GitHub Secrets are free)
+
+**Security:** Database connection strings are encrypted as GitHub Secrets and never exposed in logs.
 
 ---
 
@@ -457,8 +603,13 @@ See [Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy) 
 - [GitHub Actions Setup](docs/guides/github-actions-setup-guide.md) - CI/CD pipeline configuration
 - [Docker Usage Guide](docs/guides/docker-usage-guide.md) - Local development and containerization
 - [Release and Deployment Guide](docs/guides/release-and-deployment-guide.md) - Deployment procedures and promotions
-- [Version Management](docs/guides/version-management.md) - Version control and release process
 - [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - GCR to Artifact Registry migration
+
+**Version Management:**
+- [Version Roadmap](docs/guides/version-roadmap.md) - Complete epic/story version mapping
+- [Version Quick Reference](docs/guides/version-quick-reference.md) - Quick version lookup
+- [Version Management Guide](docs/guides/version-management.md) - Release process and automation
+- [Version Roadmap Summary](docs/VERSION-ROADMAP-SUMMARY.md) - Visual roadmap overview
 
 **Project Status:**
 - [Workflow Status](docs/bmm-workflow-status.yaml) - Current phase tracking

@@ -159,6 +159,47 @@ The workflow uses this to construct Docker image tags:
 IMAGE_NAME="gcr.io/${GCP_PROJECT_ID}/role-directory"
 ```
 
+#### Secret 3: DEV_DATABASE_URL (REQUIRED for Database Tests - Added 2025-11-08)
+
+```
+Name: DEV_DATABASE_URL
+Value: postgresql://user:password@host.region.neon.tech/database?sslmode=require
+```
+
+**Purpose:** Enables database integration tests in CI/CD pipeline.
+
+**⚠️ REQUIRED:** Without this secret, the CI/CD build will fail during the "Run Unit Tests" step:
+```
+Configuration validation failed:
+  databaseUrl: Required
+```
+
+**Value:** Use your Neon development database connection string from Story 2.1:
+1. Go to [Neon Console](https://console.neon.tech/)
+2. Select your `role_directory_dev` database
+3. Copy the connection string (includes credentials)
+4. Add to GitHub Secrets as `DEV_DATABASE_URL`
+
+**What it enables:**
+- ✅ All 38 tests run in CI/CD (including 16 database integration tests)
+- ✅ Real database testing with Periodic Table sample data
+- ✅ Auto-loading of test data on first run
+- ✅ Quality gate prevents broken database code from deploying
+
+**Security:**
+- GitHub Secrets are encrypted at rest
+- Never exposed in logs or workflow output
+- Only accessible during workflow execution
+- Dev database only (not staging/production)
+
+**Test Coverage Impact:**
+
+| Before | After |
+|--------|-------|
+| 22 tests (16 skipped) | **38 tests (all run)** |
+| No database validation | ✅ Real database tests |
+| ~15s test duration | ~30s test duration |
+
 #### Optional Secrets (for Epic 3)
 
 These can be added now with placeholder values:
@@ -177,6 +218,7 @@ After adding secrets, you should see them listed (values hidden):
 
 - `GCP_SERVICE_ACCOUNT_KEY` - Added [date]
 - `GCP_PROJECT_ID` - Added [date]
+- `DEV_DATABASE_URL` - Added [date] (Required for database tests)
 
 ### Step 6: Secure the Service Account Key
 
@@ -243,14 +285,41 @@ The updated `.github/workflows/ci-cd.yml` now includes:
 - Run ESLint
 - Run TypeScript type check
 - Build Next.js application
+- **Run Unit Tests (38 tests) with database integration** ✨ Added 2025-11-08
+  - Uses `DEV_DATABASE_URL` GitHub Secret
+  - Tests include configuration, database, and API route tests
+  - Auto-loads Periodic Table sample data
+- Install Playwright browsers
+- Run E2E Tests
+
+**Database Tests in CI/CD:**
+
+The workflow now runs all 38 tests including 16 database integration tests:
+
+```yaml
+- name: Run Unit Tests
+  run: npm run test:unit
+  env:
+    DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+    ALLOWED_EMAILS: test@example.com,ci@example.com
+    NODE_ENV: test
+    PORT: 3000
+```
+
+**Environment Variables:**
+- `DATABASE_URL`: From GitHub Secret (Neon connection string)
+- `ALLOWED_EMAILS`: Test values for configuration validation
+- `NODE_ENV`: Set to `test` for test environment
+- `PORT`: Default port for testing
 
 ### Job 2: Deploy to Dev (depends on Build)
 - Checkout code
 - Authenticate with GCP
 - Setup gcloud CLI
-- Deploy to Cloud Run (using `--source .`)
+- Deploy to Cloud Run (using Docker image)
 - Get service URL
 - Run health check (retries for 60 seconds)
+- Run post-deployment E2E tests
 - Post deployment summary
 
 ## Deployment Configuration
@@ -356,10 +425,18 @@ gcloud iam service-accounts keys create github-actions-key.json \
 
 | Stage | Duration | Notes |
 |-------|----------|-------|
-| **Build & Quality Checks** | 2-3 min | With npm caching |
+| **Build & Quality Checks** | 3-4 min | With npm caching + database tests |
+| **Unit Tests (38 tests)** | 30-45 sec | Includes 16 database integration tests |
+| **E2E Tests** | 30-60 sec | Playwright tests |
 | **Deploy to Cloud Run** | 4-6 min | Cloud Build + deployment |
-| **Health Check** | 10-60 sec | Includes cold start |
-| **Total** | 7-10 min | Target: <10 minutes |
+| **Post-Deployment Tests** | 30-60 sec | Health check verification |
+| **Total** | 8-12 min | Target: <15 minutes |
+
+**Database Test Performance:**
+- Database connection: ~100-200ms (Neon cold start)
+- Sample data loading: ~500ms (first run only)
+- Individual tests: ~50-100ms each
+- Total database tests: ~30 seconds
 
 ## Cost Impact
 

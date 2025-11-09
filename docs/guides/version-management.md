@@ -348,13 +348,16 @@ git push origin main
 
 ## Related Documentation
 
+- **Version Roadmap:** `docs/guides/version-roadmap.md` - Complete epic/story version mapping
+- **Version Quick Reference:** `docs/guides/version-quick-reference.md` - Quick version lookup
 - **Release Guide:** `docs/guides/release-and-deployment-guide.md`
 - **CI/CD Setup:** `docs/guides/github-actions-setup-guide.md`
 - **Docker Guide:** `docs/guides/docker-usage-guide.md`
 - **Architecture:** `docs/3-solutioning/architecture.md`
+- **Semantic Versioning:** [semver.org](https://semver.org) - Official specification
 
 ---
 
-**Last Updated:** 2025-11-08  
+**Last Updated:** 2025-11-09  
 **Version:** 1.0
 

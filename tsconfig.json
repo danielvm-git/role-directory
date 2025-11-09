@@ -34,11 +34,11 @@
     "src/app/**/*.tsx",
     "src/lib/**/*.ts",
     "src/lib/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "vitest.config.ts",
-    "tests"
+    "node_modules"
   ]
 }
