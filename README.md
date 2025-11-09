@@ -32,8 +32,8 @@ When building applications in the cloud, there's a tension between rapid iterati
 | **Staging** | ⏳ Pending | TBD |
 | **Production** | ⏳ Pending | TBD |
 
-**Current Phase:** ✅ Solutioning Complete → Ready for Implementation  
-**Documentation Quality:** 📚 Grade A (94.2/100)
+**Current Phase:** 🔄 Implementation (Epic 2 - Database Infrastructure)  
+**Documentation Quality:** 📚 Grade A+ (Consolidated & Current)
 
 ---
 
@@ -146,16 +146,16 @@ const users = await query<User>(
   ['user@example.com']
 );
 
-// Multiple parameters
-const profiles = await query<Profile>(
-  'SELECT * FROM role_profiles WHERE career_path_id = $1 AND role_name ILIKE $2',
-  [5, '%engineer%']
+// Query periodic table sample data
+const elements = await query<Element>(
+  'SELECT * FROM periodic_table WHERE atomic_number <= $1 ORDER BY atomic_number',
+  [10]
 );
 
 // Single row query
-const user = await queryOne<User>(
-  'SELECT * FROM users WHERE id = $1',
-  [userId]
+const element = await queryOne<Element>(
+  'SELECT * FROM periodic_table WHERE symbol = $1',
+  ['Ne']
 );
 ```
 
@@ -172,7 +172,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const start = Date.now();
-    const result = await query('SELECT * FROM role_profiles LIMIT 10');
+    const result = await query('SELECT * FROM periodic_table ORDER BY atomic_number LIMIT 10');
     
     return NextResponse.json({ 
       data: result, 
@@ -285,11 +285,25 @@ console.log(config.port);          // number
 
 See detailed guide: [Neon Infrastructure Setup](docs/guides/neon-infrastructure-setup-guide.md)
 
-**5. Set up Neon Auth (OAuth)**
+**5. Run database migrations**
+
+Apply schema migrations to set up your database:
+
+```bash
+# Check migration status
+DATABASE_URL="postgresql://..." npm run migrate:status
+
+# Apply all pending migrations
+DATABASE_URL="postgresql://..." npm run migrate:up
+```
+
+See detailed guide: [Database Migrations](docs/guides/database-migrations.md)
+
+**6. Set up Neon Auth (OAuth)**
 
 See detailed guide: [Neon Auth Setup](docs/guides/neon-auth-setup-guide.md)
 
-**6. Test database connection (optional)**
+**7. Test database connection (optional)**
 
 Verify your database connection works using the [Periodic Table sample data](https://neon.com/docs/import/import-sample-data):
 
@@ -310,7 +324,7 @@ Expected output:
 ✅ All tests passed!
 ```
 
-**7. Run development server**
+**8. Run development server**
 
 ```bash
 npm run dev
@@ -351,9 +365,16 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 {
   "data": [
     {
-      "id": "123e4567-e89b-12d3-a456-426614174000",
-      "title": "Senior Software Engineer",
-      "level": "Senior"
+      "atomic_number": 1,
+      "symbol": "H",
+      "element": "Hydrogen",
+      "atomic_mass": 1.008
+    },
+    {
+      "atomic_number": 2,
+      "symbol": "He",
+      "element": "Helium",
+      "atomic_mass": 4.0026
     }
   ],
   "query_time_ms": 45,
@@ -606,10 +627,7 @@ See [Rollback Procedures](docs/3-solutioning/architecture.md#rollback-strategy) 
 - [Artifact Registry Migration](docs/guides/artifact-registry-migration.md) - GCR to Artifact Registry migration
 
 **Version Management:**
-- [Version Roadmap](docs/guides/version-roadmap.md) - Complete epic/story version mapping
-- [Version Quick Reference](docs/guides/version-quick-reference.md) - Quick version lookup
-- [Version Management Guide](docs/guides/version-management.md) - Release process and automation
-- [Version Roadmap Summary](docs/VERSION-ROADMAP-SUMMARY.md) - Visual roadmap overview
+- [Versioning Guide](docs/guides/versioning.md) - Semantic versioning, release process, and epic/story mapping
 
 **Project Status:**
 - [Workflow Status](docs/bmm-workflow-status.yaml) - Current phase tracking
@@ -739,12 +757,12 @@ SOFTWARE.
 **MVP Goal:** ONE feature through 3 environments (dev → stg → prd)
 
 **Progress:**
-- [ ] Epic 1: Foundation & Deployment Pipeline (0/11 stories)
-- [ ] Epic 2: Database Infrastructure (0/6 stories)
+- [x] Epic 1: Foundation & Deployment Pipeline (11/11 stories) ✅
+- [ ] Epic 2: Database Infrastructure (2/6 stories) 🔄
 - [ ] Epic 3: Authentication & Access Control (0/8 stories)
 - [ ] Epic 4: Hello World Dashboard (0/7 stories)
 
-**Estimated Completion:** 7-12 days (based on story breakdown)
+**Estimated Completion:** 4-8 days remaining for MVP (Epic 2-4)
 
 ### 🔮 Future Phases
 
