@@ -181,13 +181,13 @@ DROP TABLE IF EXISTS test_periodic_table;
         SELECT tablename FROM pg_tables 
         WHERE schemaname = 'public' 
         AND tablename = 'test_periodic_table'
-      `);
+      `) as Array<{ tablename: string }>;
       
       expect(tables).toHaveLength(1);
       expect(tables[0].tablename).toBe('test_periodic_table');
 
       // Verify data was inserted
-      const data = await sql('SELECT * FROM test_periodic_table WHERE "AtomicNumber" = 10');
+      const data = await sql('SELECT * FROM test_periodic_table WHERE "AtomicNumber" = 10') as Array<{ Element: string; Symbol: string }>;
       expect(data).toHaveLength(1);
       expect(data[0].Element).toBe('Neon');
       expect(data[0].Symbol).toBe('Ne');
@@ -210,7 +210,7 @@ DROP TABLE IF EXISTS test_periodic_table;
         SELECT version, applied_at 
         FROM schema_migrations 
         WHERE version = $1
-      `, [testMigrationVersion]);
+      `, [testMigrationVersion]) as Array<{ version: string; applied_at: Date }>;
       
       expect(migrations).toHaveLength(1);
       expect(migrations[0].version).toBe(testMigrationVersion);
@@ -234,7 +234,7 @@ DROP TABLE IF EXISTS test_periodic_table;
         SELECT tablename FROM pg_tables 
         WHERE schemaname = 'public' 
         AND tablename = 'test_periodic_table'
-      `);
+      `) as Array<{ tablename: string }>;
       
       expect(tablesAfterRollback).toHaveLength(0);
 
@@ -246,7 +246,7 @@ DROP TABLE IF EXISTS test_periodic_table;
         SELECT version 
         FROM schema_migrations 
         WHERE version = $1
-      `, [testMigrationVersion]);
+      `, [testMigrationVersion]) as Array<{ version: string }>;
       
       expect(migrationsAfterRollback).toHaveLength(0);
 
@@ -264,7 +264,7 @@ DROP TABLE IF EXISTS test_periodic_table;
         SELECT tablename FROM pg_tables 
         WHERE schemaname = 'public' 
         AND tablename = 'test_periodic_table'
-      `);
+      `) as Array<{ tablename: string }>;
       
       expect(tablesReapplied).toHaveLength(1);
 
