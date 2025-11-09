@@ -82,9 +82,25 @@ async function ensureSchemaMigrationsTable() {
  * Get all applied migrations from database
  */
 async function getAppliedMigrations() {
-  await ensureSchemaMigrationsTable();
-  const rows = await sql('SELECT version, applied_at FROM schema_migrations ORDER BY version');
-  return rows;
+  try {
+    await ensureSchemaMigrationsTable();
+    const rows = await sql('SELECT version, applied_at FROM schema_migrations ORDER BY version');
+    return rows;
+  } catch (error) {
+    // If table doesn't exist yet (race condition or first run), return empty array
+    if (error.message && error.message.includes('does not exist')) {
+      // Try one more time to create the table
+      try {
+        await ensureSchemaMigrationsTable();
+        const rows = await sql('SELECT version, applied_at FROM schema_migrations ORDER BY version');
+        return rows;
+      } catch (retryError) {
+        // If still failing, return empty array (no migrations applied yet)
+        return [];
+      }
+    }
+    throw error;
+  }
 }
 
 /**
@@ -146,6 +162,95 @@ function generateTimestamp() {
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
+/**
+ * Split SQL into individual statements respecting dollar-quoted strings
+ * Handles PostgreSQL function definitions with $BODY$, $function$, etc.
+ */
+function splitSqlStatements(sql) {
+  const statements = [];
+  let currentStatement = '';
+  let inDollarQuote = false;
+  let dollarQuoteTag = '';
+  let i = 0;
+  
+  while (i < sql.length) {
+    const char = sql[i];
+    
+    // Check for dollar quote start/end
+    if (char === '$') {
+      // Look ahead to find the complete dollar quote tag
+      let j = i + 1;
+      while (j < sql.length && sql[j] !== '$') {
+        j++;
+      }
+      if (j < sql.length) {
+        const tag = sql.substring(i, j + 1);
+        
+        if (inDollarQuote) {
+          // Check if this closes the current dollar quote
+          if (tag === dollarQuoteTag) {
+            currentStatement += tag;
+            inDollarQuote = false;
+            dollarQuoteTag = '';
+            i = j + 1;
+            continue;
+          }
+        } else {
+          // Start a new dollar quote
+          currentStatement += tag;
+          inDollarQuote = true;
+          dollarQuoteTag = tag;
+          i = j + 1;
+          continue;
+        }
+      }
+    }
+    
+    // Check for statement terminator (semicolon) when not in dollar quote
+    if (char === ';' && !inDollarQuote) {
+      currentStatement += char;
+      // Push the statement (will be cleaned later to remove comments)
+      if (currentStatement.trim()) {
+        statements.push(currentStatement);
+      }
+      currentStatement = '';
+      i++;
+      continue;
+    }
+    
+    currentStatement += char;
+    i++;
+  }
+  
+  // Add any remaining statement (if no semicolon at end)
+  if (currentStatement.trim()) {
+    statements.push(currentStatement);
+  }
+  
+  return statements;
+}
+
+/**
+ * Clean SQL statement by removing comments
+ */
+function cleanSqlStatement(statement) {
+  return statement.split('\n')
+    .map(line => {
+      const commentIndex = line.indexOf('--');
+      if (commentIndex >= 0) {
+        // Keep the part before the comment, unless the line starts with --
+        if (commentIndex === 0 || line.substring(0, commentIndex).trim() === '') {
+          return '';
+        }
+        return line.substring(0, commentIndex);
+      }
+      return line;
+    })
+    .filter(line => line.trim())
+    .join('\n')
+    .trim();
+}
+
 // ============================================================================
 // Command Handlers
 // ============================================================================
@@ -204,35 +309,11 @@ async function up() {
     const migrationSql = fs.readFileSync(migrationPath, 'utf-8');
     
     try {
-      // Split SQL into individual statements and execute each
+      // Split SQL into individual statements respecting dollar-quoted strings
       // Neon serverless driver doesn't support multiple statements in one query
-      const statements = migrationSql
-        .split(';')
-        .map(s => s.trim())
-        .filter(s => {
-          // Filter out empty statements and comment-only lines
-          if (!s || s.length === 0) return false;
-          // Remove comment lines but keep statements with inline comments
-          const lines = s.split('\n').filter(line => {
-            const trimmed = line.trim();
-            return trimmed && !trimmed.startsWith('--');
-          });
-          return lines.length > 0;
-        })
-        .map(s => {
-          // Remove inline comments from statements
-          return s.split('\n')
-            .map(line => {
-              const commentIndex = line.indexOf('--');
-              if (commentIndex > 0) {
-                return line.substring(0, commentIndex).trim();
-              }
-              return line.trim().startsWith('--') ? '' : line;
-            })
-            .filter(line => line)
-            .join('\n')
-            .trim();
-        })
+      const rawStatements = splitSqlStatements(migrationSql);
+      const statements = rawStatements
+        .map(s => cleanSqlStatement(s))
         .filter(s => s.length > 0);
       
       for (const statement of statements) {
@@ -298,35 +379,11 @@ async function down() {
   const migrationSql = fs.readFileSync(downFile, 'utf-8');
   
   try {
-    // Split SQL into individual statements and execute each
+    // Split SQL into individual statements respecting dollar-quoted strings
     // Neon serverless driver doesn't support multiple statements in one query
-    const statements = migrationSql
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => {
-        // Filter out empty statements and comment-only lines
-        if (!s || s.length === 0) return false;
-        // Remove comment lines but keep statements with inline comments
-        const lines = s.split('\n').filter(line => {
-          const trimmed = line.trim();
-          return trimmed && !trimmed.startsWith('--');
-        });
-        return lines.length > 0;
-      })
-      .map(s => {
-        // Remove inline comments from statements
-        return s.split('\n')
-          .map(line => {
-            const commentIndex = line.indexOf('--');
-            if (commentIndex > 0) {
-              return line.substring(0, commentIndex).trim();
-            }
-            return line.trim().startsWith('--') ? '' : line;
-          })
-          .filter(line => line)
-          .join('\n')
-          .trim();
-      })
+    const rawStatements = splitSqlStatements(migrationSql);
+    const statements = rawStatements
+      .map(s => cleanSqlStatement(s))
       .filter(s => s.length > 0);
     
     for (const statement of statements) {
