@@ -24,7 +24,8 @@
     "migrate:up": "node scripts/migrate.js up",
     "migrate:down": "node scripts/migrate.js down",
     "migrate:status": "node scripts/migrate.js status",
-    "migrate:create": "node scripts/migrate.js create"
+    "migrate:create": "node scripts/migrate.js create",
+    "migrate:ensure-initial": "node scripts/ensure-initial-schema.js"
   },
   "keywords": [],
   "author": "",
