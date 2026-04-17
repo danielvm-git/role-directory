@@ -77,7 +77,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      image_tag: ${{ steps.build.outputs.DEV_TAG }}
+      image_url: ${{ steps.image.outputs.IMAGE_URL }}
       service_url: ${{ steps.get-url.outputs.SERVICE_URL }}
     env:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -96,83 +96,41 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev
-
-      - name: Extract version from package.json
-        id: version
+      - name: Deploy to Cloud Run (source)
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Package version: $VERSION"
-
-      - name: Build and tag Docker image
-        id: build
-        run: |
-          DEV_TAG="dev-$(date +%Y%m%d-%H%M%S)"
-          echo "DEV_TAG=$DEV_TAG" >> $GITHUB_OUTPUT
-          
-          IMAGE_NAME="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/role-directory/app"
-          DEV_IMAGE="$IMAGE_NAME:$DEV_TAG"
-          DEV_LATEST="$IMAGE_NAME:dev-latest"
-          
-          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          
-          echo "🐳 Building Docker image with version info..."
-          echo "  Version: ${{ steps.version.outputs.VERSION }}"
-          echo "  Build Time: $BUILD_TIME"
-          echo "  Commit SHA: ${{ github.sha }}"
-          
-          docker build \
-            --build-arg NEXT_PUBLIC_APP_VERSION=${{ steps.version.outputs.VERSION }} \
-            --build-arg NEXT_PUBLIC_BUILD_TIME="$BUILD_TIME" \
-            --build-arg NEXT_PUBLIC_COMMIT_SHA=${{ github.sha }} \
-            -t $DEV_IMAGE \
-            -t $DEV_LATEST \
-            .
-          
-          echo "✅ Built and tagged as: $DEV_TAG"
-          echo "✅ Built and tagged as: dev-latest"
-          
-          echo "📤 Pushing to Artifact Registry..."
-          docker push $DEV_IMAGE
-          docker push $DEV_LATEST
-          echo "✅ Images pushed to registry"
-
-      - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ env.SERVICE_NAME }}
-          region: ${{ env.GCP_REGION }}
-          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.build.outputs.DEV_TAG }}
-          flags: |
-            --set-env-vars=NODE_ENV=development
-            --min-instances=0
-            --max-instances=2
-            --cpu=1
-            --memory=512Mi
+          echo "🚀 Deploying from source (Cloud Build handles image build + push)..."
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --source . \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --set-env-vars NODE_ENV=development \
+            --min-instances 0 \
+            --max-instances 2 \
+            --cpu 1 \
+            --memory 512Mi \
+            --quiet
+          echo "✅ Deployed successfully"
 
       - name: Get Service URL
         id: get-url
         run: |
-          # Use deploy action output first, fallback to gcloud describe
-          if [ -n "${{ steps.deploy.outputs.url }}" ]; then
-            SERVICE_URL="${{ steps.deploy.outputs.url }}"
-            echo "Using deploy action output: $SERVICE_URL"
-          else
-            SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
-              --region ${GCP_REGION} \
-              --format 'value(status.url)')
-            echo "Using gcloud describe: $SERVICE_URL"
-          fi
-          
-          # Debug: Show what we got
-          echo "Raw URL value: $SERVICE_URL"
-          echo "URL length: ${#SERVICE_URL}"
-          
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --format 'value(status.url)')
           echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
           echo "✅ Deployed to: $SERVICE_URL"
+
+      - name: Get deployed image URL
+        id: image
+        run: |
+          REVISION=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.GCP_REGION }} \
+            --format 'value(status.latestReadyRevisionName)')
+          IMAGE_URL=$(gcloud run revisions describe "$REVISION" \
+            --region ${{ env.GCP_REGION }} \
+            --format 'value(spec.containers[0].image)')
+          echo "IMAGE_URL=$IMAGE_URL" >> $GITHUB_OUTPUT
+          echo "📌 Image URL for promotion: $IMAGE_URL"
 
       - name: Health Check
         run: |
@@ -230,6 +188,7 @@ jobs:
         if: always()
         run: |
           SERVICE_URL="${{ steps.get-url.outputs.SERVICE_URL }}"
+          IMAGE_URL="${{ steps.image.outputs.IMAGE_URL }}"
           
           # Generate unique token for stop-commands
           STOP_TOKEN=$(date +%s%N)
@@ -241,8 +200,6 @@ jobs:
           echo "| **Environment** | Dev |" >> $GITHUB_STEP_SUMMARY
           echo "| **Service** | role-directory-dev |" >> $GITHUB_STEP_SUMMARY
           echo "| **Region** | southamerica-east1 |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Version** | \`${{ steps.version.outputs.VERSION }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Image Tag** | \`${{ steps.build.outputs.DEV_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -270,8 +227,11 @@ jobs:
             echo "✅ **Status:** Deployment successful" >> $GITHUB_STEP_SUMMARY
             echo "✅ **Post-Deployment Tests:** Passed" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📦 Next Steps" >> $GITHUB_STEP_SUMMARY
-            echo "To promote this image to staging, run the **Promote Dev to Staging** workflow with tag: \`${{ steps.build.outputs.DEV_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Promote to Staging" >> $GITHUB_STEP_SUMMARY
+            echo "Run the **Promote Dev to Staging** workflow with this image URL:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${IMAGE_URL}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Status:** Deployment failed" >> $GITHUB_STEP_SUMMARY
           fi

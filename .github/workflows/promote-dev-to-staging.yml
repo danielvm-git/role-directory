@@ -1,10 +1,14 @@
 name: Promote Dev to Staging
 
+# Manual promotion workflow: Promotes a validated dev deployment to staging.
+# This workflow does NOT rebuild — it deploys the exact same image that ran in dev.
+# Get the image URL from the CI/CD deployment summary after a successful dev deploy.
+
 on:
   workflow_dispatch:
     inputs:
-      dev_image_tag:
-        description: 'Dev image tag to promote (e.g., dev-20231106-123456)'
+      dev_image_url:
+        description: 'Full image URL from dev deployment (copy from CI/CD summary)'
         required: true
         type: string
 
@@ -20,7 +24,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,43 +37,14 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
-
-      - name: Pull dev image
+      - name: Validate image URL
         run: |
-          DEV_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ inputs.dev_image_tag }}"
-          echo "📦 Pulling dev image: $DEV_IMAGE"
-          docker pull $DEV_IMAGE
-          echo "✅ Dev image pulled successfully"
-          docker images | grep role-directory
-
-      - name: Re-tag image for staging
-        id: retag
-        run: |
-          STAGING_TAG="staging-$(date +%Y%m%d-%H%M%S)"
-          echo "STAGING_TAG=$STAGING_TAG" >> $GITHUB_OUTPUT
-          
-          DEV_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ inputs.dev_image_tag }}"
-          STAGING_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:$STAGING_TAG"
-          STAGING_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:staging-latest"
-          
-          echo "🏷️  Re-tagging image for staging..."
-          docker tag $DEV_IMAGE $STAGING_IMAGE
-          docker tag $DEV_IMAGE $STAGING_LATEST
-          
-          echo "✅ Tagged as: $STAGING_TAG"
-          echo "✅ Tagged as: staging-latest"
-
-      - name: Push staging images
-        run: |
-          STAGING_IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.retag.outputs.STAGING_TAG }}"
-          STAGING_LATEST="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:staging-latest"
-          
-          echo "📤 Pushing staging images to registry..."
-          docker push $STAGING_IMAGE
-          docker push $STAGING_LATEST
-          echo "✅ Staging images pushed successfully"
+          IMAGE_URL="${{ inputs.dev_image_url }}"
+          if [ -z "$IMAGE_URL" ]; then
+            echo "❌ dev_image_url is required"
+            exit 1
+          fi
+          echo "📌 Promoting image: $IMAGE_URL"
 
       - name: Deploy to Cloud Run (Staging)
         id: deploy
@@ -77,7 +52,7 @@ jobs:
         with:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.GCP_REGION }}
-          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/role-directory/app:${{ steps.retag.outputs.STAGING_TAG }}
+          image: ${{ inputs.dev_image_url }}
           flags: |
             --set-env-vars=NODE_ENV=staging
             --min-instances=0
@@ -95,35 +70,30 @@ jobs:
         run: |
           TOKEN=$(gcloud auth print-identity-token)
           STAGING_URL="${{ steps.deploy.outputs.url }}"
-          
-          # Debug URL
-          echo "Debug - Raw staging URL: $STAGING_URL"
-          echo "Debug - URL length: ${#STAGING_URL}"
-          
+
           echo "🏥 Running health check against: $STAGING_URL/api/health"
-          
-          # Retry logic: Poll every 5 seconds for up to 60 seconds
+
           MAX_ATTEMPTS=12
           ATTEMPT=1
-          
+
           while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
             echo "📡 Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
-            
+
             RESPONSE=$(curl -f -s -w "\n%{http_code}" -H "Authorization: Bearer $TOKEN" "$STAGING_URL/api/health" 2>&1 || true)
             HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
             BODY=$(echo "$RESPONSE" | head -n-1)
-            
+
             if [ "$HTTP_CODE" = "200" ]; then
               echo "✅ Health check passed!"
               echo "Response: $BODY"
               exit 0
             fi
-            
+
             echo "⏳ Health check returned status $HTTP_CODE, retrying in 5 seconds..."
             sleep 5
             ATTEMPT=$((ATTEMPT + 1))
           done
-          
+
           echo "❌ Health check failed after $((MAX_ATTEMPTS * 5)) seconds"
           exit 1
 
@@ -131,30 +101,27 @@ jobs:
         if: always()
         run: |
           STAGING_URL="${{ steps.deploy.outputs.url }}"
-          
+
           # Generate unique token for stop-commands
           STOP_TOKEN=$(date +%s%N)
-          
+
           echo "### 🚀 Promotion Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Dev Image** | \`${{ inputs.dev_image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Staging Image** | \`${{ steps.retag.outputs.STAGING_TAG }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Dev Image** | \`${{ inputs.dev_image_url }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Timestamp** | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |" >> $GITHUB_STEP_SUMMARY
           echo "| **Run URL** | [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Use stop-commands to prevent URL masking
+
           echo "**🌐 Staging URL:**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "::stop-commands::${STOP_TOKEN}"
           echo "${STAGING_URL}" >> $GITHUB_STEP_SUMMARY
           echo "::${STOP_TOKEN}::"
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Backup: Code block with URL
+
           echo "<details>" >> $GITHUB_STEP_SUMMARY
           echo "<summary>📋 Copy URL (if masked above)</summary>" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -165,22 +132,26 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "</details>" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ job.status }}" == "success" ]; then
             echo "✅ **Status:** Promotion successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Promote to Production" >> $GITHUB_STEP_SUMMARY
+            echo "Run the **Promote Staging to Production** workflow with this image URL:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "${{ inputs.dev_image_url }}" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Status:** Promotion failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo ""
           echo "═══════════════════════════════════════════════════════"
           echo "🚀 Promotion Summary"
           echo "═══════════════════════════════════════════════════════"
-          echo "Dev Image:     ${{ inputs.dev_image_tag }}"
-          echo "Staging Image: ${{ steps.retag.outputs.STAGING_TAG }}"
+          echo "Image:         ${{ inputs.dev_image_url }}"
           echo "Staging URL:   ${STAGING_URL}"
           echo "Triggered by:  ${{ github.actor }}"
           echo "Timestamp:     $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
           echo "Run URL:       ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           echo "═══════════════════════════════════════════════════════"
-
