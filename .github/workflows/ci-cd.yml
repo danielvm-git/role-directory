@@ -76,6 +76,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    outputs:
+      image_tag: ${{ steps.build.outputs.DEV_TAG }}
+      service_url: ${{ steps.get-url.outputs.SERVICE_URL }}
     env:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_REGION: southamerica-east1
