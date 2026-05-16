@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Roles - Role Directory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: #000;
+        }
+
+        .job-family-section {
+            margin-bottom: 50px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+
+        .job-family-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #000;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            grid-column: 1 / -1;
+        }
+
+        .career-track-group {
+            margin-bottom: 0;
+        }
+
+        .career-track-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+
+        .roles-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .role-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #1a1a1a;
+            line-height: 1.8;
+        }
+
+        .role-item.no-employees {
+            color: #999;
+        }
+
+        .role-name {
+            display: inline-block;
+        }
+
+        .role-count {
+            display: inline-block;
+            margin-left: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .role-item.no-employees .role-count {
+            color: #ccc;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All roles</h1>
+        <div id="content">
+            <div class="loading">Loading roles...</div>
+        </div>
+    </div>
+
+    <script>
+        // CSV Parser function
+        function parseCSV(text) {
+            const lines = [];
+            let currentLine = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentField += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    currentLine.push(currentField);
+                    currentField = '';
+                } else if (char === '\n' && !inQuotes) {
+                    currentLine.push(currentField);
+                    if (currentLine.some(field => field.trim() !== '')) {
+                        lines.push(currentLine);
+                    }
+                    currentLine = [];
+                    currentField = '';
+                } else if (char === '\r' && nextChar === '\n' && !inQuotes) {
+                    currentLine.push(currentField);
+                    if (currentLine.some(field => field.trim() !== '')) {
+                        lines.push(currentLine);
+                    }
+                    currentLine = [];
+                    currentField = '';
+                    i++;
+                } else if (char !== '\r') {
+                    currentField += char;
+                }
+            }
+
+            if (currentField || currentLine.length > 0) {
+                currentLine.push(currentField);
+                if (currentLine.some(field => field.trim() !== '')) {
+                    lines.push(currentLine);
+                }
+            }
+
+            return lines;
+        }
+
+        // Load and display roles
+        async function loadRoles() {
+            try {
+                const response = await fetch('./old_docs/data/source_data/normalized-roles-complete.csv');
+                if (!response.ok) {
+                    throw new Error(`Failed to load CSV file: ${response.status} ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                const lines = parseCSV(text);
+                
+                if (lines.length < 2) {
+                    throw new Error('CSV file is empty or invalid');
+                }
+
+                const headers = lines[0];
+                const data = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const row = lines[i];
+                    if (row.length >= 7 && row[0] && row[1] && row[2]) {
+                        data.push({
+                            job_family: row[0].trim(),
+                            career_track: row[1].trim(),
+                            role_name: row[2].trim(),
+                            level: row[3].trim(),
+                            role_description: row[4].trim(),
+                            mappings: row[5].trim(),
+                            count: parseInt(row[6]) || 0
+                        });
+                    }
+                }
+
+                displayRoles(data);
+            } catch (error) {
+                console.error('Error details:', error);
+                document.getElementById('content').innerHTML = 
+                    `<div class="error">Error loading roles: ${error.message}<br><br>Please make sure you're accessing this page via http://localhost:8000/roles-list.html</div>`;
+            }
+        }
+
+        function displayRoles(data) {
+            // Group by job family and career track
+            const grouped = {};
+
+            data.forEach(role => {
+                if (!grouped[role.job_family]) {
+                    grouped[role.job_family] = {};
+                }
+                if (!grouped[role.job_family][role.career_track]) {
+                    grouped[role.job_family][role.career_track] = [];
+                }
+                grouped[role.job_family][role.career_track].push(role);
+            });
+
+            // Build HTML
+            let html = '';
+
+            Object.keys(grouped).sort().forEach(jobFamily => {
+                html += `<div class="job-family-section">`;
+                html += `<div class="job-family-title">${jobFamily}</div>`;
+
+                Object.keys(grouped[jobFamily]).sort().forEach(careerTrack => {
+                    html += `<div class="career-track-group">`;
+                    html += `<div class="career-track-title">${careerTrack}</div>`;
+                    html += `<ul class="roles-list">`;
+
+                    grouped[jobFamily][careerTrack].forEach(role => {
+                        const hasEmployees = role.count > 0;
+                        const itemClass = hasEmployees ? '' : 'no-employees';
+                        html += `<li class="role-item ${itemClass}">`;
+                        html += `<span class="role-name">${role.role_name}</span>`;
+                        html += `<span class="role-count">(${role.count})</span>`;
+                        html += `</li>`;
+                    });
+
+                    html += `</ul>`;
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            });
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // Load roles on page load
+        loadRoles();
+    </script>
+</body>
+</html>
+

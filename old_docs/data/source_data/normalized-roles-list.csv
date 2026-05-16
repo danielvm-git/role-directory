@@ -1,0 +1,147 @@
+Track,Role Name,Level
+Track 1: Artificial Intelligence,AI Specialist (Senior),L4
+Track 1: Artificial Intelligence,AI Specialist (Master),L5
+Track 2: Business Intelligence,BI Analyst (Junior),L2
+Track 2: Business Intelligence,BI Analyst (Mid),L3
+Track 2: Business Intelligence,BI Analyst (Senior),L4
+Track 2: Business Intelligence,BI Architect (Master),L5
+Track 3: Data Analysis,Data Analyst (Junior),L2
+Track 3: Data Analysis,Data Analyst (Mid),L3
+Track 3: Data Analysis,Data Analyst (Senior),L4
+Track 3: Data Analysis,Data Analyst (Master),L5
+Track 3: Data Analysis,Data Analytics Manager,L5
+Track 3: Data Analysis,Data Analytics Director,L6
+Track 3: Data Analysis,Senior Data Analytics Manager,L6
+Track 4: Data Architecture,Data Architect (Master),L5
+Track 4: Data Architecture,Principal Data Architect (Expert),L6
+Track 5: Data Development,Data Developer (Junior),L2
+Track 5: Data Development,Data Developer (Mid),L3
+Track 5: Data Development,Data Developer (Senior),L4
+Track 5: Data Development,Data Developer (Master),L5
+Track 6: Data Science,Data Scientist (Junior),L2
+Track 6: Data Science,Data Scientist (Mid),L3
+Track 6: Data Science,Data Scientist (Senior),L4
+Track 6: Data Science,Data Scientist (Master),L5
+Track 6: Data Science,Principal Data Scientist,L6
+Track 7: Machine Learning,ML Specialist (Mid),L3
+Track 7: Machine Learning,ML Specialist (Senior),L4
+Track 7: Machine Learning,ML Specialist (Master),L5
+Track 8: Customer Success,Customer Service (Junior),L2
+Track 8: Customer Success,Customer Service (Mid),L3
+Track 8: Customer Success,CX Manager (Senior),L4
+Track 8: Customer Success,CX Manager (Master),L5
+Track 9: Management,Team Manager (Mid),L3
+Track 9: Management,Team Manager (Senior),L4
+Track 9: Management,Project Manager (Master),L5
+Track 9: Management,Program Manager (Expert),L6
+Track 9: Management,Executive Manager,L7
+Track 9: Management,Executive Director,L8
+Track 10: Content & Communications,Copywriter (Mid),L3
+Track 10: Content & Communications,Copywriter (Senior),L4
+Track 10: Content & Communications,Content Lead (Master),L5
+Track 11: Digital Strategy,Digital Strategist (Senior),L4
+Track 11: Digital Strategy,Digital Strategist (Master),L5
+Track 11: Digital Strategy,Digital Strategist (Expert),L6
+Track 12: UI Design,UI Designer (Junior),L2
+Track 12: UI Design,UI Designer (Mid),L3
+Track 12: UI Design,UI Designer (Senior),L4
+Track 12: UI Design,UI Designer (Master),L5
+Track 12: UI Design,UI Design Manager,L5
+Track 12: UI Design,Senior UI Design Manager,L6
+Track 13: UX Design,UX Designer (Mid),L3
+Track 13: UX Design,UX Designer (Senior),L4
+Track 13: UX Design,UX Designer (Master),L5
+Track 13: UX Design,UX Manager,L5
+Track 13: UX Design,UX Designer (Expert),L6
+Track 13: UX Design,Senior UX Manager,L6
+Track 14: UX Research,UX Researcher (Junior),L2
+Track 14: UX Research,UX Researcher (Mid),L3
+Track 14: UX Research,UX Researcher (Senior),L4
+Track 14: UX Research,UX Researcher (Master),L5
+Track 15: Business Analysis,Business Analyst (Mid),L3
+Track 15: Business Analysis,Business Analyst (Senior),L4
+Track 15: Business Analysis,Lead Business Analyst (Master),L5
+Track 15: Business Analysis,Senior Business Analyst,L6
+Track 16: Product Management,Product Owner (Senior),L4
+Track 16: Product Management,Product Manager (Master),L5
+Track 16: Product Management,Product Director (Expert),L6
+Track 17: Backend Development,Backend Developer (Junior),L2
+Track 17: Backend Development,Backend Developer (Mid),L3
+Track 17: Backend Development,Backend Developer (Senior),L4
+Track 17: Backend Development,Backend Developer (Master),L5
+Track 18: Cloud & Infrastructure,DevOps Specialist (Junior),L2
+Track 18: Cloud & Infrastructure,DevOps Specialist (Mid),L3
+Track 18: Cloud & Infrastructure,DevOps Specialist (Senior),L4
+Track 18: Cloud & Infrastructure,DevOps Specialist (Master),L5
+Track 18: Cloud & Infrastructure,Cloud Specialist (Mid),L3
+Track 18: Cloud & Infrastructure,Cloud Specialist (Senior),L4
+Track 18: Cloud & Infrastructure,Cloud Architect (Master),L5
+Track 18: Cloud & Infrastructure,Platform Specialist (Senior),L4
+Track 18: Cloud & Infrastructure,Platform Specialist (Master),L5
+Track 18: Cloud & Infrastructure,SRE Specialist (Senior),L4
+Track 18: Cloud & Infrastructure,SRE Specialist (Master),L5
+Track 19: Cybersecurity,Information Security Specialist (Mid),L3
+Track 19: Cybersecurity,Information Security Specialist (Senior),L4
+Track 19: Cybersecurity,Security Architect (Master),L5
+Track 19: Cybersecurity,Security Architect (Expert),L6
+Track 20: Frontend Development,Frontend Developer (Junior),L2
+Track 20: Frontend Development,Frontend Developer (Mid),L3
+Track 20: Frontend Development,Frontend Developer (Senior),L4
+Track 20: Frontend Development,Frontend Developer (Master),L5
+Track 21: Full-Stack Development,Full-Stack Developer (Mid),L3
+Track 21: Full-Stack Development,Full-Stack Developer (Senior),L4
+Track 21: Full-Stack Development,Full-Stack Developer (Master),L5
+Track 22: Mobile Development,Mobile Developer (Junior),L2
+Track 22: Mobile Development,Mobile Developer (Mid),L3
+Track 22: Mobile Development,Mobile Developer (Senior),L4
+Track 22: Mobile Development,Mobile Developer (Master),L5
+Track 23: Quality Assurance,QA Analyst (Junior),L2
+Track 23: Quality Assurance,QA Analyst (Mid),L3
+Track 23: Quality Assurance,QA Analyst (Senior),L4
+Track 23: Quality Assurance,QA Analyst (Master),L5
+Track 23: Quality Assurance,QA Manager (Master),L5
+Track 23: Quality Assurance,Test Automation Specialist (Mid),L3
+Track 23: Quality Assurance,Test Automation Specialist (Senior),L4
+Track 23: Quality Assurance,Test Automation Architect (Master),L5
+Track 24: Software Architecture,Software Architect (Mid),L3
+Track 24: Software Architecture,Software Architect (Senior),L4
+Track 24: Software Architecture,Systems Architect (Master),L5
+Track 24: Software Architecture,Principal Architect (Expert),L6
+Track 25: Software Development (Generic),Developer (Junior),L2
+Track 25: Software Development (Generic),Developer (Mid),L3
+Track 25: Software Development (Generic),Developer (Senior),L4
+Track 25: Software Development (Generic),Developer (Master),L5
+Track 25: Software Development (Generic),Developer (Expert),L6
+Track 26: Technical Support,Support Analyst (Junior),L2
+Track 26: Technical Support,Support Analyst (Mid),L3
+Track 26: Technical Support,Support Analyst (Senior),L4
+Track 26: Technical Support,Support Manager (Master),L5
+Track 27: Gaming & Interactive Media,Immersive Experience Developer (Junior),L2
+Track 27: Gaming & Interactive Media,Immersive Experience Developer (Mid),L3
+Track 27: Gaming & Interactive Media,Immersive Experience Developer (Senior),L4
+Track 27: Gaming & Interactive Media,Immersive Experience Architect (Master),L5
+Track 27: Gaming & Interactive Media,Immersive Experience Architect (Expert),L6
+Track 28: Agile/Scrum Leadership,Scrum Master (Mid),L3
+Track 28: Agile/Scrum Leadership,Scrum Master (Senior),L4
+Track 28: Agile/Scrum Leadership,Agile Coach (Master),L5
+Track 29: Sales & Business Development,Client Manager (Senior),L4
+Track 29: Sales & Business Development,Client Director (Master),L5
+Track 29: Sales & Business Development,Sales Director (Expert),L6
+Track 30: Finance & Operations,Fiscal Analyst (Mid),L3
+Track 30: Finance & Operations,Process Analyst (Senior),L4
+Track 30: Finance & Operations,Finance Manager (Master),L5
+Track 31: Talent & HR,Talent Specialist (Mid),L3
+Track 31: Talent & HR,Talent Specialist (Senior),L4
+Track 31: Talent & HR,Talent Manager (Master),L5
+Track 32: Content Strategy,Content Manager (Mid),L3
+Track 32: Content Strategy,Content Strategist (Senior),L4
+Track 32: Content Strategy,Content Strategy Director (Master),L5
+Track 32: Content Strategy,Senior Content Strategy Director,L6
+Track 33: Salesforce Specialist,Salesforce Specialist (Mid),L3
+Track 33: Salesforce Specialist,Salesforce Specialist (Senior),L4
+Track 33: Salesforce Specialist,Salesforce Architect (Master),L5
+INTERN Program,Developer Intern,INTERN
+INTERN Program,Support Analyst Intern,INTERN
+INTERN Program,Technology Intern,INTERN
+INTERN Program,UI Designer Intern,INTERN
+

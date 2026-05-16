@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Hierarchy - Role Directory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #000;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .legend-box.family {
+            background-color: #e8e8e8;
+        }
+
+        .legend-box.track {
+            background-color: #f5f5f5;
+        }
+
+        .legend-box.role {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+        }
+
+        .hierarchy-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            margin-bottom: 60px;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .column-header {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .arrow {
+            font-size: 24px;
+            color: #ccc;
+            align-self: center;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: #999;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .card.selected {
+            border-color: #000;
+            background-color: #f9f9f9;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .card-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .role-card {
+            padding: 12px;
+        }
+
+        .role-card.no-employees {
+            opacity: 0.5;
+        }
+
+        .role-card .card-title {
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #d32f2f;
+        }
+
+        .stats {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="main-title">Loading...</h1>
+            <p>Dive into the role taxonomy to uncover the key skills for each role. Explore the job families, career tracks and roles driving the future's innovation.</p>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box family"></div>
+                    <span>Job Family</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box track"></div>
+                    <span>Career Track</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box role"></div>
+                    <span>Role</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="loading">Loading role hierarchy...</div>
+        </div>
+    </div>
+
+    <script>
+        // CSV Parser function
+        function parseCSV(text) {
+            const lines = [];
+            let currentLine = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentField += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    currentLine.push(currentField);
+                    currentField = '';
+                } else if (char === '\n' && !inQuotes) {
+                    currentLine.push(currentField);
+                    if (currentLine.some(field => field.trim() !== '')) {
+                        lines.push(currentLine);
+                    }
+                    currentLine = [];
+                    currentField = '';
+                } else if (char === '\r' && nextChar === '\n' && !inQuotes) {
+                    currentLine.push(currentField);
+                    if (currentLine.some(field => field.trim() !== '')) {
+                        lines.push(currentLine);
+                    }
+                    currentLine = [];
+                    currentField = '';
+                    i++;
+                } else if (char !== '\r') {
+                    currentField += char;
+                }
+            }
+
+            if (currentField || currentLine.length > 0) {
+                currentLine.push(currentField);
+                if (currentLine.some(field => field.trim() !== '')) {
+                    lines.push(currentLine);
+                }
+            }
+
+            return lines;
+        }
+
+        let rolesData = [];
+        let selectedFamily = null;
+        let selectedTrack = null;
+
+        // Load and display roles
+        async function loadRoles() {
+            try {
+                const response = await fetch('./old_docs/data/source_data/normalized-roles-complete.csv');
+                if (!response.ok) {
+                    throw new Error(`Failed to load CSV file: ${response.status} ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                const lines = parseCSV(text);
+                
+                if (lines.length < 2) {
+                    throw new Error('CSV file is empty or invalid');
+                }
+
+                rolesData = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const row = lines[i];
+                    if (row.length >= 7 && row[0] && row[1] && row[2]) {
+                        rolesData.push({
+                            job_family: row[0].trim(),
+                            career_track: row[1].trim(),
+                            role_name: row[2].trim(),
+                            level: row[3].trim(),
+                            role_description: row[4].trim(),
+                            mappings: row[5].trim(),
+                            count: parseInt(row[6]) || 0
+                        });
+                    }
+                }
+
+                updateTitle();
+                displayHierarchy();
+            } catch (error) {
+                console.error('Error details:', error);
+                document.getElementById('content').innerHTML = 
+                    `<div class="error">Error loading roles: ${error.message}<br><br>Please make sure you're accessing this page via http://localhost:8000/roles-hierarchy.html</div>`;
+            }
+        }
+
+        function updateTitle() {
+            const jobFamilies = new Set(rolesData.map(r => r.job_family));
+            const totalRoles = rolesData.length;
+            document.getElementById('main-title').textContent = 
+                `${jobFamilies.size} job families. ${totalRoles} roles.\nOne way to hire.`;
+        }
+
+        function displayHierarchy() {
+            // Group data
+            const families = {};
+            
+            rolesData.forEach(role => {
+                if (!families[role.job_family]) {
+                    families[role.job_family] = {
+                        name: role.job_family,
+                        tracks: {},
+                        totalCount: 0
+                    };
+                }
+                
+                if (!families[role.job_family].tracks[role.career_track]) {
+                    families[role.job_family].tracks[role.career_track] = {
+                        name: role.career_track,
+                        roles: [],
+                        totalCount: 0
+                    };
+                }
+                
+                families[role.job_family].tracks[role.career_track].roles.push(role);
+                families[role.job_family].tracks[role.career_track].totalCount += role.count;
+                families[role.job_family].totalCount += role.count;
+            });
+
+            // Auto-select first family and track
+            if (!selectedFamily && Object.keys(families).length > 0) {
+                selectedFamily = Object.keys(families).sort()[0];
+            }
+            
+            if (selectedFamily && !selectedTrack && families[selectedFamily]) {
+                selectedTrack = Object.keys(families[selectedFamily].tracks).sort()[0];
+            }
+
+            // Build HTML
+            let html = '<div class="hierarchy-container">';
+            
+            // Column 1: Job Families
+            html += '<div class="column">';
+            html += '<div class="column-header">JOB FAMILY</div>';
+            
+            Object.keys(families).sort().forEach(familyName => {
+                const family = families[familyName];
+                const isSelected = familyName === selectedFamily ? 'selected' : '';
+                html += `<div class="card ${isSelected}" onclick="selectFamily('${familyName.replace(/'/g, "\\'")}')">`;
+                html += `<div class="card-title">${familyName}</div>`;
+                html += `<div class="card-count">${family.totalCount} employees</div>`;
+                html += `</div>`;
+            });
+            
+            html += '</div>';
+            
+            html += '<div class="arrow">→</div>';
+            
+            // Column 2: Career Tracks
+            html += '<div class="column">';
+            html += '<div class="column-header">CAREER TRACK</div>';
+            
+            if (selectedFamily && families[selectedFamily]) {
+                Object.keys(families[selectedFamily].tracks).sort().forEach(trackName => {
+                    const track = families[selectedFamily].tracks[trackName];
+                    const isSelected = trackName === selectedTrack ? 'selected' : '';
+                    html += `<div class="card ${isSelected}" onclick="selectTrack('${trackName.replace(/'/g, "\\'")}')">`;
+                    html += `<div class="card-title">${trackName}</div>`;
+                    html += `<div class="card-count">${track.totalCount} employees</div>`;
+                    html += `</div>`;
+                });
+            }
+            
+            html += '</div>';
+            
+            html += '<div class="arrow">→</div>';
+            
+            // Column 3: Roles
+            html += '<div class="column">';
+            html += '<div class="column-header">ROLES</div>';
+            
+            if (selectedFamily && selectedTrack && families[selectedFamily] && families[selectedFamily].tracks[selectedTrack]) {
+                const roles = families[selectedFamily].tracks[selectedTrack].roles;
+                roles.forEach(role => {
+                    const noEmployees = role.count === 0 ? 'no-employees' : '';
+                    html += `<div class="card role-card ${noEmployees}">`;
+                    html += `<div class="card-title">${role.role_name}</div>`;
+                    html += `<div class="card-subtitle">${role.level}</div>`;
+                    html += `<div class="card-count">${role.count} employees</div>`;
+                    html += `</div>`;
+                });
+            }
+            
+            html += '</div>';
+            
+            html += '</div>';
+            
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function selectFamily(familyName) {
+            selectedFamily = familyName;
+            // Reset track selection when family changes
+            const families = {};
+            rolesData.forEach(role => {
+                if (!families[role.job_family]) {
+                    families[role.job_family] = { tracks: {} };
+                }
+                if (!families[role.job_family].tracks[role.career_track]) {
+                    families[role.job_family].tracks[role.career_track] = true;
+                }
+            });
+            
+            if (families[selectedFamily]) {
+                selectedTrack = Object.keys(families[selectedFamily].tracks).sort()[0];
+            }
+            
+            displayHierarchy();
+        }
+
+        function selectTrack(trackName) {
+            selectedTrack = trackName;
+            displayHierarchy();
+        }
+
+        // Load roles on page load
+        loadRoles();
+    </script>
+</body>
+</html>
+
