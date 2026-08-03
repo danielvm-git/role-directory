@@ -1,0 +1,160 @@
+name: Test Build Release
+# version: 4.1.0 — see workflow-templates/CHANGELOG.md
+# Reusable workflow reference: danielvm-git/.github/.github/workflows/test-build-release-node.yml@main
+# Paired with deploy-node.yml → deploy.yml
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pipeline-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_TYPE: node
+  SITE_URL: "https://role-directory.bigbase.click"
+  RELEASE_TOOL: "big-release"
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Preflight
+        run: |
+          if [ -f scripts/preflight.sh ]; then
+            bash scripts/preflight.sh
+          elif [ -f Makefile ] && grep -q '^preflight:' Makefile; then
+            make preflight
+          elif command -v npm >/dev/null 2>&1 && grep -q '"preflight"' package.json 2>/dev/null; then
+            npm run preflight
+          else
+            echo "WARN: No preflight script found — add scripts/preflight.sh"
+          fi
+
+      - name: Check Conventional Commits
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: |
+          git log origin/main..HEAD --no-merges --format=%s | while read -r line; do
+            if ! echo "$line" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?!?: "; then
+              echo "FAIL: Non-conventional commit: $line"
+              exit 1
+            fi
+          done
+          echo "PASS: All commits follow Conventional Commits"
+
+      - name: Check no AI agent attribution
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: |
+          if git log origin/main..HEAD --format="%B" | grep -qiE '^co[- ]authored[- ]by:'; then
+            echo "FAIL: Co-authored-by: footer found — blocked by CONVENTIONS.md"
+            exit 1
+          fi
+          echo "PASS: No AI agent attribution"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Type check
+        # role-directory script is `type-check` (hyphen), not the template default `typecheck`
+        run: npm run type-check --if-present
+
+      - name: Test
+        # `npm test` also runs Playwright e2e which needs a live server; CI runs the
+        # server-free vitest suite (`npm run test:unit`) instead. Integration tests in
+        # tests/integration/ require DATABASE_URL, provided from the existing secret.
+        run: npm run test:unit
+        env:
+          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          ALLOWED_EMAILS: test@example.com,ci@example.com
+          NODE_ENV: test
+          PORT: 3000
+
+  build:
+    needs: [test]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Write deploy-meta
+        run: |
+          jq -n \
+            --arg sha "${{ github.sha }}" \
+            --arg ref "${{ github.ref_name }}" \
+            --arg app_type "${{ env.APP_TYPE }}" \
+            '{sha: $sha, ref: $ref, app_type: $app_type}' > deploy-meta.json
+
+      - name: Upload deploy-meta artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: deploy-meta
+          path: deploy-meta.json
+          retention-days: 3
+
+  release:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build]
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Install big-release
+        run: |
+          curl -sL https://github.com/danielvm-git/big-release/releases/latest/download/big-release-linux-amd64 -o big-release
+          chmod +x big-release
+          sudo mv big-release /usr/local/bin/
+          big-release --version
+
+      - name: Run big-release
+        run: big-release release --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: big-release-bot
+          GIT_AUTHOR_EMAIL: big-release-bot@danielvm-git.github.io
+          GIT_COMMITTER_NAME: big-release-bot
+          GIT_COMMITTER_EMAIL: big-release-bot@danielvm-git.github.io
