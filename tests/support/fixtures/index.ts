@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks -- Playwright fixtures use a `use` callback param, not React hooks */
 /**
  * Playwright Fixture Architecture
  * 
@@ -36,9 +37,9 @@ type TestFixtures = {
  *   });
  */
 export const test = base.extend<TestFixtures>({
-  userFactory: async ({}, use) => {
+  userFactory: async ({}, useFixture) => {
     const factory = new UserFactory();
-    await use(factory);
+    await useFixture(factory);
     await factory.cleanup(); // Auto-cleanup after test
   },
 });
