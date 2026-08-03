@@ -1,0 +1,8 @@
+# big-release configuration
+tagFormat: "v${version}"
+initialVersion: "0.1.0"
+
+plugins:
+  - changelog
+  - git
+  - github

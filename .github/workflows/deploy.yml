@@ -1,0 +1,78 @@
+name: Deploy
+# version: 4.0.0 — see workflow-templates/CHANGELOG.md
+# Reusable workflow reference: danielvm-git/.github/.github/workflows/deploy-node.yml@main
+# Triggered by test-build-release.yml only
+
+on:
+  workflow_run:
+    workflows: ["Test Build Release"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  SITE_URL: "https://role-directory.bigbase.click"
+
+jobs:
+  deploy:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - name: Download deploy-meta artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
+        with:
+          name: deploy-meta
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          repository: ${{ github.event.workflow_run.repository.full_name }}
+          path: deploy-meta
+
+      - name: Verify deploy-meta artifact
+        id: meta
+        run: |
+          if [ ! -s deploy-meta/deploy-meta.json ]; then
+            echo "::error::deploy-meta artifact missing or empty"
+            exit 1
+          fi
+          REF=$(jq -r '.sha' deploy-meta/deploy-meta.json)
+          APP_TYPE=$(jq -r '.app_type' deploy-meta/deploy-meta.json)
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+          echo "app_type=$APP_TYPE" >> "$GITHUB_OUTPUT"
+          echo "Deploy metadata: $(cat deploy-meta/deploy-meta.json)"
+
+      - name: Deploy to BigBase
+        uses: danielvm-git/.github/actions/bigbase-deploy@9c56ac10c629f3baa110ddb19136579e3c90d690  # v1
+        with:
+          site_id: ${{ secrets.BIGBASE_SITE_ID }}
+          app_type: ${{ steps.meta.outputs.app_type }}
+          site_url: ${{ env.SITE_URL }}
+          deploy_token: ${{ secrets.BIGBASE_DEPLOY_TOKEN }}
+          ref: ${{ steps.meta.outputs.ref }}
+          branch: main
+          skip_health_check: true
+
+      - name: Health check
+        run: |
+          ATTEMPTS=8
+          INTERVAL=10
+          for i in $(seq 1 "$ATTEMPTS"); do
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${{ env.SITE_URL }}" || echo "000")
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "301" ] || [ "$STATUS" = "302" ]; then
+              echo "✅ Site LIVE (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i/$ATTEMPTS: HTTP $STATUS, waiting ${INTERVAL}s..."
+            sleep "$INTERVAL"
+          done
+          echo "::error::Health check failed after $ATTEMPTS attempts"
+          exit 1
